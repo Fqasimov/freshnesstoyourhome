@@ -1,7 +1,7 @@
 /* Freshness To Your Home — catalogue data
    Prices in AZN, transcribed from the 2025 poster catalogue (boards 1–9 of 15). */
 
-const CONTACT = {
+export const CONTACT = {
   phone: '+994503521919',
   phoneDisplay: '+994 50 352 19 19',
   whatsapp: '994503521919',
@@ -9,7 +9,7 @@ const CONTACT = {
   city: { en: 'Baku, Azerbaijan', az: 'Bakı, Azərbaycan' }
 };
 
-const CATEGORIES = [
+export const CATEGORIES = [
   { id: 'all',      en: 'Everything',      az: 'Hamısı',            kicker: '54' },
   { id: 'smoked',   en: 'Smoked Fish',     az: 'Hisə verilmiş',     kicker: '06' },
   { id: 'fresh',    en: 'Fresh Fish',      az: 'Təzə balıqlar',     kicker: '06' },
@@ -20,7 +20,7 @@ const CATEGORIES = [
 ];
 
 /* unit.qty is in the unit's base measure; unit.kind drives the per-kg badge */
-const PRODUCTS = [
+export const PRODUCTS = [
   /* ── SMOKED FISH ───────────────────────────────────────────── */
   { id:'smoked-salmon', cat:'smoked', price:65, unit:{en:'1 kg',az:'1 kg',kind:'kg',qty:1},
     en:'Smoked Salmon', az:'Hisə verilmiş qızıl balıq', star:true,
@@ -251,4 +251,25 @@ const PRODUCTS = [
     daz:'Yapon çiyələkli KitKat — ayrı-ayrı bükülmüş.' }
 ];
 
-PRODUCTS.forEach(p => { p.img = 'assets/products/' + p.id + '.jpg'; });
+/* Vite resolves every product photo at build time, so each one gets a
+   hashed, cache-busted URL and a missing file fails the build instead of
+   404-ing in production. */
+const PHOTOS = import.meta.glob('../assets/products/*.jpg', { eager: true, import: 'default' })
+
+PRODUCTS.forEach(p => {
+  const hit = PHOTOS[`../assets/products/${p.id}.jpg`]
+  if (!hit && import.meta.env.DEV) console.warn(`[catalogue] no photo for "${p.id}"`)
+  p.img = hit
+})
+
+/* Money, rounded to the cent and printed without trailing zeroes. */
+export const money = n => (Math.round(n * 100) / 100).toString()
+
+/* A per-kilo reference price, but only where it tells the customer
+   something — a 400 gr tin is worth comparing, a single fish is not. */
+export function perKg (p) {
+  const u = p.unit
+  if (u.kind === 'g') return p.price / (u.qty / 1000)
+  if (u.kind === 'kg' && u.qty !== 1) return p.price / u.qty
+  return null
+}

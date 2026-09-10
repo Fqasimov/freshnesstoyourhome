@@ -1,5 +1,5 @@
 /* Bilingual copy — English / Azerbaijani. Values may contain inline HTML. */
-const I18N = {
+export const I18N = {
   en: {
     'nav.shop':'Catalogue','nav.week':'This week','nav.story':'About','nav.how':'How to order',
     'nav.contact':'Contact','nav.cart':'Basket',
