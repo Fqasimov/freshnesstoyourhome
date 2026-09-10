@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-lang="en">
+<html lang="az" data-lang="az">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,6 +18,34 @@
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
+
+<!-- ══ OPENING SEQUENCE ══════════════════════════════════════════════════
+     The brand mark growing from a seed — leaf, veins, the three dots —
+     inside its own ring, then a bloom of ripples before the counter
+     underneath is revealed. Plays once per visit; any tap, key or
+     scroll skips straight to the shop. -->
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro__stage">
+    <svg class="intro__mark" viewBox="-10 -40 320 320">
+      <circle class="intro__ring" cx="150" cy="120" r="140"/>
+      <g class="intro__ripples">
+        <circle cx="150" cy="120" r="62"/>
+        <circle cx="150" cy="120" r="62"/>
+        <circle cx="150" cy="120" r="62"/>
+      </g>
+      <path class="intro__outline" d="M100,20 C40,55 25,130 60,195 C75,215 125,215 140,195 C175,130 160,55 100,20 Z"/>
+      <path class="intro__vein" d="M100,35 C101,95 102,150 109,205"/>
+      <path class="intro__vein" d="M100,84 L72,64"/>
+      <path class="intro__vein" d="M104,84 L133,64"/>
+      <path class="intro__vein" d="M104,128 L69,116"/>
+      <path class="intro__vein" d="M108,128 L139,116"/>
+      <circle class="intro__dot" cx="183" cy="65" r="11"/>
+      <circle class="intro__dot" cx="207" cy="92" r="8"/>
+      <circle class="intro__dot" cx="192" cy="119" r="6"/>
+    </svg>
+    <p class="intro__tag" data-i18n="intro.tag">Təzə. Təmiz. Təbii.</p>
+  </div>
+</div>
 
 <!-- ══ NAV ═══════════════════════════════════════════════════════════════ -->
 <header class="nav" id="nav">
@@ -40,8 +68,8 @@
 
     <div class="nav__tools">
       <div class="lang" id="lang">
-        <button data-lang="en" class="on"><span>EN</span></button>
-        <button data-lang="az"><span>AZ</span></button>
+        <button data-lang="en"><span>EN</span></button>
+        <button data-lang="az" class="on"><span>AZ</span></button>
       </div>
       <button class="cartbtn" id="cartbtn" aria-label="Open cart">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>

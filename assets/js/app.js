@@ -10,7 +10,7 @@ const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- state -------------------------------------------------------- */
-let lang  = localStorage.getItem('fth.lang') || 'en';
+let lang  = localStorage.getItem('fth.lang') || 'az';
 let cart  = [];
 try { cart = JSON.parse(localStorage.getItem('fth.cart') || '[]'); } catch (e) { cart = []; }
 
@@ -527,6 +527,45 @@ $$('[data-num]').forEach(el => numIO.observe(el));
     if (y > window.innerHeight) return;
     figs.forEach(f => { f.style.marginTop = (y * (+f.dataset.depth || 10) * -0.012) + 'px'; });
   }, { passive: true });
+})();
+
+/* ---------- opening sequence ---------------------------------------------
+   The brand mark assembles itself, blooms, then fades to reveal the shop.
+   Runs once per browser tab; skips instantly under reduced motion or on
+   any tap, key press or scroll. */
+(function intro() {
+  const el = $('#intro'); if (!el) return;
+  let seen = false;
+  try { seen = sessionStorage.getItem('fth.intro') === '1'; } catch (e) {}
+
+  if (RM || seen) { el.classList.add('hidden'); return; }
+  try { sessionStorage.setItem('fth.intro', '1'); } catch (e) {}
+
+  document.body.classList.add('is-locked');
+  $$('.intro__outline, .intro__vein', el).forEach(p => {
+    p.style.setProperty('--len', p.getTotalLength());
+  });
+
+  let done = false;
+  const timers = [];
+  const T = (fn, ms) => timers.push(setTimeout(fn, ms));
+
+  function leave() {
+    if (done) return;
+    done = true;
+    timers.forEach(clearTimeout);
+    document.body.classList.remove('is-locked');
+    el.classList.add('leave');
+    setTimeout(() => el.classList.add('hidden'), 720);
+  }
+
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('go')));
+  T(() => el.classList.add('pulse'), 1150);
+  T(leave, 2000);
+
+  ['click', 'touchstart', 'keydown', 'wheel'].forEach(ev =>
+    el.addEventListener(ev, leave, { once: true, passive: true })
+  );
 })();
 
 /* ---------- boot --------------------------------------------------------- */

@@ -4,6 +4,8 @@ const I18N = {
     'nav.shop':'Catalogue','nav.week':'This week','nav.story':'About','nav.how':'How to order',
     'nav.contact':'Contact','nav.cart':'Basket',
 
+    'intro.tag':'Fresh. Clean. Natural.',
+
     'hero.eyebrow':'Baku · Delivered daily',
     'hero.h1b':'to your home',
     'hero.copy':"A working fishmonger's counter, a cheese room and an import pantry — packed cold and driven to your door across Baku. Fifty-four things worth eating, priced plainly.",
@@ -71,6 +73,8 @@ const I18N = {
   az: {
     'nav.shop':'Kataloq','nav.week':'Bu həftə','nav.story':'Haqqımızda','nav.how':'Necə sifariş etməli',
     'nav.contact':'Əlaqə','nav.cart':'Səbət',
+
+    'intro.tag':'Təzə. Təmiz. Təbii.',
 
     'hero.eyebrow':'Bakı · Hər gün çatdırılır',
     'hero.h1b':'evinizə',
