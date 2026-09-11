@@ -7,13 +7,16 @@
   /* ink */
   --ink:          #1B2916;
   --ink-2:        #3D4C35;
-  --ink-3:        #6B7862;
+  --ink-3:        #5F6955;
   /* brand */
   --forest:       #3A6A2C;
   --forest-2:     #2C5121;
   --leaf:         #84AB58;
-  --leaf-d:       #5F8339;
+  --leaf-d:       #52712F;
   --leaf-l:       #A8C782;
+  /* light green for SMALL text on the dark panels, where --leaf-l
+     only reaches 3.4:1 and large display type is the sole safe use */
+  --leaf-xl:      #C9E6A4;
   --brick:        #90452E;
   --brick-l:      #B15A3D;
   --acid:         #EFE24E;
@@ -96,7 +99,7 @@ h3.display{ font-size:clamp(1.4rem, 2.4vw, 2.1rem); line-height:1.05; }
 .eyebrow::before{
   content:''; width:26px; height:1px; background:currentColor; opacity:.55; flex:none;
 }
-.eyebrow--inv{ color:var(--leaf-l); }
+.eyebrow--inv{ color:var(--leaf-xl); }
 .lede{ font-size:clamp(1rem,1.35vw,1.18rem); color:var(--ink-2); max-width:52ch; line-height:1.62; }
 
 .wrap{ width:100%; max-width:var(--maxw); margin-inline:auto; padding-inline:var(--gutter); }

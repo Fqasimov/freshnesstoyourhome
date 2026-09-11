@@ -133,7 +133,7 @@ const shots = [
 }
 .hero.in .hero__ul path{ stroke-dashoffset:0; }
 
-.hero__copy{ margin:clamp(22px,3vw,34px) 0 0; max-width:46ch; color:rgba(246,243,234,.78); font-size:clamp(.98rem,1.2vw,1.1rem); }
+.hero__copy{ margin:clamp(22px,3vw,34px) 0 0; max-width:46ch; color:rgba(246,243,234,.9); font-size:clamp(.98rem,1.2vw,1.1rem); }
 
 .hero__cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:clamp(26px,3.4vw,38px); }
 

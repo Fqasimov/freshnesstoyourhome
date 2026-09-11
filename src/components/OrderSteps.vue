@@ -51,7 +51,7 @@ onUnmounted(() => io && io.disconnect())
 .step{ position:relative; }
 .step b{
   font-family:var(--display); font-size:clamp(3.4rem,6vw,5.2rem); font-weight:300;
-  line-height:.8; color:var(--leaf); letter-spacing:-.04em;
+  line-height:.8; color:#6D9144; letter-spacing:-.04em;
   display:flex; align-items:center; gap:clamp(14px,1.6vw,22px);
 }
 /* the rule that ties one numeral to the next — it grows when the section arrives */

@@ -57,7 +57,7 @@ const terms = [['h.zone', 'h.zonev'], ['h.pay', 'h.payv'], ['h.order', 'h.orderv
 </template>
 
 <style scoped>
-.hours__note{ margin:16px 0 0; font-size:.78rem; line-height:1.55; color:rgba(246,243,234,.6); }
+.hours__note{ margin:16px 0 0; font-size:.78rem; line-height:1.55; color:rgba(246,243,234,.88); }
 /* ---------- 14. Contact -------------------------------------------------- */
 .contact{ background:var(--forest); color:var(--paper); padding:clamp(64px,8vw,110px) 0; position:relative; overflow:hidden; }
 .contact::before{
@@ -70,7 +70,7 @@ const terms = [['h.zone', 'h.zonev'], ['h.pay', 'h.payv'], ['h.order', 'h.orderv
 }
 .contact__in{ display:grid; grid-template-columns:1.1fr .9fr; gap:clamp(32px,5vw,80px); align-items:center; position:relative; z-index:2; }
 .contact h2{ color:var(--paper); }
-.contact p{ color:rgba(246,243,234,.76); }
+.contact p{ color:rgba(246,243,234,.9); }
 .contact__cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:32px; }
 .phone{
   font-family:var(--display); font-size:clamp(1.5rem,3.2vw,2.5rem); font-weight:400;
@@ -83,7 +83,7 @@ const terms = [['h.zone', 'h.zonev'], ['h.pay', 'h.payv'], ['h.order', 'h.orderv
 
 .hours{ border:1px solid var(--line-inv); border-radius:var(--radius); padding:clamp(22px,2.6vw,32px); }
 .hours dl{ margin:0; display:grid; grid-template-columns:auto 1fr; gap:12px 18px; font-size:.88rem; }
-.hours dt{ color:rgba(246,243,234,.6); }
+.hours dt{ color:rgba(246,243,234,.88); }
 .hours dd{ margin:0; text-align:right; }
 .hours hr{ grid-column:1/-1; border:0; border-top:1px solid var(--line-inv); margin:2px 0; }
 </style>
