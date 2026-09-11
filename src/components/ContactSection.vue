@@ -57,7 +57,7 @@ const terms = [['h.zone', 'h.zonev'], ['h.pay', 'h.payv'], ['h.order', 'h.orderv
 </template>
 
 <style scoped>
-.hours__note{ margin:16px 0 0; font-size:.78rem; line-height:1.55; color:rgba(242,247,234,.72); }
+.hours__note{ margin:16px 0 0; font-size:.78rem; line-height:1.55; color:rgba(246,243,234,.6); }
 /* ---------- 14. Contact -------------------------------------------------- */
 .contact{ background:var(--forest); color:var(--paper); padding:clamp(64px,8vw,110px) 0; position:relative; overflow:hidden; }
 .contact::before{
@@ -83,7 +83,7 @@ const terms = [['h.zone', 'h.zonev'], ['h.pay', 'h.payv'], ['h.order', 'h.orderv
 
 .hours{ border:1px solid var(--line-inv); border-radius:var(--radius); padding:clamp(22px,2.6vw,32px); }
 .hours dl{ margin:0; display:grid; grid-template-columns:auto 1fr; gap:12px 18px; font-size:.88rem; }
-.hours dt{ color:rgba(242,247,234,.72); }
+.hours dt{ color:rgba(246,243,234,.6); }
 .hours dd{ margin:0; text-align:right; }
 .hours hr{ grid-column:1/-1; border:0; border-top:1px solid var(--line-inv); margin:2px 0; }
 </style>

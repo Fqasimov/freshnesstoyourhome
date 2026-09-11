@@ -99,30 +99,18 @@ const shots = [
 </template>
 
 <style scoped>
-/* On the bright ground the cream/acid treatments invert: the eyebrow and
-   the primary button go deep, the ghost button outlines in ink. Acid
-   yellow reads 1.45:1 on this green, so it cannot carry a control here. */
-.hero .eyebrow--inv{ color:var(--forest-2); }
-.hero .btn{ --bg:var(--forest); --fg:var(--paper); }
-.hero .btn::before{ background:var(--ink); }
-.hero .btn:hover{ color:var(--paper); box-shadow:0 12px 30px rgba(23,37,15,.28); }
-.hero .btn--ghost{ --bg:transparent; --fg:var(--ink); box-shadow:inset 0 0 0 1.5px rgba(23,37,15,.32); }
-.hero .btn--ghost::before{ background:var(--ink); }
-.hero .btn--ghost:hover{ color:var(--paper); }
-
 /* ---------- 5. Hero ------------------------------------------------------ */
 .hero{
-  background:var(--bright);
-  background-image:linear-gradient(168deg, var(--bright) 0%, var(--bright-2) 100%);
-  color:var(--ink);
+  background:var(--forest);
+  color:var(--paper);
   position:relative; overflow:hidden;
   padding:calc(var(--nav-h) + clamp(48px,7vw,110px)) 0 clamp(56px,7vw,96px);
 }
 /* the poster's engraved line-work, rebuilt as a background */
 .hero__lines{
-  position:absolute; inset:-10% -5% auto -5%; height:150%; opacity:.12; pointer-events:none;
+  position:absolute; inset:-10% -5% auto -5%; height:150%; opacity:.16; pointer-events:none;
   background:
-    repeating-linear-gradient(102deg, transparent 0 46px, rgba(23,37,15,.5) 46px 47px);
+    repeating-linear-gradient(102deg, transparent 0 46px, rgba(168,199,130,.85) 46px 47px);
   -webkit-mask-image:radial-gradient(120% 90% at 12% 40%, #000 10%, transparent 72%);
   mask-image:radial-gradient(120% 90% at 12% 40%, #000 10%, transparent 72%);
   animation:drift 34s linear infinite;
@@ -131,21 +119,21 @@ const shots = [
 
 .hero__in{ display:grid; grid-template-columns:1.05fr .95fr; gap:clamp(28px,5vw,72px); align-items:center; position:relative; z-index:2; }
 
-.hero h1{ color:var(--ink); }
+.hero h1{ color:var(--paper); }
 .hero h1 em{
-  font-style:italic; font-weight:400; color:var(--forest);
+  font-style:italic; font-weight:400; color:var(--leaf-l);
   display:block; font-size:.4em; line-height:1.08;
   margin-top:.18em; letter-spacing:-.01em;
 }
 .hero__ul{ display:block; width:min(340px,54%); margin:.35em 0 0; overflow:visible; }
 .hero__ul path{
-  fill:none; stroke:var(--forest); stroke-width:5; stroke-linecap:round;
+  fill:none; stroke:var(--acid); stroke-width:5; stroke-linecap:round;
   stroke-dasharray:var(--len,600); stroke-dashoffset:var(--len,600);
   transition:stroke-dashoffset 1.5s .5s var(--ease-out);
 }
 .hero.in .hero__ul path{ stroke-dashoffset:0; }
 
-.hero__copy{ margin:clamp(22px,3vw,34px) 0 0; max-width:46ch; color:var(--ink-2); font-size:clamp(.98rem,1.2vw,1.1rem); }
+.hero__copy{ margin:clamp(22px,3vw,34px) 0 0; max-width:46ch; color:rgba(246,243,234,.78); font-size:clamp(.98rem,1.2vw,1.1rem); }
 
 .hero__cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:clamp(26px,3.4vw,38px); }
 
@@ -153,8 +141,8 @@ const shots = [
 .collage{ position:relative; aspect-ratio:1/1.02; }
 .collage figure{
   position:absolute; margin:0; overflow:hidden; border-radius:var(--radius);
-  box-shadow:0 24px 54px rgba(23,37,15,.26);
-  outline:7px solid #FFFFFF; outline-offset:-1px;
+  box-shadow:0 26px 60px rgba(0,0,0,.34);
+  outline:6px solid var(--paper); outline-offset:-1px;
   will-change:transform;
 }
 .collage img{ width:100%; height:100%; object-fit:cover; transition:transform 1.4s var(--ease-out); }
@@ -165,15 +153,15 @@ const shots = [
 .collage__seal{
   position:absolute; left:34%; bottom:7%; z-index:6;
   width:clamp(96px,10.5vw,128px); aspect-ratio:1; border-radius:50%;
-  background:var(--forest); color:var(--paper);
+  background:var(--acid); color:var(--ink);
   display:grid; place-items:center; text-align:center;
   font-family:var(--display); font-size:clamp(.7rem,.86vw,.82rem); line-height:1.2; font-weight:500;
-  box-shadow:0 16px 38px rgba(23,37,15,.3);
+  box-shadow:0 16px 38px rgba(0,0,0,.34);
 }
 .collage__seal b{ display:block; font-size:2.1em; font-weight:600; letter-spacing:-.03em; line-height:.95; margin-bottom:2px; }
 .collage__seal::before{
   content:''; position:absolute; inset:-11px; border-radius:50%;
-  border:1.5px dashed rgba(23,37,15,.42);
+  border:1.5px dashed rgba(44,66,35,.5);
   animation:spinRing 30s linear infinite;
 }
 @keyframes spinRing{ to{ transform:rotate(360deg); } }

@@ -1,32 +1,26 @@
 /* ---------- 1. Tokens ---------------------------------------------------- */
 :root{
-  /* ground — a fresher, greener paper than the old warm cream */
-  --paper:        #F2F7EA;
-  --paper-2:      #E9F2DC;
-  --paper-3:      #DBE9C6;
+  /* ground */
+  --paper:        #F6F3EA;
+  --paper-2:      #EFEADC;
+  --paper-3:      #E5DFCC;
   /* ink */
-  --ink:          #17250F;
-  --ink-2:        #38492E;
-  --ink-3:        #5D6B53;
-  /* brand
-     --bright is the fresh green the brand leads with. It is a SURFACE:
-     dark ink on it reads 7.8:1, but cream on it is 1.8:1 and it can never
-     be text on paper — use --leaf-d when a green needs to be legible. */
-  --bright:       #66D147;
-  --bright-2:     #57C038;
-  --forest:       #2A571D;
-  --forest-2:     #214616;
-  --leaf:         #66D147;
-  --leaf-d:       #397528;
-  --leaf-l:       #C5E3A0;
+  --ink:          #1B2916;
+  --ink-2:        #3D4C35;
+  --ink-3:        #6B7862;
+  /* brand */
+  --forest:       #3A6A2C;
+  --forest-2:     #2C5121;
+  --leaf:         #84AB58;
+  --leaf-d:       #5F8339;
+  --leaf-l:       #A8C782;
   --brick:        #90452E;
   --brick-l:      #B15A3D;
   --acid:         #EFE24E;
 
-  --line:         rgba(23,37,15,.14);
-  --line-soft:    rgba(23,37,15,.08);
-  --line-inv:     rgba(242,247,234,.2);
-  --line-ink:     rgba(23,37,15,.22);
+  --line:         rgba(27,41,22,.14);
+  --line-soft:    rgba(27,41,22,.08);
+  --line-inv:     rgba(246,243,234,.18);
 
   /* type */
   /* Cormorant and Onest both carry Cyrillic and Latin Extended, so the
