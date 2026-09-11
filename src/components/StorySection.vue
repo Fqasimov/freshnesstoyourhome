@@ -6,18 +6,20 @@ import logo from '../assets/logo.png'
 
 const { t } = useI18n()
 
+/* `to` counts up; `text` is shown as-is — opening hours and a support
+   line are not quantities. */
 const stats = [
   { to: 54, key: 'st1' }, { to: 6, key: 'st2' },
-  { to: 5,  key: 'st3' }, { to: 4, key: 'st4' }
+  { text: '10–22', key: 'st3' }, { text: '24/7', key: 'st4' }
 ]
 
 /* Numbers count up once, when the block first arrives. */
-const shown = ref(stats.map(() => 0))
+const shown = ref(stats.map(s => (s.text ? s.text : 0)))
 const box = ref(null)
 let io = null
 
 onMounted(() => {
-  if (reducedMotion) { shown.value = stats.map(s => s.to); return }
+  if (reducedMotion) { shown.value = stats.map(s => s.text || s.to); return }
   io = new IntersectionObserver(entries => {
     if (!entries[0].isIntersecting) return
     io.disconnect()
@@ -25,7 +27,7 @@ onMounted(() => {
     const tick = now => {
       const k = Math.min(1, (now - t0) / dur)
       const eased = 1 - Math.pow(1 - k, 3)
-      shown.value = stats.map(s => Math.round(s.to * eased))
+      shown.value = stats.map(s => (s.text ? s.text : Math.round(s.to * eased)))
       if (k < 1) requestAnimationFrame(tick)
     }
     requestAnimationFrame(tick)

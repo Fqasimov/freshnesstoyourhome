@@ -1,6 +1,6 @@
 import { ref, computed, watch } from 'vue'
-import { PRODUCTS, CONTACT, money } from '../data/catalogue'
-import { useI18n, lang } from './useI18n'
+import { PRODUCTS, SETS, CONTACT, money, setPricing } from '../data/catalogue'
+import { useI18n } from './useI18n'
 
 const read = () => {
   try { const v = JSON.parse(localStorage.getItem('fth.cart') || '[]'); return Array.isArray(v) ? v : [] }
@@ -15,20 +15,32 @@ watch(items, v => {
   try { localStorage.setItem('fth.cart', JSON.stringify(v)) } catch (e) {}
 }, { deep: true })
 
-const keyOf = (id, v) => id + '::' + (v == null ? '-' : v)
+const keyOf = (id, v, kind) => kind + ':' + id + '::' + (v == null ? '-' : v)
 
 export function useCart () {
   const { t, nm, unitOf } = useI18n()
 
-  /* Resolve a stored line into the product, its chosen variant and price. */
+  /* Resolve a stored line into something the drawer can render. A set is
+     one line at its bundle price, not its contents at full price. */
   function resolve (it) {
+    if (it.kind === 'set') {
+      const s = SETS.find(x => x.id === it.id)
+      if (!s) return null
+      const { items, price } = setPricing(s)
+      return {
+        key: it.key, qty: it.qty, isSet: true,
+        product: { ...s, img: items[0] && items[0].img },
+        price,
+        unit: `${t('ui.set')} · ${items.length}`
+      }
+    }
     const p = PRODUCTS.find(x => x.id === it.id)
     if (!p) return null
     const v = (p.variants && it.v != null) ? p.variants[it.v] : null
     return {
       key: it.key, qty: it.qty, product: p,
       price: v ? v.price : p.price,
-      unit:  v ? (lang.value === 'az' ? v.az : v.en) : unitOf(p)
+      unit:  unitOf(p, v)
     }
   }
 
@@ -36,11 +48,11 @@ export function useCart () {
   const count = computed(() => items.value.reduce((s, c) => s + c.qty, 0))
   const total = computed(() => lines.value.reduce((s, l) => s + l.price * l.qty, 0))
 
-  function add (id, v = null, qty = 1) {
-    const key = keyOf(id, v)
+  function add (id, v = null, qty = 1, kind = 'product') {
+    const key = keyOf(id, v, kind)
     const hit = items.value.find(c => c.key === key)
     if (hit) hit.qty += qty
-    else items.value.push({ key, id, v, qty })
+    else items.value.push({ key, id, v, qty, kind })
   }
 
   function setQty (key, delta) {

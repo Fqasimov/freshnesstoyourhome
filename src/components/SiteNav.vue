@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { useI18n, lang } from '../composables/useI18n'
+import { useI18n, lang, LANGS } from '../composables/useI18n'
 import { useCart } from '../composables/useCart'
 import mark from '../assets/logo-mark.png'
 
@@ -15,8 +15,8 @@ const popped = ref(false)
 defineExpose({ cartBtn })
 
 const links = [
-  ['#catalogue', 'nav.shop'], ['#week', 'nav.week'], ['#story', 'nav.story'],
-  ['#order', 'nav.how'], ['#contact', 'nav.contact']
+  ['#catalogue', 'nav.shop'], ['#sets', 'nav.sets'], ['#week', 'nav.week'],
+  ['#story', 'nav.story'], ['#contact', 'nav.contact']
 ]
 
 const onScroll = () => { solid.value = window.scrollY > window.innerHeight * 0.72 }
@@ -49,8 +49,10 @@ watch(count, (now, before) => {
 
       <div class="nav__tools">
         <div class="lang">
-          <button :class="{ on: lang === 'en' }" @click="lang = 'en'"><span>EN</span></button>
-          <button :class="{ on: lang === 'az' }" @click="lang = 'az'"><span>AZ</span></button>
+          <button v-for="l in LANGS" :key="l" :class="{ on: lang === l }"
+                  :aria-pressed="lang === l" @click="lang = l">
+            <span>{{ l.toUpperCase() }}</span>
+          </button>
         </div>
 
         <button class="cartbtn" ref="cartBtn" aria-label="Open cart" @click="open = true">

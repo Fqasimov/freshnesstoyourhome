@@ -9,6 +9,7 @@ import HeroSection from './components/HeroSection.vue'
 import TickerBar from './components/TickerBar.vue'
 import PromiseGrid from './components/PromiseGrid.vue'
 import FeaturedSlider from './components/FeaturedSlider.vue'
+import SetsSection from './components/SetsSection.vue'
 import CatalogueSection from './components/CatalogueSection.vue'
 import StorySection from './components/StorySection.vue'
 import OrderSteps from './components/OrderSteps.vue'
@@ -34,6 +35,13 @@ function onAdd ({ product, el }) {
   if (product.variants) { peeked.value = product; return }
   flyToCart(el, nav.value?.cartBtn)
   add(product.id, null, 1)
+  toast(t('ui.added'))
+}
+
+/* A set joins the basket as a single discounted line. */
+function onAddSet ({ set, el }) {
+  flyToCart(el, nav.value?.cartBtn)
+  add(set.id, null, 1, 'set')
   toast(t('ui.added'))
 }
 
@@ -64,6 +72,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   <HeroSection />
   <TickerBar />
   <PromiseGrid />
+  <SetsSection @add="onAddSet" />
   <FeaturedSlider @add="onAdd" @peek="peeked = $event" />
   <CatalogueSection @add="onAdd" @peek="peeked = $event" />
   <StorySection />

@@ -5,7 +5,7 @@ import logo from '../assets/logo.png'
 
 const { t } = useI18n()
 const year = new Date().getFullYear()
-const links = [['#catalogue', 'nav.shop'], ['#week', 'nav.week'], ['#story', 'nav.story'], ['#order', 'nav.how']]
+const links = [['#catalogue', 'nav.shop'], ['#sets', 'nav.sets'], ['#week', 'nav.week'], ['#story', 'nav.story'], ['#order', 'nav.how']]
 </script>
 
 <template>

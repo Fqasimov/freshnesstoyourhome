@@ -22,7 +22,7 @@ const visible = computed(() => {
   if (sortBy.value === 'asc')  list = [...list].sort((a, b) => a.price - b.price)
   if (sortBy.value === 'desc') list = [...list].sort((a, b) => b.price - a.price)
   if (sortBy.value === 'az')   list = [...list].sort((a, b) =>
-    nm(a).localeCompare(nm(b), lang.value === 'az' ? 'az' : 'en'))
+    nm(a).localeCompare(nm(b), lang.value))
   return list
 })
 
@@ -47,7 +47,7 @@ const countLabel = computed(() =>
         <div class="chips">
           <button v-for="c in CATEGORIES" :key="c.id" class="chip"
                   :class="{ on: filter === c.id }" @click="filter = c.id">
-            {{ lang === 'az' ? c.az : c.en }}<sup>{{ c.kicker }}</sup>
+            {{ catName(c.id) }}<sup>{{ c.kicker }}</sup>
           </button>
         </div>
 

@@ -7,10 +7,10 @@ const { t } = useI18n()
 const waHref = computed(() =>
   `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(t('ui.waPlain'))}`)
 
-const hours = [
-  ['h.days1', '09:00 – 20:00'], ['h.days2', '09:00 – 18:00'], ['h.days3', 'h.sun']
-]
-const terms = [['h.cut', 'h.cutv'], ['h.zone', 'h.zonev'], ['h.pay', 'h.payv']]
+const igHref = computed(() => `https://instagram.com/${CONTACT.instagram}`)
+
+const hours = [['h.deliv', 'h.delivv'], ['h.support', 'h.supportv']]
+const terms = [['h.zone', 'h.zonev'], ['h.pay', 'h.payv'], ['h.order', 'h.orderv']]
 </script>
 
 <template>
@@ -31,6 +31,10 @@ const terms = [['h.cut', 'h.cutv'], ['h.zone', 'h.zonev'], ['h.pay', 'h.payv']]
             <span>{{ t('ct.wa') }}</span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
+          <a class="btn btn--ghost" :href="igHref" target="_blank" rel="noopener">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.2" fill="currentColor" stroke="none"/></svg>
+            <span>{{ t('ct.ig') }}</span>
+          </a>
         </div>
       </div>
 
@@ -38,7 +42,7 @@ const terms = [['h.cut', 'h.cutv'], ['h.zone', 'h.zonev'], ['h.pay', 'h.payv']]
         <dl>
           <template v-for="[k, v] in hours" :key="k">
             <dt>{{ t(k) }}</dt>
-            <dd>{{ v.startsWith('h.') ? t(v) : v }}</dd>
+            <dd>{{ t(v) }}</dd>
           </template>
           <hr>
           <template v-for="[k, v] in terms" :key="k">
@@ -46,12 +50,14 @@ const terms = [['h.cut', 'h.cutv'], ['h.zone', 'h.zonev'], ['h.pay', 'h.payv']]
             <dd>{{ t(v) }}</dd>
           </template>
         </dl>
+        <p class="hours__note">{{ t('h.zonenote') }}</p>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
+.hours__note{ margin:16px 0 0; font-size:.78rem; line-height:1.55; color:rgba(246,243,234,.6); }
 /* ---------- 14. Contact -------------------------------------------------- */
 .contact{ background:var(--forest); color:var(--paper); padding:clamp(64px,8vw,110px) 0; position:relative; overflow:hidden; }
 .contact::before{

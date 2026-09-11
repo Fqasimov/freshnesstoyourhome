@@ -3,12 +3,12 @@ import { computed } from 'vue'
 import { CATEGORIES } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
 
-const { lang, t } = useI18n()
+const { catName, t } = useI18n()
 
 /* The track is duplicated so the marquee can loop seamlessly at -50%. */
 const words = computed(() => {
-  const names = CATEGORIES.slice(1).map(c => (lang.value === 'az' ? c.az : c.en))
-  names.push(lang.value === 'az' ? 'Bakıya çatdırılma' : 'Delivered across Baku')
+  const names = CATEGORIES.slice(1).map(c => catName(c.id))
+  names.push(t('h.zonev'))
   return [...names, ...names]
 })
 </script>

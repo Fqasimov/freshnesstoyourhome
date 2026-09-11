@@ -8,7 +8,7 @@ import ProductCard from './ProductCard.vue'
 const { t } = useI18n()
 const emit = defineEmits(['add', 'peek'])
 
-const picks = computed(() => PRODUCTS.filter(p => p.star))
+const picks = computed(() => PRODUCTS.filter(p => p.popular))
 const track = ref(null)
 const atStart = ref(true)
 const atEnd = ref(false)

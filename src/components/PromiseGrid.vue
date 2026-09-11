@@ -5,9 +5,9 @@ const { t } = useI18n()
 /* Four promises, each with a line icon drawn inline. */
 const items = [
   { k: 'pr1', d: '0ms',   path: '<path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>' },
-  { k: 'pr2', d: '90ms',  path: '<path d="M12 2v20M12 6l4-3M12 6 8 3M12 18l4 3M12 18l-4 3"/><path d="m3.5 7 17 10M3.5 7l.4 5M3.5 7l4.6-1.4M20.5 17l-.4-5M20.5 17l-4.6 1.4"/><path d="m20.5 7-17 10M20.5 7l-.4 5M20.5 7l-4.6-1.4M3.5 17l.4-5M3.5 17l4.6 1.4"/>' },
-  { k: 'pr3', d: '180ms', path: '<path d="M20.8 5.2c-3 0-6.6 1-9 3.4-2.6 2.6-3.2 6-3.3 8.8 2.8-.1 6.2-.7 8.8-3.3 2.4-2.4 3.4-6 3.5-8.9Z"/><path d="M3 21c1.5-4 3.6-6.6 5.5-8.5"/>' },
-  { k: 'pr4', d: '270ms', path: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"/>' }
+  { k: 'pr2', d: '90ms',  path: '<path d="M20 10.2c0 5.4-8 11.3-8 11.3s-8-5.9-8-11.3a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.8"/>' },
+  { k: 'pr3', d: '180ms', path: '<path d="M12 2.5 4 6v6c0 4.6 3.2 8.4 8 9.5 4.8-1.1 8-4.9 8-9.5V6l-8-3.5Z"/><path d="m8.8 12 2.3 2.3 4.3-4.5"/>' },
+  { k: 'pr4', d: '270ms', path: '<circle cx="12" cy="12" r="9.2"/><path d="M12 6.6V12l3.4 2"/>' }
 ]
 </script>
 

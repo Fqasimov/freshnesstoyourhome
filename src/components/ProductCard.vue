@@ -19,7 +19,6 @@ const kg = computed(() => perKg(props.product))
     <div class="card__media">
       <img :src="product.img" :alt="nm(product)" loading="lazy" decoding="async">
       <div class="card__flags">
-        <span v-if="product.star" class="flag">{{ t('ui.pick') }}</span>
         <span v-if="kg" class="flag flag--kg">{{ money(kg) }} AZN{{ t('ui.perkg') }}</span>
       </div>
       <div class="card__peek">

@@ -2,9 +2,9 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { reducedMotion } from '../composables/useMotion'
+import duck from '../assets/products/peking-duck.jpg'
+import camembert from '../assets/products/camembert.jpg'
 import salmon from '../assets/products/salmon-steaks.jpg'
-import mussels from '../assets/products/black-mussels.jpg'
-import caviar from '../assets/products/red-caviar.jpg'
 
 const { t } = useI18n()
 
@@ -53,10 +53,12 @@ onMounted(() => {
   })
 })
 
+/* One from meat, one from the cheese room, one from the fish counter —
+   the range, rather than a fishmonger's window. */
 const shots = [
-  { src: salmon,  cls: 'c1', depth: 18,  alt: 'Salmon steaks on ice' },
-  { src: mussels, cls: 'c2', depth: -14, alt: 'Black mussels in a terracotta dish' },
-  { src: caviar,  cls: 'c3', depth: 26,  alt: 'Red caviar' }
+  { src: duck,      cls: 'c1', depth: 18,  alt: 'Peking duck' },
+  { src: camembert, cls: 'c2', depth: -14, alt: 'Camembert' },
+  { src: salmon,    cls: 'c3', depth: 26,  alt: 'Salmon steaks on ice' }
 ]
 </script>
 
@@ -67,7 +69,7 @@ const shots = [
       <div class="hero__text">
         <p class="eyebrow eyebrow--inv">{{ t('hero.eyebrow') }}</p>
         <h1 class="display">
-          Freshness<br>
+          Freshness
           <em>{{ t('hero.h1b') }}</em>
         </h1>
         <svg class="hero__ul" viewBox="0 0 420 22" preserveAspectRatio="none" aria-hidden="true">
@@ -119,9 +121,11 @@ const shots = [
 
 .hero h1{ color:var(--paper); }
 .hero h1 em{
-  font-style:italic; font-weight:300; color:var(--leaf-l); display:inline-block;
+  font-style:italic; font-weight:400; color:var(--leaf-l);
+  display:block; font-size:.4em; line-height:1.08;
+  margin-top:.18em; letter-spacing:-.01em;
 }
-.hero__ul{ display:block; width:min(420px,72%); margin:.15em 0 0; overflow:visible; }
+.hero__ul{ display:block; width:min(340px,54%); margin:.35em 0 0; overflow:visible; }
 .hero__ul path{
   fill:none; stroke:var(--acid); stroke-width:5; stroke-linecap:round;
   stroke-dasharray:var(--len,600); stroke-dashoffset:var(--len,600);
