@@ -87,20 +87,21 @@ onUnmounted(() => {
    for reduced motion. */
 .intro{
   position:fixed; inset:0; z-index:5000;
-  background:var(--forest);
+  background:var(--bright);
+  background-image:linear-gradient(168deg, var(--bright) 0%, var(--bright-2) 100%);
   display:flex; align-items:center; justify-content:center;
   cursor:pointer;
 }
 .intro::before{
-  content:''; position:absolute; inset:0; opacity:.14; mix-blend-mode:screen;
+  content:''; position:absolute; inset:0; opacity:.1; pointer-events:none;
   background:
-    repeating-linear-gradient(102deg, transparent 0 46px, rgba(168,199,130,.9) 46px 47px);
+    repeating-linear-gradient(102deg, transparent 0 46px, rgba(23,37,15,.55) 46px 47px);
 }
 .intro__stage{ position:relative; display:flex; flex-direction:column; align-items:center; gap:clamp(18px,2.6vw,34px); }
 .intro__mark{ width:clamp(260px,38vw,440px); height:auto; overflow:visible; }
 
 .intro__ring{
-  fill:none; stroke:rgba(168,199,130,.55); stroke-width:2; stroke-dasharray:9 13;
+  fill:none; stroke:rgba(23,37,15,.38); stroke-width:2; stroke-dasharray:9 13;
   opacity:0; transform-origin:150px 120px;
   transition:opacity .8s var(--ease); animation:introSpin 40s linear infinite;
   animation-play-state:paused;
@@ -109,21 +110,21 @@ onUnmounted(() => {
 @keyframes introSpin{ to{ transform:rotate(360deg); } }
 
 .intro__outline{
-  fill:none; stroke:var(--acid); stroke-width:4.5; stroke-linecap:round; stroke-linejoin:round;
+  fill:none; stroke:var(--forest); stroke-width:4.5; stroke-linecap:round; stroke-linejoin:round;
   stroke-dasharray:var(--len,700); stroke-dashoffset:var(--len,700);
   transition:stroke-dashoffset 1s var(--ease-out);
 }
 .intro.go .intro__outline{ stroke-dashoffset:0; }
 
 .intro__vein{
-  fill:none; stroke:var(--leaf-l); stroke-width:2.5; stroke-linecap:round;
+  fill:none; stroke:rgba(23,37,15,.45); stroke-width:2.5; stroke-linecap:round;
   stroke-dasharray:var(--len,120); stroke-dashoffset:var(--len,120);
   transition:stroke-dashoffset .55s var(--ease-out); transition-delay:.62s;
 }
 .intro.go .intro__vein{ stroke-dashoffset:0; }
 
 .intro__dot{
-  fill:var(--acid); opacity:0; transform:scale(.2); transform-origin:center;
+  fill:var(--forest); opacity:0; transform:scale(.2); transform-origin:center;
   transform-box:fill-box;
   transition:opacity .45s var(--ease-out), transform .55s var(--ease-out);
 }
@@ -133,7 +134,7 @@ onUnmounted(() => {
 .intro__dot:nth-of-type(3){ transition-delay:1.17s; }
 
 .intro__ripples circle{
-  fill:none; stroke:var(--leaf-l); stroke-width:1.5; opacity:0; transform-origin:150px 120px;
+  fill:none; stroke:rgba(23,37,15,.5); stroke-width:1.5; opacity:0; transform-origin:150px 120px;
 }
 .intro.pulse .intro__ripples circle{ animation:introBloom 1.05s var(--ease-out) forwards; }
 .intro.pulse .intro__ripples circle:nth-child(1){ animation-delay:0ms; }
@@ -145,7 +146,7 @@ onUnmounted(() => {
 }
 
 .intro__tag{
-  margin:0; color:var(--paper); opacity:0; transform:translateY(10px);
+  margin:0; color:var(--ink); opacity:0; transform:translateY(10px);
   font-family:var(--display); font-style:italic; font-weight:400;
   font-size:clamp(1.15rem,2.3vw,1.75rem); letter-spacing:.01em;
   transition:opacity .6s var(--ease-out), transform .7s var(--ease-out);

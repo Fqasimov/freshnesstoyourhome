@@ -83,7 +83,7 @@ watch(count, (now, before) => {
 .nav__mark{
   width:40px; height:40px; border-radius:50%; background:var(--paper);
   display:grid; place-items:center; overflow:hidden; flex:none;
-  box-shadow:0 0 0 1px rgba(255,255,255,.2);
+  box-shadow:0 0 0 1px rgba(23,37,15,.12);
   transition:transform .5s var(--ease-out);
 }
 .nav__brand:hover .nav__mark{ transform:rotate(-8deg) scale(1.06); }
@@ -140,11 +140,11 @@ watch(count, (now, before) => {
 .burger i::before,.burger i::after{ content:''; position:absolute; left:0; width:20px; height:1.5px; background:currentColor; transition:.4s var(--ease); }
 .burger i::before{ top:-6px; } .burger i::after{ top:6px; }
 
-/* over-hero (dark) vs scrolled (paper) */
-.nav{ color:var(--paper); }
+/* over the bright hero the nav is ink; once scrolled it sits on paper */
+.nav{ color:var(--ink); }
 .nav.solid{
   color:var(--ink); height:64px;
-  background:rgba(246,243,234,.92);
+  background:rgba(242,247,234,.92);
   backdrop-filter:saturate(1.4) blur(14px);
   -webkit-backdrop-filter:saturate(1.4) blur(14px);
   box-shadow:0 1px 0 var(--line);
