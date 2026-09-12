@@ -314,6 +314,12 @@ export const api = {
       method: 'POST', body: { lines, zone_id, locale: getLang() }, auth: false,
     }),
 
+  registerPushToken: (body: { token: string; platform?: string; device_name?: string }) =>
+    request<{ status: string; id: number }>('push-tokens', { method: 'POST', body }),
+
+  unregisterPushToken: (token: string) =>
+    request<{ status: string }>('push-tokens', { method: 'DELETE', body: { token } }),
+
   orders: () => request<{ data: Order[] }>('orders'),
   order: (id: string) => request<{ data: Order }>(`orders/${id}`),
   placeOrder: (payload: Record<string, unknown>) =>

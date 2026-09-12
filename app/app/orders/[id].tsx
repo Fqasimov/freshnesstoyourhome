@@ -6,6 +6,7 @@ import { api, ApiError, type Order } from '@/lib/api'
 import { t, useLang } from '@/lib/i18n'
 import { money } from '@/lib/money'
 import { AppBar, Body, Button, Loading, Note, Row, Small } from '@/components/ui'
+import { enablePush, hasBeenAsked } from '@/lib/push'
 import { color, font, space } from '@/theme/tokens'
 
 const STEPS = ['placed', 'confirmed', 'preparing', 'out_for_delivery', 'delivered'] as const
@@ -20,6 +21,11 @@ export default function OrderDetail () {
   const [cancelling, setCancelling] = useState(false)
   const [confirming, setConfirming] = useState(false)
 
+  // Shown only on the screen that follows a freshly placed order, and only
+  // once ever. See lib/push.ts for why the ask is not at launch.
+  const [offerPush, setOfferPush] = useState(false)
+  const [enablingPush, setEnablingPush] = useState(false)
+
   const load = useCallback(async () => {
     try {
       const { data } = await api.order(id)
@@ -32,6 +38,23 @@ export default function OrderDetail () {
   }, [id])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    // The moment this is worth asking: the customer has just placed an order
+    // and "tell me when it is on its way" is an offer rather than an
+    // interruption. Asking at launch is how an app gets permanently denied.
+    if (placed === '1') {
+      hasBeenAsked().then(asked => setOfferPush(!asked)).catch(() => {})
+    }
+  }, [placed])
+
+  async function turnOnPush () {
+    setEnablingPush(true)
+    try { await enablePush() } finally {
+      setEnablingPush(false)
+      setOfferPush(false)
+    }
+  }
 
   async function cancel () {
     setCancelling(true)
@@ -67,6 +90,25 @@ export default function OrderDetail () {
       <ScrollView contentContainerStyle={{ padding: space.gutter, paddingBottom: 36 }}>
         {placed === '1' ? (
           <View style={{ marginBottom: 18 }}><Note>✓ {t('status.placed')}</Note></View>
+        ) : null}
+
+        {offerPush ? (
+          <View style={s.pushCard}>
+            <Text style={s.pushTitle}>{t('push.askTitle')}</Text>
+            <Small muted style={{ marginTop: 6 }}>{t('push.askBody')}</Small>
+            <Button
+              title={t('push.enable')}
+              onPress={turnOnPush}
+              busy={enablingPush}
+              style={{ marginTop: 14 }}
+            />
+            <Button
+              title={t('push.notNow')}
+              variant="ghost"
+              onPress={() => setOfferPush(false)}
+              style={{ marginTop: 8 }}
+            />
+          </View>
         ) : null}
 
         {order.status !== 'cancelled' ? (
@@ -153,6 +195,15 @@ export default function OrderDetail () {
 }
 
 const s = StyleSheet.create({
+  pushCard: {
+    backgroundColor: '#fff',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: color.lineSoft,
+    borderRadius: space.radius,
+    padding: 16,
+    marginBottom: 18,
+  },
+  pushTitle: { fontFamily: font.displaySemi, fontSize: 19, color: color.ink },
   track: { flexDirection: 'row', gap: 4, marginBottom: 6 },
   dot: { height: 4, borderRadius: 2, backgroundColor: color.paper3 },
   trackLabel: { fontFamily: font.body, fontSize: 10, lineHeight: 12, color: color.ink3 },

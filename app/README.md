@@ -87,6 +87,18 @@ to buy half a kilo of cheese is a bad screen.
 in a lift. It is never used to price an order — a stale cache costs a corrected
 total, not a wrong bill.
 
+**Push permission is never asked for at launch.** The prompt appears on the
+screen after the customer's first order, where "tell me when it's on its way"
+is an offer rather than an interruption. On iOS a denial is effectively
+permanent — the app cannot ask twice, only send them to Settings — so the one
+chance is spent at the moment the answer is most likely to be yes. The profile
+screen has a switch for turning it off again, and `lib/push.ts` carries the
+detail.
+
+**Notifications need an EAS project id** (`eas init`) in any build that is not
+Expo Go, and an Android channel called `orders` that matches what the server
+sends — without the channel Android files the notification somewhere silent.
+
 **No `<Link asChild>` around a styled Pressable.** It crashes React Native Web
 0.21 on the first tap (`Failed to set an indexed property [0] on
 CSSStyleDeclaration`) and takes the whole screen down. Use `router.push()`.

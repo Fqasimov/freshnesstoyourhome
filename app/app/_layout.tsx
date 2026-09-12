@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Stack } from 'expo-router'
+import { Stack, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from 'expo-font'
@@ -10,6 +10,9 @@ import { AuthProvider } from '@/lib/auth'
 import { CatalogueProvider } from '@/lib/catalogue'
 import { CartProvider } from '@/lib/cart'
 import { loadLang } from '@/lib/i18n'
+import { useAuth } from '@/lib/auth'
+import { refreshPushRegistration } from '@/lib/push'
+import * as Notifications from 'expo-notifications'
 import { color } from '@/theme/tokens'
 
 // Held until the app can actually show something, rather than auto-hiding into
@@ -49,6 +52,7 @@ export default function RootLayout () {
         <AuthProvider>
           <CatalogueProvider>
             <CartProvider>
+              <PushBridge />
               <StatusBar style="light" />
               <Stack
                 screenOptions={{
@@ -69,4 +73,47 @@ export default function RootLayout () {
       </SafeAreaProvider>
     </GestureHandlerRootView>
   )
+}
+
+/**
+ * Connects push notifications to navigation.
+ *
+ * Lives inside the providers because it needs to know whether anyone is signed
+ * in — there is nobody to register a device against otherwise.
+ */
+function PushBridge () {
+  const auth = useAuth()
+  const router = useRouter()
+
+  // Refresh the token whenever a customer is signed in. The OS can reissue one
+  // at any time and a stale token fails silently, so this runs at every launch
+  // rather than only at registration. It never prompts.
+  useEffect(() => {
+    if (auth.signedIn) refreshPushRegistration()
+  }, [auth.signedIn])
+
+  useEffect(() => {
+    // Tapping a notification should land on the order it is about, not on the
+    // home screen leaving the customer to find it.
+    const open = (data: any) => {
+      if (data?.type === 'order' && typeof data.order_id === 'string') {
+        router.push({ pathname: '/orders/[id]', params: { id: data.order_id } })
+      }
+    }
+
+    // The app was closed and the notification is what opened it.
+    Notifications.getLastNotificationResponseAsync()
+      .then(response => {
+        if (response) open(response.notification.request.content.data)
+      })
+      .catch(() => {})
+
+    const sub = Notifications.addNotificationResponseReceivedListener(response => {
+      open(response.notification.request.content.data)
+    })
+
+    return () => sub.remove()
+  }, [router])
+
+  return null
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 
@@ -7,6 +7,7 @@ import { ApiError } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import { LANGS, setLang, t, useLang, type Lang } from '@/lib/i18n'
 import { AppBar, Body, Button, Empty, Field, Note, Small, inputStyle } from '@/components/ui'
+import { disablePush, enablePush, isEnabledOnThisDevice } from '@/lib/push'
 import { color, font, space } from '@/theme/tokens'
 
 export default function Profile () {
@@ -24,10 +25,38 @@ export default function Profile () {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
+  const [pushOn, setPushOn] = useState(false)
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushBlocked, setPushBlocked] = useState(false)
+
   useEffect(() => {
     setName(auth.user?.name ?? '')
     setPhone(auth.user?.phone ?? '')
   }, [auth.user])
+
+  useEffect(() => {
+    isEnabledOnThisDevice().then(setPushOn).catch(() => {})
+  }, [])
+
+  async function togglePush (next: boolean) {
+    setPushBusy(true)
+    setPushBlocked(false)
+
+    try {
+      if (next) {
+        const granted = await enablePush()
+        setPushOn(granted)
+        // Denied at the OS level. iOS will not prompt a second time, so the
+        // only honest thing to say is where the switch actually lives.
+        setPushBlocked(!granted)
+      } else {
+        await disablePush()
+        setPushOn(false)
+      }
+    } finally {
+      setPushBusy(false)
+    }
+  }
 
   async function save () {
     setSaving(true); setSaved(false); setError(null)
@@ -111,6 +140,23 @@ export default function Profile () {
 
         <Button title={saved ? t('profile.saved') : t('profile.save')} onPress={save} busy={saving} />
 
+        <Text style={s.heading}>{t('push.title')}</Text>
+        <View style={s.switchRow}>
+          <Text style={s.switchLabel}>{pushOn ? t('push.on') : t('push.off')}</Text>
+          <Switch
+            value={pushOn}
+            onValueChange={togglePush}
+            disabled={pushBusy}
+            trackColor={{ true: color.leaf, false: color.paper3 }}
+            thumbColor={pushOn ? color.forest : undefined}
+          />
+        </View>
+        {pushBlocked ? (
+          <Pressable onPress={() => Linking.openSettings()} style={{ marginTop: 10 }}>
+            <Note warn>{t('push.blocked')}</Note>
+          </Pressable>
+        ) : null}
+
         <Text style={s.heading}>{t('profile.language')}</Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {LANGS.map((l: Lang) => (
@@ -157,6 +203,19 @@ export default function Profile () {
 }
 
 const s = StyleSheet.create({
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    backgroundColor: '#fff',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: color.lineSoft,
+    borderRadius: space.radius,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+  },
+  switchLabel: { fontFamily: font.body, fontSize: 15, color: color.ink, flex: 1 },
   heading: { fontFamily: font.displaySemi, fontSize: 18, color: color.ink, marginTop: 26, marginBottom: 11 },
   chip: { paddingVertical: 9, paddingHorizontal: 17, borderRadius: 999, backgroundColor: color.paper2 },
   chipText: { fontFamily: font.semi, fontSize: 13, color: color.ink2 },

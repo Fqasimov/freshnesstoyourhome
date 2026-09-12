@@ -5,6 +5,7 @@ import {
 import { Platform } from 'react-native'
 import { api, getToken, setToken, handleSessionExpiry, type User } from './api'
 import { setLang, type Lang } from './i18n'
+import { disablePush } from './push'
 
 type AuthValue = {
   user: User | null
@@ -81,7 +82,12 @@ export function AuthProvider ({ children }: PropsWithChildren) {
   }, [])
 
   const signOut = useCallback(async () => {
-    // Tell the server first, so the token is revoked rather than merely
+    // Stop notifications first. A shared or sold phone must not keep receiving
+    // somebody else's order updates, and after the token is gone we can no
+    // longer authenticate the request that unregisters it.
+    await disablePush()
+
+    // Then tell the server, so the token is revoked rather than merely
     // forgotten — a token dropped from the device still works until it expires.
     try { await api.logout() } catch { /* offline: clear locally anyway */ }
     await setToken(null)
@@ -89,6 +95,7 @@ export function AuthProvider ({ children }: PropsWithChildren) {
   }, [])
 
   const deleteAccount = useCallback(async () => {
+    await disablePush()
     await api.deleteAccount()
     await setToken(null)
     setUser(null)

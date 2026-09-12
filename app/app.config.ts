@@ -26,6 +26,11 @@ const config: ExpoConfig = {
       // saves a compliance question on every single App Store submission.
       ITSAppUsesNonExemptEncryption: false,
     },
+    // Order updates arrive while the app is closed; nothing runs in the
+    // background beyond receiving them.
+    entitlements: {
+      'aps-environment': 'production',
+    },
   },
 
   android: {
@@ -55,6 +60,16 @@ const config: ExpoConfig = {
         imageWidth: 220,
         resizeMode: 'contain',
         backgroundColor: '#3A6A2C',
+      },
+    ],
+    [
+      'expo-notifications',
+      {
+        // Android uses this in the status bar. A white-on-transparent
+        // silhouette is the only thing that renders correctly there — a full
+        // colour logo comes out as a grey square.
+        icon: './assets/notification-icon.png',
+        color: '#3A6A2C',
       },
     ],
     [

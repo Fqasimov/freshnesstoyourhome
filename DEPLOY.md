@@ -24,6 +24,12 @@ personal account. Moving it later is a transfer process with real friction.
   charged in the app anyway.
 - **Browsing without an account** — an app that is a login wall until you
   register is the shape Guideline 4.2 rejects.
+- **Push notifications for order status** — the substantive answer to 4.2's
+  "this should be a website", and the permission is asked for after the first
+  order rather than at launch, which is what reviewers expect to see.
+- **A notification never carries personal data** — order code and status only,
+  because a notification body lands on a locked screen. There is a test holding
+  it to that.
 
 ## Still needed for review
 
@@ -31,9 +37,13 @@ personal account. Moving it later is a transfer process with real friction.
   320×320. Upscaled to the required 1024×1024 it is soft, and a soft icon is a
   visible quality problem on a store listing. Supply the mark at 1024 or larger
   and re-run `app/resources` generation.
-- **Push notifications.** Not built. Order status is the feature customers
-  actually want, and it is also the strongest answer to "why is this not a
-  website" under Guideline 4.2.
+- **An EAS project id for push.** `eas init` once. Notifications work in Expo
+  Go without it but not in a real build, and the failure reads like a network
+  error rather than a missing id.
+- **A push test on a real device** before submission: `php artisan
+  freshness:push-test <email>`. Push never works on a simulator, and Apple's
+  and Google's credentials live with Expo — nothing else tells you they are
+  wrong.
 - **Screenshots** at every required size, for both stores.
 - **A privacy policy on a public URL.** Required by both. It has to match what
   the app really collects: name, email, phone, delivery address, order history.

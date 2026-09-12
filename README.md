@@ -63,7 +63,7 @@ of `backend/storage/logs/laravel.log`.
 ## Tests
 
 ```bash
-cd backend && php artisan test           # 78 tests, 466 assertions
+cd backend && composer test              # 94 tests, 515 assertions
 cd app && npm run typecheck              # tsc --noEmit
 cd app && npm run journey                # the customer journey in a browser
 ```

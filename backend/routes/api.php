@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CatalogueController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\PushTokenController;
 use App\Http\Controllers\Api\StaffOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +64,12 @@ Route::middleware(['auth:sanctum', 'blocked'])->group(function () {
 
     Route::apiResource('addresses', AddressController::class)
         ->only(['index', 'store', 'update', 'destroy']);
+
+    // Order updates by push. Registering is idempotent and called on every
+    // launch, because the OS can reissue a token at any time and a stale one
+    // stops working silently.
+    Route::post('push-tokens', [PushTokenController::class, 'store']);
+    Route::delete('push-tokens', [PushTokenController::class, 'destroy']);
 
     Route::get('orders', [OrderController::class, 'index']);
     Route::get('orders/{id}', [OrderController::class, 'show']);

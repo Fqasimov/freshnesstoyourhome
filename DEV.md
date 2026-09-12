@@ -152,10 +152,28 @@ generated and not committed — `app.config.ts` and `assets/` regenerate them.
 
 ## Tests
 
+> **Never run the suite against a database you care about.** It uses
+> `RefreshDatabase`, which drops every table — pointed at your development
+> database it destroys the catalogue and any orders in it. `composer test`
+> uses an in-memory sqlite database; `composer test:pgsql` uses a separate
+> `freshness_test` database. Neither touches your development data.
+
 ```bash
-cd backend && php artisan test     # 78 tests, 466 assertions
+cd backend && composer test        # 94 tests, 515 assertions (sqlite)
+cd backend && composer test:pgsql  # the same suite against Postgres
 cd app && npm run typecheck        # tsc --noEmit
 cd app && npm run journey          # the full customer journey in a browser
+```
+
+### Push notifications
+
+They cannot be verified from a test suite — a faked HTTP client proves the
+request is well formed, not that a phone buzzes. After a real build, on a real
+device (push never works on a simulator):
+
+```bash
+php artisan freshness:push-test                          # who has a device
+php artisan freshness:push-test dev@freshnesstoyourhome.az
 ```
 
 `npm run journey` exports the app for web and drives it in a real browser. It

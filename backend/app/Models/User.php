@@ -109,6 +109,11 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function pushTokens(): HasMany
+    {
+        return $this->hasMany(PushToken::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
@@ -151,6 +156,7 @@ class User extends Authenticatable
     public function anonymise(): void
     {
         $this->tokens()->delete();
+        $this->pushTokens()->delete();
         $this->addresses()->delete();
 
         foreach ($this->orders()->cursor() as $order) {

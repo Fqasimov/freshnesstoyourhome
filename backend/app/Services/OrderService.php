@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendOrderPush;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\OrderEvent;
@@ -146,6 +147,12 @@ class OrderService
 
             $this->record($fresh, $from, $to, $actor, $note);
 
+            // Dispatched after the transaction commits, never inside it. A job
+            // queued mid-transaction can be picked up by a worker before the
+            // commit lands — and then reads a row that does not exist yet, or
+            // one that a rollback is about to undo.
+            DB::afterCommit(fn () => SendOrderPush::dispatch($fresh->id, $to));
+
             return $fresh;
         });
     }
@@ -224,6 +231,11 @@ class OrderService
                 Money::format($fresh->total_minor),
                 Money::format($fresh->final_total_minor),
             ));
+
+            // The notification that earns the feature: the customer agreed to
+            // an estimate and this is the real figure, reaching them before
+            // somebody knocks expecting payment.
+            DB::afterCommit(fn () => SendOrderPush::dispatch($fresh->id, 'weighed'));
 
             return $fresh->load('items');
         });
