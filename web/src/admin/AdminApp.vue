@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { token, me, loadMe, signOut } from './api'
+import { token, me, loadMe, signOut, DEMO } from './api'
 import { toast } from './toast'
 import SignIn from './views/SignIn.vue'
 import Dashboard from './views/Dashboard.vue'
@@ -75,6 +75,13 @@ onMounted(boot)
   <SignIn v-else-if="!me" @in="onSignedIn" />
 
   <template v-else>
+    <!-- Loud on purpose. Somebody looking at a dashboard full of numbers
+         should never have to wonder whether they are the shop's numbers. -->
+    <div v-if="DEMO" class="a-demo">
+      Nümunə rejimi — bu rəqəmlər uydurmadır və heç nə saxlanmır ·
+      Preview mode — sample data, nothing is saved
+    </div>
+
     <header class="a-top">
       <div class="a-wrap a-top__in">
         <span class="a-brand"><i></i> Freshness</span>

@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "build:single": "vite build --mode single",
+    "build:admin-demo": "VITE_ADMIN_DEMO=1 vite build --mode admin-demo",
     "test:api": "node tests/api-integration.mjs"
   },
   "dependencies": {

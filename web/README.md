@@ -131,6 +131,25 @@ shop does not stay signed in until somebody notices.
 Every edit reaches customers on the next request: the catalogue cache is busted
 by a model hook, not by remembering to call something.
 
+### Looking at it without a server
+
+```bash
+npm run build:admin-demo     # → dist-admin-demo/admin.html
+```
+
+One self-contained file that answers from `src/admin/demo.js` instead of the
+network, so the screens can be clicked through before the API is deployed. Every
+number in it is invented and nothing is saved; a banner across the top says so.
+
+It is a build mode, not a runtime switch. The real build sets no flag, which
+makes the branch in `api.js` dead and lets Rollup drop it and the dynamic import
+with it — the sample data does not ship with the panel the shop uses. Worth
+re-checking after touching `api.js`:
+
+```bash
+grep -l 'Preview has no answer' dist/assets/admin-*.js   # must find nothing
+```
+
 ## Still placeholder content
 
 - the hero text and the "about" text

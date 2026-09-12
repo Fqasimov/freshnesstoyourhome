@@ -1,10 +1,11 @@
 <script setup>
 import { ref, nextTick } from 'vue'
-import { api, signIn, ApiError } from '../api'
+import { api, signIn, ApiError, DEMO } from '../api'
 
 const emit = defineEmits(['in'])
 
-const email = ref('')
+// The preview has no mailbox to send to, so it starts filled in.
+const email = ref(DEMO ? 'siz@freshnesstoyourhome.az' : '')
 const code = ref('')
 const stage = ref('email')
 const busy = ref(false)
@@ -56,6 +57,12 @@ async function verify () {
     <div class="a-signin__box">
       <h1><span class="a-brand"><i></i> Freshness</span></h1>
       <p>İdarə paneli · Admin panel</p>
+
+      <div v-if="DEMO" class="a-note a-note--ok">
+        <b>Nümunə</b> — bu, real mağaza məlumatı deyil. İstənilən e-poçt və
+        istənilən 6 rəqəm ilə daxil ola bilərsiniz.
+        <br><b>Preview</b> — not real shop data. Any address and any six digits will let you in.
+      </div>
 
       <div v-if="error" class="a-note a-note--err">{{ error }}</div>
 

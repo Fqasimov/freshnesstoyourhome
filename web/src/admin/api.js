@@ -16,6 +16,15 @@ import { ref } from 'vue'
 const KEY = 'fth.admin.token'
 const API = import.meta.env.VITE_API_URL ?? ''
 
+/**
+ * Preview builds answer from src/admin/demo.js instead of the network.
+ *
+ * Set only by `npm run build:admin-demo`, so in the panel the shop actually
+ * runs this is `false`, the branch below is dead, and Rollup drops both it and
+ * the dynamic import — the sample data never ships with the real thing.
+ */
+export const DEMO = import.meta.env.VITE_ADMIN_DEMO === '1'
+
 export const token = ref(read())
 export const me = ref(null)
 
@@ -44,6 +53,12 @@ export class ApiError extends Error {
 }
 
 export async function api (path, { method = 'GET', body, auth = true } = {}) {
+  if (DEMO) {
+    const { respond } = await import('./demo.js')
+
+    return respond(path, method, body)
+  }
+
   const headers = { Accept: 'application/json' }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   if (auth && token.value) headers.Authorization = `Bearer ${token.value}`
