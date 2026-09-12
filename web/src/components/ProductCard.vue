@@ -99,7 +99,7 @@ const kg = computed(() => perKg(props.product))
 .card__alt{ font-size:.78rem; color:var(--ink-3); line-height:1.4; }
 .card__foot{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:auto; padding-top:14px; }
 .card__price{ display:flex; flex-direction:column; line-height:1; }
-.card__price b{ font-family:var(--display); font-size:1.42rem; font-weight:600; letter-spacing:-.02em; }
+.card__price b{ font-family:var(--display); font-variant-numeric:lining-nums tabular-nums; font-size:1.42rem; font-weight:600; letter-spacing:-.02em; }
 .card__price b i{ font-style:normal; font-size:.58em; font-weight:500; margin-left:3px; opacity:.62; }
 .card__price span{ font-size:.72rem; color:var(--ink-3); margin-top:6px; letter-spacing:.02em; }
 

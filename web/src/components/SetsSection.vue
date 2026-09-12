@@ -124,7 +124,7 @@ function addSet (set, ev) {
 
 .set__foot{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:auto; padding-top:18px; }
 .set__price{ display:flex; flex-direction:column; line-height:1; }
-.set__price b{ font-family:var(--display); font-size:1.7rem; font-weight:600; letter-spacing:-.022em; }
+.set__price b{ font-family:var(--display); font-variant-numeric:lining-nums tabular-nums; font-size:1.7rem; font-weight:600; letter-spacing:-.022em; }
 .set__price b i{ font-style:normal; font-size:.5em; font-weight:500; margin-left:3px; opacity:.62; }
 .set__price s{ font-size:.76rem; color:var(--ink-3); margin-top:6px; }
 .set__foot .btn{ padding:11px 16px; font-size:.78rem; }

@@ -69,13 +69,19 @@ const shots = [
     <div class="wrap hero__in">
       <div class="hero__text">
         <p class="eyebrow eyebrow--inv">{{ t('hero.eyebrow') }}</p>
-        <h1 class="display">
-          Freshness
-          <em>{{ t('hero.h1b') }}</em>
+        <!--
+          The wordmark, set as one: Freshness large with "to your home" beneath
+          it. Both halves are the brand's own name, so neither is translated
+          and both can use the Latin-only display face.
+        -->
+        <h1 class="hero__mark">
+          <span class="mark__a">Freshness</span>
+          <span class="mark__b">to your home</span>
         </h1>
         <svg class="hero__ul" viewBox="0 0 420 22" preserveAspectRatio="none" aria-hidden="true">
           <path ref="rule" d="M4 15C70 6 138 5 206 9c62 4 124 9 210 2"/>
         </svg>
+        <p class="hero__tag">{{ t('hero.h1b') }}</p>
         <p class="hero__copy">{{ t('hero.copy') }}</p>
         <div class="hero__cta">
           <CatalogueCta />
@@ -122,11 +128,30 @@ const shots = [
 
 .hero__in{ display:grid; grid-template-columns:1.05fr .95fr; gap:clamp(28px,5vw,72px); align-items:center; position:relative; z-index:2; }
 
-.hero h1{ color:var(--paper); }
-.hero h1 em{
-  font-style:italic; font-weight:400; color:var(--leaf-l);
-  display:block; font-size:.4em; line-height:1.08;
-  margin-top:.18em; letter-spacing:-.01em;
+/* The wordmark. Fraunces, with its soft serifs and its WONK axis switched on,
+   is the one face here that looks grown rather than drawn — which is the whole
+   idea. It has no Cyrillic, so it is used only where the text is the brand's
+   own name and can never be translated. */
+.hero__mark{ color:var(--paper); margin:0; line-height:.92; }
+.mark__a{
+  display:block; font-family:var(--wordmark);
+  font-size:clamp(3.1rem,8.6vw,6.6rem); font-weight:600;
+  letter-spacing:-.03em;
+}
+.mark__b{
+  display:block; font-family:var(--wordmark);
+  font-size:clamp(1.02rem,2.5vw,1.9rem); font-weight:400;
+  letter-spacing:.02em; color:var(--leaf-l);
+  margin-top:.34em; padding-left:.16em;
+}
+
+/* The line that says what the shop is, in the visitor's own language — so this
+   one is set in the text face, not the wordmark's. */
+.hero__tag{
+  margin:clamp(18px,2.4vw,28px) 0 0;
+  font-family:var(--display); font-style:italic; font-weight:500;
+  font-size:clamp(1.25rem,2.6vw,1.95rem); line-height:1.15;
+  letter-spacing:-.012em; color:var(--acid);
 }
 .hero__ul{ display:block; width:min(340px,54%); margin:.35em 0 0; overflow:visible; }
 .hero__ul path{
@@ -136,7 +161,7 @@ const shots = [
 }
 .hero.in .hero__ul path{ stroke-dashoffset:0; }
 
-.hero__copy{ margin:clamp(22px,3vw,34px) 0 0; max-width:46ch; color:rgba(246,243,234,.9); font-size:clamp(.98rem,1.2vw,1.1rem); }
+.hero__copy{ margin:clamp(10px,1.4vw,16px) 0 0; max-width:46ch; color:rgba(246,243,234,.9); font-size:clamp(.98rem,1.2vw,1.1rem); }
 
 .hero__cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:clamp(26px,3.4vw,38px); }
 

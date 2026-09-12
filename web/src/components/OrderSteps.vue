@@ -50,7 +50,7 @@ onUnmounted(() => io && io.disconnect())
 .steps__grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(24px,3.4vw,54px); position:relative; margin-top:clamp(30px,4vw,50px); }
 .step{ position:relative; }
 .step b{
-  font-family:var(--display); font-size:clamp(3.4rem,6vw,5.2rem); font-weight:300;
+  font-family:var(--display); font-size:clamp(3rem,5.2vw,4.5rem); font-weight:400;
   line-height:.8; color:#6D9144; letter-spacing:-.04em;
   display:flex; align-items:center; gap:clamp(14px,1.6vw,22px);
 }

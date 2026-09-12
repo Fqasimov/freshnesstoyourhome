@@ -79,7 +79,7 @@ onUnmounted(() => io && io.disconnect())
 
 .stats{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
 .stat{ background:var(--paper-2); padding:clamp(20px,2.6vw,32px); }
-.stat b{ font-family:var(--display); font-size:clamp(2rem,4vw,3.1rem); font-weight:500; letter-spacing:-.03em; line-height:1; display:block; }
+.stat b{ font-family:var(--display); font-variant-numeric:lining-nums tabular-nums; font-size:clamp(2rem,4vw,3.1rem); font-weight:500; letter-spacing:-.03em; line-height:1; display:block; }
 .stat b i{ font-style:normal; font-size:.44em; margin-left:2px; opacity:.55; }
 .stat span{ display:block; margin-top:10px; font-size:.76rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); }
 

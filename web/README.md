@@ -81,6 +81,36 @@ rewrite unknown URLs to index.html, and a deep link would 404 anywhere that is
 not configured for it. Switching is one import in `src/router.js` once there is
 hosting that rewrites.
 
+## Type
+
+| | |
+|---|---|
+| **Vollkorn** | every heading, and the ticker | 
+| **Onest** | body text, buttons, labels |
+| **Fraunces** | the wordmark, and nothing else |
+
+The constraint that decides this is not taste, it is coverage: the site runs in
+Azerbaijani, Russian and English, so any face carrying translated text has to
+have both the schwa (ə, Ə) and Cyrillic. That was checked against the actual
+glyph tables rather than assumed — Manrope has no Ə, Golos Text has neither,
+and **Fraunces has no Cyrillic at all**, which is why it is confined to the
+brand's own name, where the text is "Freshness to your home" in every language
+and can never become something else. Its `<link>` carries `&text=`, so Google
+returns those thirteen letters and nothing else: 4 KB instead of 90, and any
+other character falls straight through to the next font in the stack.
+
+Vollkorn — the name means "wholegrain" — is the warm, slightly rough bookface
+doing the actual work. Two things had to follow it:
+
+- **The scale came down.** Its x-height is about half its em where Cormorant's
+  was closer to a third, so the same `font-size` renders roughly a quarter
+  larger to the eye. Every display size shrank, the weight went 600 → 500, and
+  the leading opened from `.94`, which had been set for letters that barely
+  reached it.
+- **Lining figures, everywhere.** Vollkorn defaults to oldstyle numerals, so
+  "1 gün" rendered as "I gün" and opening hours came out looking like IO:OO.
+  Opening hours and prices are the last place to be charming about numerals.
+
 ## Goods sold by weight
 
 Most of this catalogue is sold by the kilo, and a kilo is never exactly a kilo.

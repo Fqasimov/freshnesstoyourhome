@@ -1,8 +1,9 @@
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n, lang, LANGS } from '../composables/useI18n'
 import { useCart } from '../composables/useCart'
+import { SETS } from '../data/catalogue'
 import mark from '../assets/logo-mark.png'
 
 const { t } = useI18n()
@@ -20,12 +21,15 @@ defineExpose({ cartBtn })
    catalogue. The catalogue itself is not in this list: it is a page, not a
    section, and it sits in the toolbar as a button so it reads as somewhere to
    go rather than as the first of five words. */
-const links = [
-  { to: { path: '/', hash: '#sets' }, key: 'nav.sets' },
+/* Aksiyalar drops out when no set is switched on. Every bundle ships inactive,
+   so without this the menu offers a link to a section the page does not
+   render — which reads as a broken site rather than as an empty promotion. */
+const links = computed(() => [
+  ...(SETS.length ? [{ to: { path: '/', hash: '#sets' }, key: 'nav.sets' }] : []),
   { to: { path: '/', hash: '#week' }, key: 'nav.week' },
   { to: { path: '/', hash: '#story' }, key: 'nav.story' },
   { to: { path: '/', hash: '#contact' }, key: 'nav.contact' },
-]
+])
 
 const route = useRoute()
 
@@ -60,7 +64,7 @@ watch(count, (now, before) => {
         <span class="nav__mark"><img :src="mark" alt="Freshness To Your Home"></span>
         <span class="nav__name">
           <b>Freshness</b>
-          <span>To Your Home</span>
+          <span>to your home</span>
         </span>
       </RouterLink>
 
@@ -135,8 +139,11 @@ watch(count, (now, before) => {
 .nav__brand:hover .nav__mark{ transform:rotate(-8deg) scale(1.06); }
 .nav__mark img{ width:100%; height:100%; object-fit:contain; padding:2px; }
 .nav__name{ display:flex; flex-direction:column; line-height:1; }
-.nav__name b{ font-family:var(--display); font-size:1.05rem; font-weight:500; letter-spacing:-.01em; white-space:nowrap; }
-.nav__name span{ font-size:.58rem; letter-spacing:.2em; text-transform:uppercase; opacity:.7; margin-top:4px; white-space:nowrap; }
+/* The same lockup as the hero, shrunk: the name large, "to your home" small
+   underneath it. Lower case rather than the letter-spaced capitals it used to
+   be — the mark is a phrase, and capitals turned it into a label. */
+.nav__name b{ font-family:var(--wordmark); font-size:1.16rem; font-weight:600; letter-spacing:-.022em; white-space:nowrap; }
+.nav__name span{ font-family:var(--wordmark); font-size:.64rem; letter-spacing:.01em; opacity:.72; margin-top:3px; white-space:nowrap; }
 
 .nav__links{ display:flex; gap:clamp(14px,1.8vw,30px); }
 .nav__links a{

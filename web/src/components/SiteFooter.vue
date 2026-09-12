@@ -1,5 +1,6 @@
 <script setup>
-import { CONTACT } from '../data/catalogue'
+import { computed } from 'vue'
+import { CONTACT, SETS } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
 import CatalogueCta from './CatalogueCta.vue'
 import logo from '../assets/logo.png'
@@ -10,12 +11,13 @@ const year = new Date().getFullYear()
    plain href="#sets" replaces the whole route with "sets", matches nothing
    and lands the visitor back at the top of the home page — these five links
    had all stopped working when the catalogue moved to its own page. */
-const links = [
-  [{ path: '/', hash: '#sets' }, 'nav.sets'],
+const links = computed(() => [
+  // Same reason as the header: no active set, no link to one.
+  ...(SETS.length ? [[{ path: '/', hash: '#sets' }, 'nav.sets']] : []),
   [{ path: '/', hash: '#week' }, 'nav.week'],
   [{ path: '/', hash: '#story' }, 'nav.story'],
   [{ path: '/', hash: '#order' }, 'nav.how'],
-]
+])
 </script>
 
 <template>
@@ -26,7 +28,7 @@ const links = [
           <img :src="logo" alt="">
           <div>
             <b>Freshness</b>
-            <span>To Your Home</span>
+            <span>to your home</span>
           </div>
         </div>
         <nav class="foot__nav">
@@ -54,8 +56,8 @@ const links = [
 .foot__top{ display:flex; justify-content:space-between; gap:32px; flex-wrap:wrap; align-items:flex-start; padding-bottom:32px; border-bottom:1px solid var(--line-inv); }
 .foot__brand{ display:flex; align-items:center; gap:14px; }
 .foot__brand img{ width:56px; height:56px; border-radius:50%; }
-.foot__brand b{ font-family:var(--display); color:var(--paper); font-size:1.3rem; font-weight:500; display:block; letter-spacing:-.012em; }
-.foot__brand span{ font-size:.7rem; letter-spacing:.2em; text-transform:uppercase; }
+.foot__brand b{ font-family:var(--wordmark); color:var(--paper); font-size:1.5rem; font-weight:600; display:block; letter-spacing:-.024em; }
+.foot__brand span{ font-family:var(--wordmark); font-size:.82rem; letter-spacing:.01em; }
 .foot__nav{ display:flex; gap:clamp(18px,3vw,44px); flex-wrap:wrap; font-size:.86rem; }
 .foot__nav a:hover{ color:var(--paper); }
 .foot__bot{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; padding-top:24px; font-size:.76rem; }

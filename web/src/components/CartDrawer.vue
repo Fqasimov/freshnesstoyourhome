@@ -113,7 +113,7 @@ const countLabel = computed(() =>
 .drawer__foot{ border-top:1px solid var(--line); padding:20px var(--dpad,24px) 24px; background:var(--paper-2); }
 .total{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px; }
 .total span{ font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); }
-.total b{ font-family:var(--display); font-size:1.9rem; font-weight:600; letter-spacing:-.028em; }
+.total b{ font-family:var(--display); font-variant-numeric:lining-nums tabular-nums; font-size:1.9rem; font-weight:600; letter-spacing:-.028em; }
 .total b i{ font-style:normal; font-size:.5em; opacity:.6; margin-left:3px; }
 .drawer__note{ font-size:.74rem; color:var(--ink-3); margin:0 0 16px; line-height:1.5; }
 .drawer__foot .btn{ width:100%; justify-content:center; }
