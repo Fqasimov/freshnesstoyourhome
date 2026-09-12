@@ -1,38 +1,45 @@
 {
   "name": "freshness-app",
   "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "description": "Freshness To Your Home \u2014 customer app for iOS and Android",
-  "scripts": {
-    "dev": "vite --host",
-    "build": "vite build",
-    "preview": "vite preview",
-    "sync": "npm run build && cap sync",
-    "ios": "npm run build && cap sync ios && cap open ios",
-    "android": "npm run build && cap sync android && cap open android",
-    "journey": "node tests/journey.mjs"
-  },
+  "main": "expo-router/entry",
   "dependencies": {
-    "@aparajita/capacitor-secure-storage": "^7.0.1",
-    "@capacitor/android": "^7.0.0",
-    "@capacitor/app": "^7.0.0",
-    "@capacitor/core": "^7.0.0",
-    "@capacitor/haptics": "^7.0.0",
-    "@capacitor/ios": "^7.0.0",
-    "@capacitor/keyboard": "^7.0.0",
-    "@capacitor/network": "^7.0.0",
-    "@capacitor/preferences": "^7.0.0",
-    "@capacitor/splash-screen": "^7.0.0",
-    "@capacitor/status-bar": "^7.0.0",
-    "pinia": "^2.3.0",
-    "vue": "^3.5.42",
-    "vue-router": "^4.5.0"
+    "@expo/metro-runtime": "~57.0.15",
+    "@expo/vector-icons": "^15.1.1",
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "expo": "~57.0.22",
+    "expo-constants": "~57.0.18",
+    "expo-font": "~57.0.4",
+    "expo-haptics": "~57.0.3",
+    "expo-image": "~57.0.5",
+    "expo-linking": "~57.0.10",
+    "expo-router": "~57.0.21",
+    "expo-secure-store": "~57.0.4",
+    "expo-splash-screen": "~57.0.9",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-dom": "^19.2.3",
+    "react-native": "0.86.3",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "^4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-web": "^0.21.2"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.0.0",
-    "@vitejs/plugin-vue": "^5.2.4",
+    "@types/react": "~19.2.2",
+    "babel-preset-expo": "^57.0.11",
     "playwright": "^1.63.0",
-    "vite": "^6.4.3"
-  }
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "export:web": "expo export --platform web",
+    "journey": "expo export --platform web && node tests/journey.mjs",
+    "journey:only": "node tests/journey.mjs"
+  },
+  "private": true
 }

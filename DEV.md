@@ -1,9 +1,10 @@
 # Running it on your phone
 
-**This app is Vue 3 + Capacitor, not Expo.** There is no Metro bundler and no
-React Native runtime, so Expo Go cannot open it and a QR from Expo will not
-work. The equivalent — open it on your phone in seconds, no build, live reload
-— is the Vite dev server over your wifi. That is step 3 below.
+The app is **Expo + React Native**, so Expo Go works: `npx expo start`, scan the
+QR, done. No build, live reload, and the same pipeline (EAS) that already ships
+Nata Laundry.
+
+Three things have to line up, and the third is the one that catches people.
 
 ## 1. The API
 
@@ -72,42 +73,46 @@ holds it to that.
 cd app
 cp .env.example .env
 npm install
-npm run dev
+npx expo start
 ```
 
-Vite prints two addresses:
+Scan the QR with **Expo Go** (App Store / Play Store). Same wifi, no cable,
+live reload on save.
+
+### The thing that catches everyone
+
+`EXPO_PUBLIC_API_URL` must be your machine's **LAN address**, not `localhost`.
+On the phone, `localhost` means *the phone*, so the app will look for an API
+that is not there and every screen will sit empty.
+
+Expo prints the address when it starts:
 
 ```
-  ➜  Local:   http://localhost:5174/
-  ➜  Network: http://192.168.1.14:5174/     ← this one
+› Metro waiting on exp://192.168.1.14:8081
 ```
 
-Put that **Network** address in `.env` as the API host too, using the same IP:
+Take that IP and put it in `app/.env`:
 
 ```
-VITE_API_URL=http://192.168.1.14:8000
+EXPO_PUBLIC_API_URL=http://192.168.1.14:8000
 ```
 
-Restart `npm run dev` after changing it — Vite bakes the value in at build
-time. Then open the Network URL in Safari or Chrome on your phone. Same wifi,
-no cable, live reload on save.
+Then restart `npx expo start` — the value is inlined at bundle time, so an
+edit without a restart changes nothing.
 
-On iOS, Share → **Add to Home Screen** gets you a full-screen icon that behaves
-almost exactly like the built app.
+Two things already handled for you: the API binds to `0.0.0.0` (step 1) so it
+is reachable off-machine, and CORS accepts private LAN origins outside
+production. Production keeps the strict exact-match list.
 
-Two things that will bite you here and are already handled: the API binds to
-`0.0.0.0` (step 1) so it is reachable off-machine, and CORS accepts private
-LAN origins outside production — a phone's origin is `http://192.168.x.x:5174`,
-which no fixed list could predict. Production keeps the strict exact-match
-list.
+### What Expo Go cannot tell you
 
-### Signing in on the web
+Expo Go bundles **its own** native modules, not yours. Things that work there
+can still break in a real build — native config, permissions, push. Before you
+believe anything about native behaviour, do a preview build:
 
-The token is deliberately held in memory only on the web, never in
-`localStorage` — the secure-storage plugin falls back to `localStorage` in a
-browser and that is the thing it exists to avoid. **So a page reload signs you
-out.** That is correct behaviour, not a bug: on the real iOS and Android builds
-the token goes to the platform keychain and the session persists properly.
+```bash
+npx eas build --profile preview --platform android
+```
 
 ## 4. The real native apps
 
@@ -115,20 +120,23 @@ When you want the actual iOS/Android builds:
 
 ```bash
 cd app
-npx cap add ios          # once; needs macOS and Xcode
-npx cap add android      # once; needs Android Studio
-npm run ios              # or: npm run android
+npx eas login
+npx eas init                                          # once, links the project
+npx eas build --profile production --platform all
+npx eas submit --profile production --platform ios
 ```
 
-`ios/` and `android/` are generated and not committed —
-`capacitor.config.json` and `resources/` regenerate them.
+EAS builds iOS in the cloud, so no Mac is needed. `ios/` and `android/` are
+generated and not committed — `app.config.ts` and `assets/` regenerate them.
 
 ## Tests
 
 ```bash
 cd backend && php artisan test     # 78 tests, 466 assertions
+cd app && npm run typecheck        # tsc --noEmit
 cd app && npm run journey          # the full customer journey in a browser
 ```
 
-`npm run journey` needs the API running with `MAIL_MAILER=log` and the built
-app served on :8080.
+`npm run journey` exports the app for web and drives it in a real browser. It
+needs the API running with `MAIL_MAILER=log`, and the export served on :8090 —
+the header of `app/tests/journey.mjs` has the exact commands.

@@ -4,7 +4,7 @@ Premium food delivery in Baku — website, customer app, and the API behind both
 
 ```
 web/       The public website (Vue 3 + Vite). Browsing and the catalogue.
-app/       The customer app (Vue 3 + Capacitor) for iOS and Android.
+app/       The customer app (Expo + React Native) for iOS and Android.
 backend/   The API (Laravel 13 + Postgres). Auth, catalogue, orders.
 ```
 
@@ -53,8 +53,8 @@ cd web && npm install && npm run dev
 
 # App
 cd app && npm install
-cp .env.example .env                     # point VITE_API_URL at the API
-npm run dev
+cp .env.example .env                     # point EXPO_PUBLIC_API_URL at the API
+npx expo start                           # scan the QR with Expo Go
 ```
 
 For sign-in codes in development, set `MAIL_MAILER=log` and read the code out
@@ -63,7 +63,8 @@ of `backend/storage/logs/laravel.log`.
 ## Tests
 
 ```bash
-cd backend && php artisan test           # 72 tests, 444 assertions
+cd backend && php artisan test           # 78 tests, 466 assertions
+cd app && npm run typecheck              # tsc --noEmit
 cd app && npm run journey                # the customer journey in a browser
 ```
 
@@ -83,15 +84,15 @@ only, a public endpoint answering in the wrong language, and a token landing in
 
 ```bash
 cd app
-npm run build
-npx cap add ios          # once; needs macOS and Xcode
-npx cap add android      # once; needs Android Studio
-npm run ios              # build, sync, open Xcode
-npm run android          # build, sync, open Android Studio
+npx eas build --profile preview --platform all       # internal testers
+npx eas build --profile production --platform all    # the stores
+npx eas submit --profile production --platform ios
 ```
 
-The native projects are generated and not committed. `capacitor.config.json`
-and `app/resources/` are what regenerate them.
+EAS builds iOS in the cloud, so a Mac is not required. `eas.json` holds the
+development / preview / production profiles and the API URL each points at.
+`ios/` and `android/` are generated and not committed — `app.config.ts` and
+`app/assets/` regenerate them.
 
 ## Before this goes to a store
 
