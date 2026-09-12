@@ -20,6 +20,9 @@ const kg = computed(() => perKg(props.product))
       <img :src="product.img" :alt="nm(product)" loading="lazy" decoding="async">
       <div class="card__flags">
         <span v-if="kg" class="flag flag--kg">{{ money(kg) }} AZN{{ t('ui.perkg') }}</span>
+        <!-- Sold by weight: the price shown is for the stated amount, and the
+             courier's scales decide the final figure. -->
+        <span v-else-if="product.weighed" class="flag flag--kg">{{ t('ui.weighedFlag') }}</span>
       </div>
       <div class="card__peek">
         <button type="button" @click="emit('peek', product)">{{ t('ui.quick') }}</button>

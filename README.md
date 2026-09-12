@@ -21,6 +21,10 @@ salmon would have needed an App Store review. Products, categories, zones and
 all three translations are rows now. `backend/database/data/catalogue.json` is
 the reviewable seed source; the database is the authority.
 
+Both clients read it from the same public endpoint. The website keeps a bundled
+copy as an offline fallback and says so in `web/README.md`, but it is a
+fallback — not a second source of truth.
+
 **The client never decides what anything costs.** A request says which product
 and how many. The server prices it from its own tables. Every app bundle is on
 a customer's own phone and can be modified, so any total that arrives from a
@@ -66,6 +70,7 @@ of `backend/storage/logs/laravel.log`.
 cd backend && composer test              # 94 tests, 515 assertions
 cd app && npm run typecheck              # tsc --noEmit
 cd app && npm run journey                # the customer journey in a browser
+cd web && npm run test:api               # the site against a real API
 ```
 
 The backend suite runs on sqlite by default and is also green against Postgres.

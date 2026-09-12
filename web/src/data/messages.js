@@ -72,6 +72,7 @@ export const I18N = {
     'ui.remove':'Sil','ui.perkg':'/kq','ui.add':'Səbətə at',
     'ui.unit':'Vahid','ui.category':'Bölmə','ui.price':'Qiymət','ui.perkgfull':'1 kq-a görə qiymət',
     'ui.waIntro':'Salam! Freshness To Your Home-dan sifariş vermək istəyirəm:',
+    'ui.waWeighed':'ən çox','ui.weighedFlag':'Çəkiyə görə','ui.weighedNote':'Çəkiyə görə satılan məhsullar kuryerdə ölçülür — yekun məbləğ bir az dəyişə bilər.',
     'ui.waTotal':'Təxmini məbləğ','ui.waOutro':'Zəhmət olmasa mövcudluğu və çatdırılma vaxtını təsdiqləyin. Təşəkkürlər!',
     'ui.waPlain':'Salam! Məhsullarınız barədə sualım var.'
   },
@@ -148,6 +149,7 @@ export const I18N = {
     'ui.remove':'Удалить','ui.perkg':'/кг','ui.add':'В корзину',
     'ui.unit':'Единица','ui.category':'Раздел','ui.price':'Цена','ui.perkgfull':'Цена за 1 кг',
     'ui.waIntro':'Здравствуйте! Хочу оформить заказ в Freshness To Your Home:',
+    'ui.waWeighed':'не более','ui.weighedFlag':'На вес','ui.weighedNote':'Товары на вес взвешиваются курьером — итоговая сумма может немного отличаться.',
     'ui.waTotal':'Примерная сумма','ui.waOutro':'Пожалуйста, подтвердите наличие и время доставки. Спасибо!',
     'ui.waPlain':'Здравствуйте! У меня вопрос по вашим товарам.'
   },
@@ -224,6 +226,7 @@ export const I18N = {
     'ui.remove':'Remove','ui.perkg':'/kg','ui.add':'Add to basket',
     'ui.unit':'Unit','ui.category':'Counter','ui.price':'Price','ui.perkgfull':'Price per kg',
     'ui.waIntro':'Hello! I would like to order from Freshness To Your Home:',
+    'ui.waWeighed':'at most','ui.weighedFlag':'By weight','ui.weighedNote':'Anything sold by weight is measured by the courier — the final amount may vary slightly.',
     'ui.waTotal':'Estimated total','ui.waOutro':'Please confirm availability and delivery time. Thank you!',
     'ui.waPlain':'Hello! I have a question about your products.'
   }

@@ -5,7 +5,7 @@ import { useI18n } from '../composables/useI18n'
 import { useCart } from '../composables/useCart'
 
 const { t, nm } = useI18n()
-const { lines, count, total, open, setQty, remove, whatsapp } = useCart()
+const { lines, count, total, open, setQty, remove, whatsapp, weighed, ceiling } = useCart()
 
 const countLabel = computed(() =>
   `${count.value} ${count.value === 1 ? t('ui.item') : t('ui.items')}`)
@@ -55,6 +55,15 @@ const countLabel = computed(() =>
         <span>{{ t('cart.sub') }}</span>
         <b>{{ money(total) }}<i>AZN</i></b>
       </div>
+
+      <!-- Goods sold by the kilo are weighed by the courier, so the figure
+           above is an estimate. Saying so here, rather than at the door, is
+           the whole difference between an expectation and an argument. -->
+      <p v-if="weighed && ceiling" class="drawer__weighed">
+        {{ t('ui.weighedNote') }}
+        <b>{{ t('ui.waWeighed') }} {{ money(ceiling) }} AZN</b>
+      </p>
+
       <p class="drawer__note">{{ t('cart.note') }}</p>
       <a class="btn btn--brick" :href="whatsapp" target="_blank" rel="noopener">
         <span>{{ t('cart.send') }}</span>
@@ -74,6 +83,15 @@ const countLabel = computed(() =>
   box-shadow:-20px 0 60px rgba(0,0,0,.2);
 }
 .drawer.on{ transform:none; }
+.drawer__weighed{
+  margin:12px 0 0;
+  padding:10px 12px;
+  background:var(--paper-2);
+  border-left:3px solid var(--leaf);
+  border-radius:2px;
+  font-size:.82rem; line-height:1.5; color:var(--ink-2);
+}
+.drawer__weighed b{ display:block; margin-top:3px; color:var(--ink); }
 .drawer__head{ display:flex; align-items:center; justify-content:space-between; padding:22px var(--dpad,24px); border-bottom:1px solid var(--line); }
 .drawer__head h3{ font-family:var(--display); font-size:1.34rem; font-weight:500; margin:0; letter-spacing:-.014em; }
 .drawer__head small{ display:block; font-family:var(--sans); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-top:4px; }

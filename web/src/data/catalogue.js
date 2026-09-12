@@ -1,5 +1,20 @@
-/* Freshness To Your Home — catalogue data
-   Prices in AZN, transcribed from the 2025 poster catalogue (boards 1–9 of 15). */
+/* Freshness To Your Home — catalogue
+   ------------------------------------------------------------------
+   The data below is a FALLBACK, not the source of truth. Prices, names and
+   availability live in the database and arrive from /api/catalogue, the same
+   public endpoint the mobile app uses — so changing a price is a row update
+   rather than a redeploy of this site.
+
+   The bundled copy is what renders on first paint and what the page falls back
+   to when the API cannot be reached, so a customer never meets an empty shop.
+   It was correct when it was written; treat any disagreement with the API as
+   the API being right.
+
+   PRODUCTS and CATEGORIES are reactive arrays mutated in place, so every
+   component that already imports them updates when the real catalogue lands
+   without any of them needing to know where it came from. */
+
+import { reactive, ref } from 'vue'
 
 export const CONTACT = {
   phone: '+994503521919',
@@ -9,7 +24,7 @@ export const CONTACT = {
   city: { en: 'Baku, Azerbaijan', az: 'Bakı, Azərbaycan' }
 };
 
-export const CATEGORIES = [
+export const CATEGORIES = reactive([
   { id: 'all',      en: 'Everything',      az: 'Hamısı', ru: 'Всё',            kicker: '54' },
   { id: 'smoked',   en: 'Smoked Fish',     az: 'Hisə verilmiş', ru: 'Копчёности',     kicker: '06' },
   { id: 'fresh',    en: 'Fresh Fish',      az: 'Təzə balıqlar', ru: 'Свежая рыба',     kicker: '06' },
@@ -17,10 +32,10 @@ export const CATEGORIES = [
   { id: 'poultry',  en: 'Poultry & Meat',  az: 'Toyuq və ət', ru: 'Мясо и птица',       kicker: '06' },
   { id: 'cheese',   en: 'Cheese & Dairy',  az: 'Pendir və süd', ru: 'Сыры и молочное',     kicker: '12' },
   { id: 'pantry',   en: 'Pastry & Pantry', az: 'Xəmir və şirniyyat', ru: 'Выпечка и сладости',kicker: '06' }
-];
+]);
 
 /* unit.qty is in the unit's base measure; unit.kind drives the per-kg badge */
-export const PRODUCTS = [
+export const PRODUCTS = reactive([
   /* ── SMOKED FISH ───────────────────────────────────────────── */
   { id:'smoked-salmon', cat:'smoked', price:65, unit:{en:'1 kg',az:'1 kg',ru:'1 кг',kind:'kg',qty:1},
     en:'Smoked Salmon', az:'Hisə verilmiş qızıl balıq', ru:'Лосось холодного копчения', popular:true,
@@ -303,7 +318,7 @@ export const PRODUCTS = [
     den:'Japanese strawberry KitKat — pink, fruity, individually wrapped.',
     daz:'Yapon çiyələkli KitKat — ayrı-ayrı bükülmüş.',
     dru:'Японский клубничный KitKat — розовый, фруктовый, в индивидуальной упаковке.' }
-];
+]);
 
 /* Vite resolves every product photo at build time, so each one gets a
    hashed, cache-busted URL and a missing file fails the build instead of
@@ -344,7 +359,14 @@ export const SETS = [
 ]
 
 /* Money, rounded to the cent and printed without trailing zeroes. */
-export const money = n => (Math.round(n * 100) / 100).toString()
+/* A whole number stays clean — the price list reads like a poster, not a
+   receipt — but anything with qəpik in it gets both digits. "71.5 AZN" looks
+   like a typo, and this figure ends up in the message a customer sends the
+   shop. */
+export const money = n => {
+  const rounded = Math.round(n * 100) / 100
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2)
+}
 
 /* A per-kilo reference price, but only where it tells the customer
    something — a 400 gr tin is worth comparing, a single fish is not. */
@@ -361,4 +383,103 @@ export function perKg (p) {
   if (u.kind === 'g') return p.price / (u.qty / 1000)
   if (u.kind === 'kg' && u.qty !== 1) return p.price / u.qty
   return null
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   The real catalogue
+   ───────────────────────────────────────────────────────────────────────── */
+
+/** True while the page is showing the bundled copy rather than live data. */
+export const catalogueStale = ref(true)
+
+const API = import.meta.env.VITE_API_URL
+
+/**
+ * Translate the API's shape into the one this site already speaks.
+ *
+ * Deliberately an adapter rather than a rewrite of every component: the site
+ * was built against this shape, it reads well, and the only thing that had to
+ * change is where the numbers come from.
+ *
+ * Money arrives in qəpik as an integer — which is how it is stored, computed
+ * and charged. It is divided here only to be displayed; nothing on this page
+ * adds prices up any more.
+ */
+function adaptProduct (p) {
+  return {
+    id: p.id,
+    cat: p.category_id,
+    price: p.price_minor / 100,
+    priceMinor: p.price_minor,
+    unit: {
+      en: p.unit_label?.en ?? '',
+      az: p.unit_label?.az ?? '',
+      ru: p.unit_label?.ru ?? '',
+      kind: p.unit_kind,
+      qty: Number(p.unit_qty) || 1,
+    },
+    en: p.name?.en ?? p.id,
+    az: p.name?.az ?? p.name?.en ?? p.id,
+    ru: p.name?.ru ?? p.name?.en ?? p.id,
+    popular: Boolean(p.is_popular),
+    weighed: Boolean(p.is_weight_based),
+    den: p.description?.en ?? '',
+    daz: p.description?.az ?? '',
+    dru: p.description?.ru ?? '',
+    img: PHOTOS[`../assets/products/${p.image ?? p.id + '.jpg'}`] ?? null,
+  }
+}
+
+/** The API has no "everything" row and no counts; the page wants both. */
+function adaptCategories (apiCategories, products) {
+  const count = id => products.filter(p => p.cat === id).length
+  const pad = n => String(n).padStart(2, '0')
+
+  return [
+    { id: 'all', en: 'Everything', az: 'Hamısı', ru: 'Всё', kicker: pad(products.length) },
+    ...apiCategories.map(c => ({
+      id: c.id,
+      en: c.name?.en ?? c.id,
+      az: c.name?.az ?? c.name?.en ?? c.id,
+      ru: c.name?.ru ?? c.name?.en ?? c.id,
+      kicker: pad(count(c.id)),
+    })),
+  ]
+}
+
+/**
+ * Fetch the live catalogue and swap it in.
+ *
+ * Never throws and never blocks the page: if the API is unreachable the
+ * bundled copy stays on screen and `catalogueStale` stays true. A shop that
+ * shows yesterday's prices is worth more than a shop that shows nothing —
+ * which is also why nothing here awaits before the first paint.
+ */
+export async function loadCatalogue () {
+  if (!API) {
+    // No API configured — a plain static build of the marketing site. The
+    // bundled catalogue is all there is, and that is a valid way to deploy it.
+    return
+  }
+
+  try {
+    const response = await fetch(`${API}/api/catalogue`, {
+      headers: { Accept: 'application/json' },
+    })
+    if (!response.ok) return
+
+    const data = await response.json()
+    if (!Array.isArray(data.products) || data.products.length === 0) return
+
+    const products = data.products.map(adaptProduct)
+
+    // Mutated in place, so every component already holding a reference to
+    // these arrays re-renders without being told.
+    PRODUCTS.splice(0, PRODUCTS.length, ...products)
+    CATEGORIES.splice(0, CATEGORIES.length, ...adaptCategories(data.categories ?? [], products))
+
+    catalogueStale.value = false
+  } catch {
+    // Offline, blocked, or CORS. The bundled copy stands.
+  }
 }
