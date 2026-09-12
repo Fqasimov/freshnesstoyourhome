@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n, lang, LANGS } from '../composables/useI18n'
 import { useCart } from '../composables/useCart'
 import mark from '../assets/logo-mark.png'
@@ -14,14 +15,33 @@ const popped = ref(false)
 
 defineExpose({ cartBtn })
 
+/* The catalogue is its own page now; everything else is a section of the home
+   page, so each carries the route as well as the anchor — otherwise these
+   links do nothing when the customer is already on the catalogue. */
 const links = [
-  ['#catalogue', 'nav.shop'], ['#sets', 'nav.sets'], ['#week', 'nav.week'],
-  ['#story', 'nav.story'], ['#contact', 'nav.contact']
+  { to: { name: 'catalogue' }, key: 'nav.catalogue' },
+  { to: { path: '/', hash: '#sets' }, key: 'nav.sets' },
+  { to: { path: '/', hash: '#week' }, key: 'nav.week' },
+  { to: { path: '/', hash: '#story' }, key: 'nav.story' },
+  { to: { path: '/', hash: '#contact' }, key: 'nav.contact' },
 ]
 
-const onScroll = () => { solid.value = window.scrollY > window.innerHeight * 0.72 }
+const route = useRoute()
+
+/* The transparent header is for the home page, where it sits over a dark hero
+   photograph. Every other page starts at the paper background, so the nav has
+   to be solid from the first pixel or its light text is invisible on cream. */
+const overHero = () => route.name === 'home'
+
+const onScroll = () => {
+  solid.value = !overHero() || window.scrollY > window.innerHeight * 0.72
+}
 onMounted(() => { window.addEventListener('scroll', onScroll, { passive: true }); onScroll() })
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+/* Re-evaluate on navigation: leaving the home page must make it solid even
+   though no scroll event fires. */
+watch(() => route.name, onScroll)
 
 /* Nudge the badge whenever the basket grows. */
 watch(count, (now, before) => {
@@ -35,16 +55,16 @@ watch(count, (now, before) => {
 <template>
   <header class="nav" :class="{ solid }">
     <div class="nav__in">
-      <a href="#top" class="nav__brand">
+      <RouterLink to="/" class="nav__brand">
         <span class="nav__mark"><img :src="mark" alt="Freshness To Your Home"></span>
         <span class="nav__name">
           <b>Freshness</b>
           <span>To Your Home</span>
         </span>
-      </a>
+      </RouterLink>
 
       <nav class="nav__links" :class="{ open: menu }">
-        <a v-for="[href, key] in links" :key="href" :href="href" @click="menu = false">{{ t(key) }}</a>
+        <RouterLink v-for="l in links" :key="l.key" :to="l.to" @click="menu = false">{{ t(l.key) }}</RouterLink>
       </nav>
 
       <div class="nav__tools">

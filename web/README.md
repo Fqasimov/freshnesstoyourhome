@@ -39,30 +39,33 @@ Bundles are excluded from the quote: they are a website-only construct whose
 discount the business has not confirmed, and the API deliberately has no opinion
 about them.
 
-## How the catalogue is laid out
-
-Six **counters**, not one grid. Each is a horizontal rail carrying one
-category's goods, with a number, a line saying what is on it, and its size and
-price range — so the page reads as a walk past six counters rather than a wall
-of fifty-four boxes.
-
-That was the fix for a real problem: the old single grid ran to 7,583px on
-desktop and 10,042px on a phone, which was 59% of the entire page. The same
-products now take 5,134px and 3,952px — a 61% cut on mobile, where it hurt
-most.
-
-Three ways through, and the gentlest is the default:
+## Two pages
 
 | | |
 |---|---|
-| **Counters** | the default; browse sideways, one counter at a time |
-| **Search** | a separate mode — you already know what you want, so results are a plain grid |
-| **Show everything** | one button; the full 54-item grid with sorting, for anyone who wants the lot |
+| `/` | hero, Aksiyalar (bundles), most-ordered, story, how it works, contact |
+| `/#/kataloq` | the full catalogue, with filters |
 
-`ProductRail.vue` holds the rail mechanics — scroll-snap, drag-to-scroll with a
-click guard, arrows, and the `--edge` variable that keeps the first card flush
-with the page gutter. Arrows hide themselves when a counter already fits, since
-an arrow that cannot scroll is furniture rather than affordance.
+The catalogue used to sit on the front page and it was a wall — 7,583px on
+desktop and 10,042px on a phone, 59% of the whole page. It is its own
+destination now, and the home page is 5,177px: what a first-time visitor needs,
+without scrolling past fifty-four products to reach the phone number.
+
+The catalogue page carries a left sidebar (counters with live counts, price
+bands), a search field, quick-pick buttons and sorting. On a phone the sidebar
+becomes a slide-over that closes as soon as a choice is made, so the customer
+lands on the result rather than back at the panel they just used.
+
+Price **bands** rather than a two-thumb slider: a range slider is fiddly with a
+thumb, and for fifty-four products between 5 and 110 AZN four bands answer the
+question just as well. Quick picks combine as OR, not AND — ticking "by weight"
+and "by the piece" means either, not the empty set those would make if ANDed.
+
+**Hash routing** (`/#/kataloq`), because this is built as static files and as a
+single self-contained .html for previews. Clean paths would need the host to
+rewrite unknown URLs to index.html, and a deep link would 404 anywhere that is
+not configured for it. Switching is one import in `src/router.js` once there is
+hosting that rewrites.
 
 ## Goods sold by weight
 

@@ -5,15 +5,6 @@ import { useToast, flyToCart } from './composables/useMotion'
 
 import IntroSequence from './components/IntroSequence.vue'
 import SiteNav from './components/SiteNav.vue'
-import HeroSection from './components/HeroSection.vue'
-import TickerBar from './components/TickerBar.vue'
-import PromiseGrid from './components/PromiseGrid.vue'
-import FeaturedSlider from './components/FeaturedSlider.vue'
-import SetsSection from './components/SetsSection.vue'
-import CatalogueSection from './components/CatalogueSection.vue'
-import StorySection from './components/StorySection.vue'
-import OrderSteps from './components/OrderSteps.vue'
-import ContactSection from './components/ContactSection.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import CartDrawer from './components/CartDrawer.vue'
 import QuickView from './components/QuickView.vue'
@@ -69,15 +60,21 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   <IntroSequence />
 
   <SiteNav ref="nav" />
-  <HeroSection />
-  <TickerBar />
-  <PromiseGrid />
-  <SetsSection @add="onAddSet" />
-  <FeaturedSlider @add="onAdd" @peek="peeked = $event" />
-  <CatalogueSection @add="onAdd" @peek="peeked = $event" />
-  <StorySection />
-  <OrderSteps />
-  <ContactSection />
+
+  <!--
+    The shell stays put across both pages: nav, basket, quick view and toast
+    belong to the whole site, so switching page never loses a basket or
+    re-animates the header.
+  -->
+  <RouterView v-slot="{ Component }">
+    <component
+      :is="Component"
+      @add="onAdd"
+      @add-set="onAddSet"
+      @peek="peeked = $event"
+    />
+  </RouterView>
+
   <SiteFooter />
 
   <div class="scrim" :class="{ on: scrim() }" @click="closeAll"></div>

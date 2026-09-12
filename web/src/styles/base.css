@@ -162,3 +162,19 @@ section{ position:relative; scroll-margin-top:78px; }
 .qty button{ width:28px; height:28px; display:grid; place-items:center; font-size:.9rem; line-height:1; color:var(--ink-3); transition:color .3s var(--ease); }
 .qty button:hover{ color:var(--ink); }
 .qty span{ min-width:24px; text-align:center; font-size:.82rem; font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* ---------- Product grid (shared) ---------------------------------------
+   Lived in CatalogueSection's scoped styles until the catalogue moved to its
+   own page. It is used by more than one component now, so it belongs here —
+   a shared class hidden inside one component's scope is a class that vanishes
+   the day that component does. */
+.grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(252px,1fr));
+  gap:clamp(16px,1.8vw,30px) clamp(14px,1.5vw,24px);
+}
+.empty{ text-align:center; padding:70px 0; color:var(--ink-3); grid-column:1/-1; }
+.empty h3{ font-family:var(--display); font-size:1.6rem; color:var(--ink); margin:0 0 8px; font-weight:500; }
+
+@media (max-width:640px){
+  .grid{ grid-template-columns:repeat(auto-fill,minmax(158px,1fr)); gap:14px 12px; }
+}
