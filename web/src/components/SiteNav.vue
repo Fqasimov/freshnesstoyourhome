@@ -5,6 +5,7 @@ import { useI18n, lang, LANGS } from '../composables/useI18n'
 import { useCart } from '../composables/useCart'
 import { SETS } from '../data/catalogue'
 import mark from '../assets/logo-mark.png'
+import BIcon from './BIcon.vue'
 
 const { t } = useI18n()
 const { count, open } = useCart()
@@ -38,8 +39,27 @@ const route = useRoute()
    to be solid from the first pixel or its light text is invisible on cream. */
 const overHero = () => route.name === 'home'
 
+/**
+ * Go solid the moment the header reaches the hero's own words.
+ *
+ * It used to wait until nearly three quarters of the viewport had scrolled
+ * past, which meant the transparent bar dragged across "Bakı · Həftənin 7
+ * günü" and then straight through the wordmark — two sets of type overlapping
+ * with nothing between them. Measuring the text instead of guessing a fraction
+ * of the window means it also stays right when the copy or the screen changes.
+ */
 const onScroll = () => {
-  solid.value = !overHero() || window.scrollY > window.innerHeight * 0.72
+  if (!overHero()) { solid.value = true; return }
+
+  const text = document.querySelector('.hero__text')
+  if (!text) { solid.value = window.scrollY > 40; return }
+
+  const navH = parseInt(getComputedStyle(document.documentElement)
+    .getPropertyValue('--nav-h'), 10) || 76
+
+  // A few pixels of margin, so it changes just before the two touch rather
+  // than at the exact frame they do.
+  solid.value = text.getBoundingClientRect().top <= navH + 10
 }
 onMounted(() => { window.addEventListener('scroll', onScroll, { passive: true }); onScroll() })
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
@@ -74,7 +94,7 @@ watch(count, (now, before) => {
 
       <div class="nav__tools">
         <RouterLink :to="{ name: 'catalogue' }" class="navcat" @click="menu = false">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          <BIcon name="list" :size="15" />
           <span>{{ t('cta.go') }}</span>
         </RouterLink>
 
@@ -86,7 +106,7 @@ watch(count, (now, before) => {
         </div>
 
         <button class="cartbtn" ref="cartBtn" aria-label="Open cart" @click="open = true">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <BIcon name="bag" :size="14" />
           <span class="lbl">{{ t('nav.cart') }}</span>
           <span class="cartbtn__n" :class="{ pop: popped }">{{ count }}</span>
         </button>

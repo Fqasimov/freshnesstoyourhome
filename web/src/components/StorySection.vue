@@ -1,16 +1,25 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n'
+import { PRODUCTS, CATEGORIES } from '../data/catalogue'
 import { reducedMotion } from '../composables/useMotion'
 import logo from '../assets/logo.png'
 
 const { t } = useI18n()
 
-/* `to` counts up; `text` is shown as-is — opening hours and a support
-   line are not quantities. */
+/* `value()` counts up; `text` is shown as-is — opening hours and a support
+   line are not quantities.
+   
+   Read from the catalogue rather than written down: these two used to be 54
+   and 6 in this file, which would have been wrong the first morning somebody
+   added a product in the admin panel. Functions rather than values because the
+   catalogue arrives from the API after this module is evaluated. */
 const stats = [
-  { to: 54, key: 'st1' }, { to: 6, key: 'st2' },
-  { text: '10–22', key: 'st3' }, { text: '24/7', key: 'st4' }
+  { key: 'st1', value: () => PRODUCTS.length },
+  // Minus the synthetic "everything" row the page adds to the front.
+  { key: 'st2', value: () => Math.max(CATEGORIES.length - 1, 0) },
+  { key: 'st3', text: '10–22' },
+  { key: 'st4', text: '24/7' },
 ]
 
 /* Numbers count up once, when the block first arrives. */
@@ -19,7 +28,7 @@ const box = ref(null)
 let io = null
 
 onMounted(() => {
-  if (reducedMotion) { shown.value = stats.map(s => s.text || s.to); return }
+  if (reducedMotion) { shown.value = stats.map(s => s.text || s.value()); return }
   io = new IntersectionObserver(entries => {
     if (!entries[0].isIntersecting) return
     io.disconnect()
@@ -27,7 +36,7 @@ onMounted(() => {
     const tick = now => {
       const k = Math.min(1, (now - t0) / dur)
       const eased = 1 - Math.pow(1 - k, 3)
-      shown.value = stats.map(s => (s.text ? s.text : Math.round(s.to * eased)))
+      shown.value = stats.map(s => (s.text ? s.text : Math.round(s.value() * eased)))
       if (k < 1) requestAnimationFrame(tick)
     }
     requestAnimationFrame(tick)

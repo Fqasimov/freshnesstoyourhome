@@ -1,7 +1,6 @@
 <script setup>
-import { computed } from 'vue'
-import { PRODUCTS } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
+import BIcon from './BIcon.vue'
 
 const { t } = useI18n()
 
@@ -11,7 +10,7 @@ const { t } = useI18n()
  * The whole catalogue moved to its own page, which is better to use and worse
  * to find: a visitor who never scrolls past the hero has no reason to know the
  * page exists. So this is a component rather than a link written five times —
- * the wording, the count and the arrow stay identical everywhere it appears,
+ * the wording and the arrow stay identical everywhere it appears,
  * which is what makes a repeated button read as one door rather than five.
  */
 defineProps({
@@ -20,10 +19,6 @@ defineProps({
   // 'band'   — the full-width panel between sections
   variant: { type: String, default: 'solid' },
 })
-
-/* Live, because the number in a button is a promise about the page behind it
-   and the catalogue is loaded from the API. */
-const count = computed(() => PRODUCTS.length)
 </script>
 
 <template>
@@ -35,31 +30,18 @@ const count = computed(() => PRODUCTS.length)
       </div>
       <RouterLink :to="{ name: 'catalogue' }" class="btn btn--brick ctaband__btn">
         <span>{{ t('cta.go') }}</span>
-        <b class="ctacount">{{ count }}</b>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <BIcon name="arrow-right" :size="14" />
       </RouterLink>
     </div>
   </div>
 
   <RouterLink v-else :to="{ name: 'catalogue' }" class="btn" :class="{ 'btn--ghost': variant === 'ghost' }">
     <span>{{ t('cta.go') }}</span>
-    <b class="ctacount">{{ count }}</b>
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    <BIcon name="arrow-right" :size="14" />
   </RouterLink>
 </template>
 
 <style scoped>
-/* The count rides inside the button so the button says what is behind it —
-   "Kataloqa keçid edin · 54" is a different promise from "Kataloq". */
-.ctacount{
-  font: 600 .66rem/1 var(--sans);
-  letter-spacing: .04em;
-  padding: 3px 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, currentColor 14%, transparent);
-  border: 1px solid color-mix(in srgb, currentColor 26%, transparent);
-}
-
 .ctaband{
   margin: clamp(32px, 6vw, 64px) 0;
 }
@@ -83,6 +65,9 @@ const count = computed(() => PRODUCTS.length)
 
 @media (max-width: 560px){
   .ctaband__in{ flex-direction: column; align-items: stretch; text-align: left; }
+  /* `flex: 1 1 320px` means a 320px *height* once the axis turns vertical, so
+     the panel grew a 280px hole between the text and the button. */
+  .ctaband__t{ flex: 0 0 auto; }
   .ctaband__btn{ justify-content: center; }
 }
 </style>

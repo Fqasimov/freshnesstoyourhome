@@ -3,6 +3,7 @@ import CatalogueCta from './CatalogueCta.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { reducedMotion } from '../composables/useMotion'
+import { PRODUCTS } from '../data/catalogue'
 import duck from '../assets/products/peking-duck.jpg'
 import camembert from '../assets/products/camembert.jpg'
 import salmon from '../assets/products/salmon-steaks.jpg'
@@ -100,7 +101,7 @@ const shots = [
           <img :src="s.src" :alt="s.alt">
         </figure>
         <div class="collage__seal">
-          <span><b>54</b><span v-html="t('hero.seal')"></span></span>
+          <span><b>{{ PRODUCTS.length }}</b><span v-html="t('hero.seal')"></span></span>
         </div>
       </div>
     </div>
@@ -113,7 +114,7 @@ const shots = [
   background:var(--forest);
   color:var(--paper);
   position:relative; overflow:hidden;
-  padding:calc(var(--nav-h) + clamp(48px,7vw,110px)) 0 clamp(56px,7vw,96px);
+  padding:calc(var(--nav-h) + clamp(40px,5.4vw,84px)) 0 clamp(48px,5.6vw,80px);
 }
 /* the poster's engraved line-work, rebuilt as a background */
 .hero__lines{

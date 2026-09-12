@@ -1,4 +1,5 @@
 <script setup>
+import BIcon from './BIcon.vue'
 import { computed } from 'vue'
 import { money } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
@@ -19,13 +20,13 @@ const countLabel = computed(() =>
         <small>{{ countLabel }}</small>
       </div>
       <button class="x" aria-label="Close" @click="open = false">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        <BIcon name="x-lg" :size="14" />
       </button>
     </div>
 
     <div class="drawer__body">
       <div v-if="!lines.length" class="drawer__empty">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <BIcon name="bag" :size="42" />
         <h4>{{ t('ui.cartempty') }}</h4>
         <p>{{ t('ui.cartempty.d') }}</p>
       </div>
@@ -67,7 +68,7 @@ const countLabel = computed(() =>
       <p class="drawer__note">{{ t('cart.note') }}</p>
       <a class="btn btn--brick" :href="whatsapp" target="_blank" rel="noopener">
         <span>{{ t('cart.send') }}</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <BIcon name="arrow-right" :size="14" />
       </a>
     </div>
   </aside>
@@ -98,7 +99,7 @@ const countLabel = computed(() =>
 
 .drawer__body{ flex:1; overflow-y:auto; padding:8px var(--dpad,24px) 16px; }
 .drawer__empty{ text-align:center; padding:70px 10px; color:var(--ink-3); }
-.drawer__empty svg{ width:44px; height:44px; margin:0 auto 16px; opacity:.35; }
+.drawer__empty .bi{ margin:0 auto 16px; opacity:.35; }
 
 .line{ display:grid; grid-template-columns:76px 1fr auto; gap:14px; padding:16px 0; border-bottom:1px solid var(--line-soft); align-items:center; }
 .line__img{ width:76px; height:76px; border-radius:var(--radius); overflow:hidden; background:var(--paper-2); }

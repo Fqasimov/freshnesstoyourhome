@@ -4,6 +4,7 @@ import { PRODUCTS, CATEGORIES } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
 import ProductCard from '../components/ProductCard.vue'
 import SetsSection from '../components/SetsSection.vue'
+import BIcon from '../components/BIcon.vue'
 
 const { t, lang, nm, catName } = useI18n()
 defineEmits(['add', 'add-set', 'peek'])
@@ -114,7 +115,7 @@ watch([category, band], () => { filtersOpen.value = false })
            what most people reach for first. -->
       <div class="cat__tools">
         <div class="field cat__search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <BIcon name="search" :size="15" />
           <input type="search" v-model="query" :placeholder="t('shop.search')">
           <button v-if="query" class="field__x" :aria-label="t('shop.clear')" @click="query = ''">×</button>
         </div>
@@ -126,11 +127,11 @@ watch([category, band], () => { filtersOpen.value = false })
             <option value="desc">{{ t('sort.desc') }}</option>
             <option value="az">{{ t('sort.az') }}</option>
           </select>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          <BIcon name="chevron-down" :size="11" />
         </div>
 
         <button class="cat__filterbtn" @click="filtersOpen = true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+          <BIcon name="sliders" :size="15" />
           {{ t('cat.filters') }}<span v-if="active" class="cat__badge">{{ active }}</span>
         </button>
       </div>
@@ -213,7 +214,7 @@ watch([category, band], () => { filtersOpen.value = false })
 .cat__tools{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
 .cat__search{ flex:1 1 260px; max-width:420px; }
 .field{ display:flex; align-items:center; gap:9px; border-bottom:1px solid var(--line); padding:6px 2px; }
-.field svg{ width:15px; height:15px; color:var(--ink-3); flex:none; }
+.field .bi{ color:var(--ink-3); }
 .field input{ border:0; background:none; outline:none; width:100%; font-size:.9rem; padding:2px 0; }
 .field input::placeholder{ color:var(--ink-3); }
 .field:focus-within{ border-color:var(--ink); }
@@ -228,7 +229,7 @@ watch([category, band], () => { filtersOpen.value = false })
   transition:border-color .35s var(--ease);
 }
 .select select:hover{ border-color:var(--ink); }
-.select svg{ position:absolute; right:13px; width:11px; height:11px; pointer-events:none; color:var(--ink-3); }
+.select .bi{ position:absolute; right:13px; pointer-events:none; color:var(--ink-3); }
 
 /* Only a phone needs this: the sidebar is already on screen above 900px. */
 .cat__filterbtn{
@@ -236,7 +237,7 @@ watch([category, band], () => { filtersOpen.value = false })
   border:1px solid var(--line); border-radius:100px; padding:9px 16px;
   font-size:.83rem; background:none; cursor:pointer;
 }
-.cat__filterbtn svg{ width:15px; height:15px; }
+
 .cat__badge{
   display:grid; place-items:center; min-width:19px; height:19px; padding:0 5px;
   background:var(--forest); color:var(--paper); border-radius:100px;

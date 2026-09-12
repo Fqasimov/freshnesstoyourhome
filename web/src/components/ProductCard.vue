@@ -1,4 +1,5 @@
 <script setup>
+import BIcon from './BIcon.vue'
 import { computed } from 'vue'
 import { money, perKg } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
@@ -41,7 +42,7 @@ const kg = computed(() => perKg(props.product))
         </span>
         <button class="add" type="button" :aria-label="t('ui.add')"
                 @click="emit('add', { product, el: $event.currentTarget.closest('.card') })">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <BIcon name="plus-lg" :size="15" />
         </button>
       </div>
     </div>
@@ -110,8 +111,8 @@ const kg = computed(() => perKg(props.product))
   transition:width .5s var(--ease-out), background .4s var(--ease);
 }
 .add:hover{ background:var(--brick); }
-.add svg{ width:16px; height:16px; transition:transform .45s var(--ease-out); }
-.add:hover svg{ transform:rotate(90deg); }
+.add .bi{ transition:transform .45s var(--ease-out); }
+.add:hover .bi{ transform:rotate(90deg); }
 .add.done{ background:var(--leaf-d); }
 @media (max-width:640px){
   .card__body{ padding:13px 13px 15px; }

@@ -1,11 +1,12 @@
 <script setup>
+import BIcon from './BIcon.vue'
 import { useToast } from '../composables/useMotion'
 const { message, showing } = useToast()
 </script>
 
 <template>
   <div class="toast" :class="{ on: showing }" role="status" aria-live="polite">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+    <BIcon name="check-lg" :size="16" />
     <span>{{ message }}</span>
   </div>
 </template>
@@ -20,5 +21,5 @@ const { message, showing } = useToast()
   display:flex; align-items:center; gap:10px; box-shadow:0 16px 40px rgba(0,0,0,.3);
 }
 .toast.on{ transform:translate(-50%,0); }
-.toast svg{ width:16px; height:16px; color:var(--acid); }
+.toast .bi{ color:var(--acid); }
 </style>

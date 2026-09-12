@@ -1,4 +1,5 @@
 <script setup>
+import BIcon from './BIcon.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { PRODUCTS } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
@@ -71,10 +72,10 @@ onUnmounted(() => window.removeEventListener('resize', onResize))
         </div>
         <div class="slider__nav">
           <button class="arrow" :disabled="atStart" aria-label="Previous" @click="go(-1)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+            <BIcon name="arrow-left" :size="15" />
           </button>
           <button class="arrow" :disabled="atEnd" aria-label="Next" @click="go(1)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <BIcon name="arrow-right" :size="15" />
           </button>
         </div>
       </div>
@@ -99,7 +100,15 @@ onUnmounted(() => window.removeEventListener('resize', onResize))
 <style scoped>
 /* ---------- 9. Featured slider ------------------------------------------ */
 .feature{ padding:clamp(20px,3vw,40px) 0 clamp(60px,7vw,100px); }
-.slider{ position:relative; overflow:hidden; }
+.slider{
+  position:relative; overflow:hidden;
+  /* The track runs full-bleed, so whichever card happens to straddle the right
+     edge gets sliced by the window — at 1360px that landed straight through an
+     "add" button, which reads as broken rather than as "there is more". A short
+     fade makes the cut deliberate at any width. */
+  -webkit-mask-image:linear-gradient(90deg, #000 calc(100% - 64px), transparent);
+  mask-image:linear-gradient(90deg, #000 calc(100% - 64px), transparent);
+}
 .slider__track{
   display:flex; gap:clamp(14px,1.6vw,24px);
   overflow-x:auto; scroll-snap-type:x mandatory;

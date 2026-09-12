@@ -111,6 +111,34 @@ doing the actual work. Two things had to follow it:
   "1 gün" rendered as "I gün" and opening hours came out looking like IO:OO.
   Opening hours and prices are the last place to be charming about numerals.
 
+## Icons
+
+**Bootstrap Icons, and only Bootstrap Icons.** They used to be hand-drawn
+inline SVGs — twenty-two of them at four stroke widths across three viewBoxes,
+which is why the truck and the map pin never looked like a set.
+
+```vue
+<BIcon name="truck" />
+<BIcon name="x-lg" :size="14" label="Close" />
+```
+
+Only the icons in `src/assets/icons` are in the bundle, so the other two
+thousand cost nothing. To add one, copy the file across and use its name:
+
+```bash
+cp node_modules/bootstrap-icons/icons/basket.svg src/assets/icons/
+```
+
+`BIcon` owns the size, the colour and the accessibility attributes: pass
+`size` rather than styling the `svg` from the parent, because the component
+sets its own dimensions inline and an inline style outranks a class rule. An
+icon with a `label` becomes an image with a name; one without is hidden from
+screen readers, which is right when it sits next to a word that already says
+the same thing.
+
+The two SVGs left in the source are not icons — the hand-drawn rule under the
+wordmark, and the mark that draws itself in the intro.
+
 ## Goods sold by weight
 
 Most of this catalogue is sold by the kilo, and a kilo is never exactly a kilo.

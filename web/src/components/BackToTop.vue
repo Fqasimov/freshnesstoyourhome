@@ -1,4 +1,5 @@
 <script setup>
+import BIcon from './BIcon.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { reducedMotion } from '../composables/useMotion'
 
@@ -12,7 +13,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 <template>
   <button class="totop" :class="{ on: shown }" aria-label="Back to top" @click="toTop">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    <BIcon name="arrow-up" :size="17" />
   </button>
 </template>
 
@@ -20,13 +21,19 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 /* ---------- 19. Back to top ---------------------------------------------- */
 .totop{
   position:fixed; right:22px; bottom:22px; z-index:300;
-  width:48px; height:48px; border-radius:50%; background:var(--forest); color:var(--paper);
+  width:48px; height:48px; border-radius:50%;
+  /* Acid rather than forest. The contact panel is forest too, so the button
+     used to disappear into it exactly where somebody scrolling to the bottom
+     of the page reaches for it. Yellow is the one accent that reads on both
+     the cream page and the green panel. */
+  background:var(--acid); color:var(--ink);
+  box-shadow:0 10px 26px rgba(27,41,22,.28);
   display:grid; place-items:center;
   opacity:0; visibility:hidden; transform:translateY(14px);
   transition:opacity .45s var(--ease), transform .45s var(--ease-out), visibility .45s, background .35s var(--ease);
 }
 .totop.on{ opacity:1; visibility:visible; transform:none; }
-.totop:hover{ background:var(--brick); }
+.totop:hover{ background:var(--brick); color:#fff; }
 
 @media (max-width:640px){
   .totop{ right:16px; bottom:16px; width:44px; height:44px; }

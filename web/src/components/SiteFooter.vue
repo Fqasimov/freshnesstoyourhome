@@ -53,7 +53,7 @@ const links = computed(() => [
 
 /* ---------- 15. Footer --------------------------------------------------- */
 .foot{ background:var(--forest-2); color:rgba(246,243,234,.7); padding:clamp(40px,5vw,64px) 0 34px; }
-.foot__top{ display:flex; justify-content:space-between; gap:32px; flex-wrap:wrap; align-items:flex-start; padding-bottom:32px; border-bottom:1px solid var(--line-inv); }
+.foot__top{ display:flex; justify-content:space-between; gap:32px 40px; flex-wrap:wrap; align-items:center; padding-bottom:32px; border-bottom:1px solid var(--line-inv); }
 .foot__brand{ display:flex; align-items:center; gap:14px; }
 .foot__brand img{ width:56px; height:56px; border-radius:50%; }
 .foot__brand b{ font-family:var(--wordmark); color:var(--paper); font-size:1.5rem; font-weight:600; display:block; letter-spacing:-.024em; }

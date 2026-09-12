@@ -1,4 +1,5 @@
 <script setup>
+import BIcon from './BIcon.vue'
 import { ref, computed, watch } from 'vue'
 import { money, perKg } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
@@ -39,7 +40,7 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
         <div class="modal__img" ref="img">
           <img :src="product.img" :alt="nm(product)">
           <button class="x modal__x" aria-label="Close" @click="emit('close')">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <BIcon name="x-lg" :size="14" />
           </button>
         </div>
 
