@@ -34,6 +34,11 @@ the door.
 
 ## Running it
 
+**To get it on your phone in a few minutes, read `DEV.md`.** It covers the
+dummy account and the wifi setup, and notes the one thing worth saying twice:
+this is Capacitor, not Expo, so Expo Go cannot open it.
+
+
 ```bash
 # API
 cd backend

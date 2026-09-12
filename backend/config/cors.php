@@ -22,7 +22,22 @@ return [
         array_map('trim', explode(',', (string) env('CORS_ALLOWED_ORIGINS', '')))
     )),
 
-    'allowed_origins_patterns' => [],
+    /**
+     * Local development only.
+     *
+     * A phone on the same wifi reaches the dev server at the machine's LAN
+     * address, so the browser sends an origin like http://192.168.1.14:5174 —
+     * which no fixed list can predict. These patterns cover private address
+     * ranges and localhost, and only outside production, so the exact-match
+     * list above remains the whole of the rule on a real deployment.
+     */
+    'allowed_origins_patterns' => env('APP_ENV') === 'production' ? [] : [
+        '#^http://localhost(:\d+)?$#',
+        '#^http://127\.0\.0\.1(:\d+)?$#',
+        '#^http://192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$#',
+        '#^http://10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$#',
+        '#^http://172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}(:\d+)?$#',
+    ],
 
     'allowed_headers' => ['Accept', 'Authorization', 'Content-Type', 'X-Requested-With'],
 

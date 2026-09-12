@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Freshness To Your Home — customer app for iOS and Android",
+  "description": "Freshness To Your Home \u2014 customer app for iOS and Android",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
     "sync": "npm run build && cap sync",
