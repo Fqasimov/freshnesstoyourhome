@@ -34,9 +34,9 @@ the door.
 
 ## Running it
 
-**To get it on your phone in a few minutes, read `DEV.md`.** It covers the
-dummy account and the wifi setup, and notes the one thing worth saying twice:
-this is Capacitor, not Expo, so Expo Go cannot open it.
+**To get it on your phone: `./scripts/dev.sh`.** One command — database, seed,
+a development customer with its sign-in code, the API on your LAN, and Expo's
+QR for Expo Go. `DEV.md` explains each step and what to do when one fails.
 
 
 ```bash

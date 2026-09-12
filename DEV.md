@@ -1,10 +1,31 @@
 # Running it on your phone
 
-The app is **Expo + React Native**, so Expo Go works: `npx expo start`, scan the
-QR, done. No build, live reload, and the same pipeline (EAS) that already ships
-Nata Laundry.
+## The short version
 
-Three things have to line up, and the third is the one that catches people.
+```bash
+./scripts/dev.sh
+```
+
+From the repository root, on **your own machine**. It sets up the database,
+seeds the catalogue, creates a development customer and prints its sign-in
+code, starts the API on your LAN, points the app at it, and hands over to Expo
+— which prints the QR. Scan it with **Expo Go**. Ctrl-C stops everything.
+
+If it cannot work out your LAN address, tell it:
+
+```bash
+LAN_IP=192.168.1.14 ./scripts/dev.sh
+```
+
+> **The QR has to come from your machine, not from a Claude session.**
+> Expo's QR encodes `exp://<this-machine's-LAN-IP>:8081`. A cloud container has
+> no address on your wifi, and its egress proxy blocks ngrok, so it cannot
+> tunnel out either. Even if the bundler were reachable, the Laravel API runs
+> beside it with no public ingress — the app would open and then fail every
+> request. Run the script locally and the QR in your terminal is the real one.
+
+The rest of this file is what the script does, in case you want to run the
+steps yourself or something goes wrong.
 
 ## 1. The API
 
