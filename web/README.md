@@ -39,6 +39,31 @@ Bundles are excluded from the quote: they are a website-only construct whose
 discount the business has not confirmed, and the API deliberately has no opinion
 about them.
 
+## How the catalogue is laid out
+
+Six **counters**, not one grid. Each is a horizontal rail carrying one
+category's goods, with a number, a line saying what is on it, and its size and
+price range — so the page reads as a walk past six counters rather than a wall
+of fifty-four boxes.
+
+That was the fix for a real problem: the old single grid ran to 7,583px on
+desktop and 10,042px on a phone, which was 59% of the entire page. The same
+products now take 5,134px and 3,952px — a 61% cut on mobile, where it hurt
+most.
+
+Three ways through, and the gentlest is the default:
+
+| | |
+|---|---|
+| **Counters** | the default; browse sideways, one counter at a time |
+| **Search** | a separate mode — you already know what you want, so results are a plain grid |
+| **Show everything** | one button; the full 54-item grid with sorting, for anyone who wants the lot |
+
+`ProductRail.vue` holds the rail mechanics — scroll-snap, drag-to-scroll with a
+click guard, arrows, and the `--edge` variable that keeps the first card flush
+with the page gutter. Arrows hide themselves when a counter already fits, since
+an arrow that cannot scroll is furniture rather than affordance.
+
 ## Goods sold by weight
 
 Most of this catalogue is sold by the kilo, and a kilo is never exactly a kilo.
