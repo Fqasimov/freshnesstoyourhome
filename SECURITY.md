@@ -74,6 +74,15 @@ written only by `User::promote()`, which no HTTP route reaches. Both halves
 matter — a whitelist in the controller and a guard on the model — so that
 neither one being edited by mistake is enough to hand out an admin account.
 
+The admin panel does not change this. `/api/admin/*` is gated on `role:admin`
+alone — a courier moves orders and records weights, and has no business editing
+the price list — and there is **no admin route that touches a role**. Staff are
+appointed by `freshness:promote`, a console command, so appointing one needs
+access to the server rather than a stolen session; a test asserts that no
+route whose name mentions roles or promotion has appeared. The panel also
+cannot block a staff account or its own, which would otherwise let one admin
+lock out another over HTTP.
+
 Every query for a customer's own data is scoped through the relation
 (`$request->user()->orders()`), never `Order::find()`. Somebody else's id
 therefore does not exist rather than being forbidden, and the failure is a 404.
@@ -97,6 +106,34 @@ safe place to keep it.
 Blocking an account revokes its tokens, and `EnsureNotBlocked` re-checks on
 every authenticated request — revocation alone races with a token issued
 moments earlier.
+
+The admin panel is a browser, which has no keychain. Its token lives in
+`sessionStorage`: scoped to the one tab, gone when it closes, and never shared
+with another tab on a machine in the shop. `localStorage` would outlive the
+person using it. A Sanctum session cookie would be better against XSS and would
+bring a CSRF surface with it — a trade worth making only if the panel ever
+renders untrusted HTML, which it does not; Vue escapes every customer-supplied
+string it displays.
+
+## What the admin panel can see, and what it records
+
+Names, phone numbers, addresses and email addresses are encrypted at rest. An
+admin token that could page through all of them in the clear would undo that:
+the encryption would still be perfect and the data would still be gone.
+
+So the customer list shows **masked** contact details (`de•@example.com`,
+`••••••4341`) and nothing that identifies a person beyond a name. Full details
+come from the single-customer view, one at a time, and every one of those views
+writes a `customer.view` row to `admin_audits`. Phoning a customer about a late
+order is normal; reading four hundred numbers in an afternoon is not, and only a
+record of the looking tells them apart.
+
+`admin_audits` is append-only, like `order_events`: no `updated_at`, no route
+that writes twice, and no route that deletes. It records the actor, the role
+they held at the time, the IP, and what actually moved — `{"price_minor":
+{"from": 6000, "to": 6125}}` — but only when something did. An edit that changes
+nothing writes no row, because a log full of "changed nothing" is a log nobody
+reads.
 
 ## Payments
 

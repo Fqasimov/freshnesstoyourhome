@@ -1,11 +1,21 @@
 <script setup>
 import { CONTACT } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
+import CatalogueCta from './CatalogueCta.vue'
 import logo from '../assets/logo.png'
 
 const { t } = useI18n()
 const year = new Date().getFullYear()
-const links = [['#catalogue', 'nav.shop'], ['#sets', 'nav.sets'], ['#week', 'nav.week'], ['#story', 'nav.story'], ['#order', 'nav.how']]
+/* Routes rather than bare fragments. The site runs on hash history, so a
+   plain href="#sets" replaces the whole route with "sets", matches nothing
+   and lands the visitor back at the top of the home page — these five links
+   had all stopped working when the catalogue moved to its own page. */
+const links = [
+  [{ path: '/', hash: '#sets' }, 'nav.sets'],
+  [{ path: '/', hash: '#week' }, 'nav.week'],
+  [{ path: '/', hash: '#story' }, 'nav.story'],
+  [{ path: '/', hash: '#order' }, 'nav.how'],
+]
 </script>
 
 <template>
@@ -20,9 +30,13 @@ const links = [['#catalogue', 'nav.shop'], ['#sets', 'nav.sets'], ['#week', 'nav
           </div>
         </div>
         <nav class="foot__nav">
-          <a v-for="[href, key] in links" :key="href" :href="href">{{ t(key) }}</a>
+          <RouterLink v-for="[to, key] in links" :key="key" :to="to">{{ t(key) }}</RouterLink>
           <a :href="'tel:+' + CONTACT.whatsapp">{{ CONTACT.phoneDisplay }}</a>
         </nav>
+
+        <!-- Last chance on the page, and the one place a visitor looks when
+             they have read everything and still want the price list. -->
+        <div class="foot__cta"><CatalogueCta variant="ghost" /></div>
       </div>
       <div class="foot__bot">
         <p>{{ t('foot.note') }}</p>
@@ -33,6 +47,8 @@ const links = [['#catalogue', 'nav.shop'], ['#sets', 'nav.sets'], ['#week', 'nav
 </template>
 
 <style scoped>
+.foot__cta{ margin-top:4px; }
+
 /* ---------- 15. Footer --------------------------------------------------- */
 .foot{ background:var(--forest-2); color:rgba(246,243,234,.7); padding:clamp(40px,5vw,64px) 0 34px; }
 .foot__top{ display:flex; justify-content:space-between; gap:32px; flex-wrap:wrap; align-items:flex-start; padding-bottom:32px; border-bottom:1px solid var(--line-inv); }

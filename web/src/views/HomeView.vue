@@ -7,6 +7,7 @@ import SetsSection from '../components/SetsSection.vue'
 import StorySection from '../components/StorySection.vue'
 import OrderSteps from '../components/OrderSteps.vue'
 import ContactSection from '../components/ContactSection.vue'
+import CatalogueCta from '../components/CatalogueCta.vue'
 
 defineEmits(['add', 'add-set', 'peek'])
 </script>
@@ -23,6 +24,11 @@ defineEmits(['add', 'add-set', 'peek'])
   <PromiseGrid />
   <SetsSection @add="$emit('add-set', $event)" />
   <FeaturedSlider @add="$emit('add', $event)" @peek="$emit('peek', $event)" />
+
+  <!-- The catalogue is a page you have to be told about. This sits right after
+       the two things that make somebody want more of them. -->
+  <div class="wrap"><CatalogueCta variant="band" /></div>
+
   <StorySection />
   <OrderSteps />
   <ContactSection />

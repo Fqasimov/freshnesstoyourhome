@@ -52,7 +52,7 @@ php artisan freshness:generate-keys      # prints BLIND_INDEX_KEY for .env
 php artisan migrate --seed
 php artisan serve
 
-# Website
+# Website (and the admin panel, at /admin.html)
 cd web && npm install && npm run dev
 
 # App
@@ -64,10 +64,25 @@ npx expo start                           # scan the QR with Expo Go
 For sign-in codes in development, set `MAIL_MAILER=log` and read the code out
 of `backend/storage/logs/laravel.log`.
 
+### The admin panel
+
+```bash
+php artisan freshness:promote you@example.com admin
+```
+
+Then open `/admin.html` and sign in with the same email code as a customer
+would. The account has to exist first — sign in once on the site or in the app,
+then promote it.
+
+`freshness:promote` is a console command rather than a button on purpose, and
+should stay one: it needs access to the server, so an admin session that leaks
+cannot mint a second admin that outlives revoking the first. There is no HTTP
+route anywhere that changes a role, and a test asserts that none has appeared.
+
 ## Tests
 
 ```bash
-cd backend && composer test              # 94 tests, 515 assertions
+cd backend && composer test              # 122 tests, 596 assertions
 cd app && npm run typecheck              # tsc --noEmit
 cd app && npm run journey                # the customer journey in a browser
 cd web && npm run test:api               # the site against a real API

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Models\OrderEvent;
 use App\Models\User;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
@@ -36,6 +37,40 @@ class StaffOrderController extends Controller
             ->paginate(50);
 
         return OrderResource::collection($orders);
+    }
+
+    /**
+     * One order, with the history of who moved it and when.
+     *
+     * The events are what makes a dispute answerable: an order that arrived
+     * late has a row saying which member of staff confirmed it, at what time,
+     * and with what note.
+     */
+    public function show(string $id): JsonResponse
+    {
+        $order = Order::with('items')->findOrFail($id);
+
+        $events = OrderEvent::where('order_id', $order->id)
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn (OrderEvent $e) => [
+                'id' => $e->id,
+                'from_status' => $e->from_status,
+                'to_status' => $e->to_status,
+                'actor_role' => $e->actor_role,
+                'note' => $e->note,
+                'created_at' => $e->created_at,
+            ]);
+
+        return response()->json([
+            'order' => new OrderResource($order),
+            'events' => $events,
+            // Spelled out rather than left for the client to derive: the
+            // transition table lives on the server and the buttons a member of
+            // staff sees should come from it, not from a copy in a bundle that
+            // was built last month.
+            'can_transition_to' => Order::TRANSITIONS[$order->status] ?? [],
+        ]);
     }
 
     public function transition(Request $request, string $id): JsonResponse

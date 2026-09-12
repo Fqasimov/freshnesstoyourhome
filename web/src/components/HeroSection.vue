@@ -1,4 +1,5 @@
 <script setup>
+import CatalogueCta from './CatalogueCta.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { reducedMotion } from '../composables/useMotion'
@@ -77,11 +78,13 @@ const shots = [
         </svg>
         <p class="hero__copy">{{ t('hero.copy') }}</p>
         <div class="hero__cta">
-          <a href="#catalogue" class="btn">
-            <span>{{ t('hero.cta1') }}</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </a>
-          <a href="#contact" class="btn btn--ghost"><span>{{ t('hero.cta2') }}</span></a>
+          <CatalogueCta />
+          <!-- A RouterLink, not href="#contact": under hash routing a bare
+               fragment sets the whole route to "contact", which matches
+               nothing and bounces the visitor back to the top of the page. -->
+          <RouterLink :to="{ path: '/', hash: '#contact' }" class="btn btn--ghost">
+            <span>{{ t('hero.cta2') }}</span>
+          </RouterLink>
         </div>
       </div>
 

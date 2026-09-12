@@ -48,13 +48,27 @@ about them.
 
 The catalogue used to sit on the front page and it was a wall — 7,583px on
 desktop and 10,042px on a phone, 59% of the whole page. It is its own
-destination now, and the home page is 5,177px: what a first-time visitor needs,
-without scrolling past fifty-four products to reach the phone number.
+destination now, and the home page is about 5,500px: what a first-time visitor
+needs, without scrolling past fifty-four products to reach the phone number.
+
+A page you have to be told about needs telling. **"Kataloqa keçid edin" appears
+five times** — as a solid button in the header toolbar (beside the basket, not
+as one word among five in the nav), as the hero's primary call to action, under
+the sets, as a full-width band after the most-ordered rail, and in the footer.
+All five are the same `CatalogueCta` component, so the wording and the live
+product count are identical everywhere; five different labels would read as five
+different places rather than one door.
 
 The catalogue page carries a left sidebar (counters with live counts, price
 bands), a search field, quick-pick buttons and sorting. On a phone the sidebar
 becomes a slide-over that closes as soon as a choice is made, so the customer
 lands on the result rather than back at the panel they just used.
+
+The sets appear on the catalogue page too, as a compact strip above the
+products — they are things to buy, so they belong where people buy things. The
+strip hides itself the moment any filter is active: somebody who has typed
+"pendir" is hunting one item, and a seafood set above their results is exactly
+the clutter this page was built to remove.
 
 Price **bands** rather than a two-thumb slider: a range slider is fiddly with a
 thumb, and for fifty-four products between 5 and 110 AZN four bands answer the
@@ -91,9 +105,36 @@ nobody tests is a fallback that has quietly stopped working.
 
 It edits a price and puts it back, so point it at a development database.
 
+## The admin panel
+
+`admin.html` — a **second Vite entry**, not a route inside the site. None of it
+ships to a customer browsing the shop: not the screens, not the endpoint names,
+not the shape of the audit trail. `npm run build` produces both `index.html` and
+`admin.html`; the single-file preview build leaves the panel out entirely.
+
+Sign in with the same email code as everywhere else, then the server decides. A
+non-admin gets 404s from `/api/admin/*` — the role middleware's convention — and
+the panel shows the sign-in screen again. The token lives in `sessionStorage`
+rather than `localStorage`: it dies with the tab, so a shared machine in the
+shop does not stay signed in until somebody notices.
+
+| Screen | What it is for |
+|---|---|
+| Bu gün | today's and tomorrow's deliveries, open orders, orders still waiting for weights, revenue, stock warnings, the last ten changes |
+| Sifarişlər | the day's orders; open one to move its status, record the scales, read its history |
+| Məhsullar | price, stock, shelf and "popular" per row, plus taking a whole shelf out at once |
+| Aksiyalar | switch a set on, set its discount, and see what it will cost |
+| Zonalar | delivery fee and minimum order per area |
+| Müştərilər | masked contact details, one customer at a time in full, block/unblock |
+| Jurnal | who changed what — append-only |
+
+Every edit reaches customers on the next request: the catalogue cache is busted
+by a model hook, not by remembering to call something.
+
 ## Still placeholder content
 
 - the hero text and the "about" text
 - the logo
 - delivery areas and prices
-- the three bundles and their discounts, which were invented during design
+- the three bundles and their discounts, which were invented during design and
+  ship switched **off** — the admin panel is what turns them on

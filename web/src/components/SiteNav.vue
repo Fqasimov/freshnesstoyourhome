@@ -15,11 +15,12 @@ const popped = ref(false)
 
 defineExpose({ cartBtn })
 
-/* The catalogue is its own page now; everything else is a section of the home
-   page, so each carries the route as well as the anchor — otherwise these
-   links do nothing when the customer is already on the catalogue. */
+/* Sections of the home page, each carrying the route as well as the anchor —
+   otherwise these links do nothing when the customer is already on the
+   catalogue. The catalogue itself is not in this list: it is a page, not a
+   section, and it sits in the toolbar as a button so it reads as somewhere to
+   go rather than as the first of five words. */
 const links = [
-  { to: { name: 'catalogue' }, key: 'nav.catalogue' },
   { to: { path: '/', hash: '#sets' }, key: 'nav.sets' },
   { to: { path: '/', hash: '#week' }, key: 'nav.week' },
   { to: { path: '/', hash: '#story' }, key: 'nav.story' },
@@ -68,6 +69,11 @@ watch(count, (now, before) => {
       </nav>
 
       <div class="nav__tools">
+        <RouterLink :to="{ name: 'catalogue' }" class="navcat" @click="menu = false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          <span>{{ t('cta.go') }}</span>
+        </RouterLink>
+
         <div class="lang">
           <button v-for="l in LANGS" :key="l" :class="{ on: lang === l }"
                   :aria-pressed="lang === l" @click="lang = l">
@@ -88,6 +94,26 @@ watch(count, (now, before) => {
 </template>
 
 <style scoped>
+/* Solid, so it does not read as one more nav word. It keeps its own colours in
+   both states of the header — over the dark hero and on cream — because a
+   button that disappears halfway down the page is worse than no button. */
+.navcat{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:9px 15px; border-radius:100px;
+  font-size:.74rem; font-weight:600; letter-spacing:.03em; white-space:nowrap;
+  background:var(--brick); color:#fff;
+  transition:transform .3s var(--ease-out), box-shadow .3s var(--ease-out), opacity .3s;
+}
+.navcat:hover{ transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,0,0,.2); color:#fff; }
+.navcat.router-link-active{ opacity:.55; pointer-events:none; }
+
+/* Below the toolbar's breaking point the label goes and the icon stays: the
+   basket and the language switch have first call on the width. */
+@media (max-width:720px){
+  .navcat span{ display:none; }
+  .navcat{ padding:9px 11px; }
+}
+
 /* ---------- 4. Header ---------------------------------------------------- */
 .nav{
   position:fixed; inset:0 0 auto 0; z-index:200;

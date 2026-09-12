@@ -334,7 +334,7 @@ PRODUCTS.forEach(p => {
 /* Bundles sold at a discount to the sum of their parts. `off` is the
    percentage taken off that sum — edit it, or the contents, and the
    displayed price follows automatically. */
-export const SETS = [
+export const SETS = reactive([
   {
     id: 'breakfast', off: 10, items: ['frozen-croissant', 'butter', 'brie', 'red-caviar'],
     en: 'Weekend breakfast', az: 'Həftəsonu səhər yeməyi', ru: 'Выходной завтрак',
@@ -356,7 +356,7 @@ export const SETS = [
     daz: 'Krevet, kalmar halqaları, midyə və marinadlanmış qarışıq — dörd nəfərlik şam.',
     dru: 'Креветки, кольца кальмара, мидии и маринованный микс — ужин на четверых.'
   }
-]
+])
 
 /* Money, rounded to the cent and printed without trailing zeroes. */
 /* A whole number stays clean — the price list reads like a poster, not a
@@ -373,7 +373,11 @@ export const money = n => {
 /* What a set costs, before and after its discount. */
 export function setPricing (set) {
   const items = set.items.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean)
-  const full = items.reduce((sum, p) => sum + p.price, 0)
+  /* Bundles from the API carry a quantity per line — two loaves, one tin. The
+     bundled fallback sets have none, so the default keeps their arithmetic
+     exactly as it was. */
+  const qty = id => set.qty?.[id] ?? 1
+  const full = items.reduce((sum, p) => sum + p.price * qty(p.id), 0)
   const price = Math.round(full * (1 - set.off / 100))
   return { items, full, price, saving: full - price }
 }
@@ -430,6 +434,27 @@ function adaptProduct (p) {
   }
 }
 
+/**
+ * A bundle, in the shape the sets section already speaks.
+ *
+ * The API sends only bundles that are switched on *and* whose every product is
+ * in stock, so anything arriving here is genuinely orderable today.
+ */
+function adaptBundle (b) {
+  return {
+    id: b.id,
+    off: Number(b.discount_percent) || 0,
+    items: (b.items ?? []).map(i => i.product_id),
+    qty: Object.fromEntries((b.items ?? []).map(i => [i.product_id, Number(i.qty) || 1])),
+    en: b.name?.en ?? b.id,
+    az: b.name?.az ?? b.name?.en ?? b.id,
+    ru: b.name?.ru ?? b.name?.en ?? b.id,
+    den: b.description?.en ?? '',
+    daz: b.description?.az ?? '',
+    dru: b.description?.ru ?? '',
+  }
+}
+
 /** The API has no "everything" row and no counts; the page wants both. */
 function adaptCategories (apiCategories, products) {
   const count = id => products.filter(p => p.cat === id).length
@@ -477,6 +502,13 @@ export async function loadCatalogue () {
     // these arrays re-renders without being told.
     PRODUCTS.splice(0, PRODUCTS.length, ...products)
     CATEGORIES.splice(0, CATEGORIES.length, ...adaptCategories(data.categories ?? [], products))
+
+    /* Emptied when the API sends no bundles, rather than falling back to the
+       ones in this file. Those three sets and their discounts were invented
+       during design and ship switched off; showing them because the shop has
+       not switched any on yet would be advertising a price nobody agreed to.
+       The admin panel is what turns them on. */
+    SETS.splice(0, SETS.length, ...(data.bundles ?? []).map(adaptBundle))
 
     catalogueStale.value = false
   } catch {

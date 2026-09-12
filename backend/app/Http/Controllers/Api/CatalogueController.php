@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\DeliveryZone;
+use App\Models\Bundle;
 use App\Models\Product;
+use App\Support\CatalogueCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -34,7 +36,7 @@ class CatalogueController extends Controller
         // a customer opens the app. The seeder and the admin path both clear
         // it, and a minute of staleness on a price is acceptable where a
         // database round trip per app launch is not.
-        $payload = Cache::remember('catalogue:v1', now()->addMinutes(10), function () {
+        $payload = Cache::remember(CatalogueCache::KEY, now()->addMinutes(10), function () {
             $categories = Category::with('translations')
                 ->where('is_active', true)
                 ->orderBy('sort')
@@ -67,6 +69,39 @@ class CatalogueController extends Controller
                 ])
                 ->all();
 
+            /**
+             * Bundles, but only the ones that can actually be delivered.
+             *
+             * A bundle is a list of products at a discount, so it is only real
+             * while every product in it is on sale and in stock. Sending one
+             * with a missing item would put a set on the front page that the
+             * order endpoint then refuses — the customer would find out at
+             * checkout. Filtering here is the difference between a promotion
+             * and an apology.
+             */
+            $orderable = collect($products)->keyBy('id');
+
+            $bundles = Bundle::with(['translations', 'items'])
+                ->where('is_active', true)
+                ->orderBy('sort')
+                ->get()
+                ->filter(fn (Bundle $b) => $b->items->isNotEmpty()
+                    && $b->items->every(fn ($item) => $orderable->has($item->product_id)))
+                ->map(fn (Bundle $b) => [
+                    'id' => $b->id,
+                    'discount_percent' => $b->discount_percent,
+                    'name' => $b->translationMap('name'),
+                    'description' => $b->translationMap('description'),
+                    'items' => $b->items
+                        ->map(fn ($item) => [
+                            'product_id' => $item->product_id,
+                            'qty' => (float) $item->qty,
+                        ])
+                        ->all(),
+                ])
+                ->values()
+                ->all();
+
             $zones = DeliveryZone::with('translations')
                 ->where('is_active', true)
                 ->orderBy('sort')
@@ -82,6 +117,7 @@ class CatalogueController extends Controller
             return [
                 'categories' => $categories,
                 'products' => $products,
+                'bundles' => $bundles,
                 'zones' => $zones,
                 'currency' => config('freshness.currency'),
                 'delivery' => [

@@ -2,9 +2,20 @@
 import { computed } from 'vue'
 import { SETS, setPricing, money } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
+import CatalogueCta from './CatalogueCta.vue'
 
 const { t, nm, dsc } = useI18n()
 const emit = defineEmits(['add'])
+
+/**
+ * The same sets in two places.
+ *
+ * On the home page this is a full section with its own heading. On the
+ * catalogue page it is a strip above the products: the sets belong there —
+ * they are things to buy — but they must not push fifty-four products below
+ * the fold, which is the problem the catalogue page was built to solve.
+ */
+defineProps({ compact: { type: Boolean, default: false } })
 
 const sets = computed(() => SETS.map(s => ({ ...s, ...setPricing(s) })))
 
@@ -15,15 +26,22 @@ function addSet (set, ev) {
 </script>
 
 <template>
-  <section class="sets" id="sets">
-    <div class="wrap">
-      <div class="shead" v-reveal>
+  <!-- Nothing at all when no set is switched on, rather than an empty
+       heading over a gap: the shop ships with every bundle inactive. -->
+  <section v-if="sets.length" class="sets" :class="{ 'sets--compact': compact }" :id="compact ? null : 'sets'">
+    <div :class="compact ? '' : 'wrap'">
+      <div v-if="!compact" class="shead" v-reveal>
         <div class="shead__t">
           <p class="eyebrow">{{ t('sets.eyebrow') }}</p>
           <h2 class="display">{{ t('sets.h2') }}</h2>
           <p class="lede">{{ t('sets.copy') }}</p>
         </div>
       </div>
+
+      <header v-else class="sets__chead">
+        <h2>{{ t('cat.sets.h') }}</h2>
+        <p>{{ t('cat.sets.p') }}</p>
+      </header>
 
       <div class="sets__grid">
         <article v-for="(s, i) in sets" :key="s.id" class="set" v-reveal="i * 110 + 'ms'">
@@ -52,11 +70,24 @@ function addSet (set, ev) {
           </div>
         </article>
       </div>
+
+      <!-- Three sets is not the shop. Saying so, with the door next to it.
+           Not on the catalogue page, where the shop is already on screen. -->
+      <p v-if="!compact" class="sets__more" v-reveal>
+        <span>{{ t('cta.sets') }}</span>
+        <CatalogueCta />
+      </p>
     </div>
   </section>
 </template>
 
 <style scoped>
+.sets__more{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+  gap:14px 20px; margin:clamp(26px,4vw,44px) 0 0; text-align:center;
+}
+.sets__more span{ color:var(--ink-2); font-size:.95rem; }
+
 .sets{ background:var(--paper-2); border-block:1px solid var(--line); padding:clamp(56px,7vw,100px) 0; }
 .sets__grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(16px,1.8vw,28px); }
 
@@ -98,7 +129,33 @@ function addSet (set, ev) {
 .set__price s{ font-size:.76rem; color:var(--ink-3); margin-top:6px; }
 .set__foot .btn{ padding:11px 16px; font-size:.78rem; }
 
+/* ---- compact: the strip that sits above the catalogue -------------------- */
+.sets--compact{ background:none; border:0; padding:0 0 clamp(22px,3vw,34px); }
+.sets--compact .sets__grid{ gap:clamp(12px,1.4vw,18px); }
+.sets--compact .set__body{ padding:14px 16px 16px; }
+.sets--compact .set__body h3{ font-size:1.15rem; }
+.sets--compact .set__desc,
+.sets--compact .set__list{ display:none; }
+.sets--compact .set__price b{ font-size:1.3rem; }
+.sets--compact .set__foot{ padding-top:14px; }
+.sets--compact .set__foot .btn{ padding:9px 13px; font-size:.72rem; }
+
+.sets__chead{ margin:0 0 clamp(12px,1.6vw,18px); }
+.sets__chead h2{ font-family:var(--display); font-size:clamp(1.25rem,2.6vw,1.6rem); font-weight:600; letter-spacing:-.016em; margin:0; }
+.sets__chead p{ margin:4px 0 0; font-size:.88rem; color:var(--ink-3); }
+
 @media (max-width:1080px){ .sets__grid{ grid-template-columns:1fr; max-width:560px; } }
+
+/* The compact strip keeps three across further down, then goes to a swipeable
+   row rather than stacking three tall cards on top of the catalogue. */
+@media (max-width:1080px){
+  .sets--compact .sets__grid{
+    max-width:none; grid-auto-flow:column; grid-auto-columns:minmax(230px,72%);
+    grid-template-columns:none; overflow-x:auto; scroll-snap-type:x mandatory;
+    padding-bottom:6px; scrollbar-width:thin;
+  }
+  .sets--compact .set{ scroll-snap-align:start; }
+}
 @media (max-width:640px){
   .set__body h3{ font-size:1.3rem; }
   .set__foot{ flex-direction:column; align-items:stretch; }

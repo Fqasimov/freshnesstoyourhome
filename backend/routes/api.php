@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AuditController;
+use App\Http\Controllers\Api\Admin\BundleController;
+use App\Http\Controllers\Api\Admin\CategoryController;
+use App\Http\Controllers\Api\Admin\CustomerController;
+use App\Http\Controllers\Api\Admin\DashboardController;
+use App\Http\Controllers\Api\Admin\DeliveryZoneController;
+use App\Http\Controllers\Api\Admin\ProductController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CatalogueController;
@@ -19,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 |  - Public: browsing the catalogue and asking for a sign-in code.
 |  - Signed in: everything about one's own profile, addresses and orders.
 |  - Staff: the shop's own view, gated on the role stored in the database.
+|  - Admin: the shop's own settings — prices, stock, bundles, zones.
 |
 | Every route that writes is rate limited. The named limiters are defined in
 | AppServiceProvider.
@@ -84,6 +92,49 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:courier,admin'])
     ->prefix('staff')
     ->group(function () {
         Route::get('orders', [StaffOrderController::class, 'index']);
+        Route::get('orders/{id}', [StaffOrderController::class, 'show']);
         Route::post('orders/{id}/transition', [StaffOrderController::class, 'transition']);
         Route::post('orders/{id}/weights', [StaffOrderController::class, 'confirmWeights']);
+    });
+
+// ----------------------------------------------------------------- admin ---
+
+/*
+| Everything a shopkeeper changes, and nothing a shopkeeper should not.
+|
+| `role:admin` alone, not `role:courier,admin`: a courier moves orders along
+| and records weights, and has no business editing the price list.
+|
+| Two things are deliberately missing and should stay missing. There is no
+| route that changes a user's role — staff are appointed by a console command
+| on the server, so a stolen admin session cannot mint a second admin that
+| outlives it. And there is no route that deletes an audit row.
+|
+| Writes are rate limited as a blast radius control rather than as abuse
+| prevention: these callers are trusted, and a loop that empties the shelves
+| by accident is still an outage.
+*/
+Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
+    ->prefix('admin')
+    ->group(function () {
+        Route::get('dashboard', [DashboardController::class, 'index']);
+
+        Route::get('products', [ProductController::class, 'index']);
+        Route::patch('products/{id}', [ProductController::class, 'update']);
+        Route::post('products/stock', [ProductController::class, 'stock']);
+
+        Route::get('categories', [CategoryController::class, 'index']);
+        Route::patch('categories/{id}', [CategoryController::class, 'update']);
+
+        Route::get('bundles', [BundleController::class, 'index']);
+        Route::patch('bundles/{id}', [BundleController::class, 'update']);
+
+        Route::get('zones', [DeliveryZoneController::class, 'index']);
+        Route::patch('zones/{id}', [DeliveryZoneController::class, 'update']);
+
+        Route::get('customers', [CustomerController::class, 'index']);
+        Route::get('customers/{id}', [CustomerController::class, 'show']);
+        Route::post('customers/{id}/block', [CustomerController::class, 'block']);
+
+        Route::get('audits', [AuditController::class, 'index']);
     });

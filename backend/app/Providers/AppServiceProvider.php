@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
+use App\Support\CatalogueCache;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -94,6 +94,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Public and cached, so it can be generous — but not unbounded, or it
         // is a free way to make the server do work.
+        // Generous, because this is staff doing their job — and finite,
+        // because an admin panel with a runaway loop in it is still a way to
+        // take the shop down.
+        RateLimiter::for('admin', fn (Request $r) => Limit::perMinute(120)->by($r->user()?->id ?: $r->ip()));
+
         RateLimiter::for('catalogue', fn (Request $r) => Limit::perMinute(60)->by($r->ip()));
 
         // Laravel's default for everything else.
@@ -116,11 +121,17 @@ class AppServiceProvider extends ServiceProvider
             \App\Models\CategoryTranslation::class,
             \App\Models\DeliveryZone::class,
             \App\Models\DeliveryZoneTranslation::class,
+            // Bundles became customer-facing when the catalogue endpoint
+            // started serving them; without these three a set switched on
+            // in the admin panel would appear up to ten minutes later.
+            \App\Models\Bundle::class,
+            \App\Models\BundleTranslation::class,
+            \App\Models\BundleItem::class,
         ];
 
         foreach ($models as $model) {
-            $model::saved(fn () => Cache::forget('catalogue:v1'));
-            $model::deleted(fn () => Cache::forget('catalogue:v1'));
+            $model::saved(fn () => CatalogueCache::flush());
+            $model::deleted(fn () => CatalogueCache::flush());
         }
     }
 }

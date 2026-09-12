@@ -3,9 +3,10 @@ import { ref, computed, watch } from 'vue'
 import { PRODUCTS, CATEGORIES } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
 import ProductCard from '../components/ProductCard.vue'
+import SetsSection from '../components/SetsSection.vue'
 
 const { t, lang, nm, catName } = useI18n()
-defineEmits(['add', 'peek'])
+defineEmits(['add', 'add-set', 'peek'])
 
 /* ── Filter state ──────────────────────────────────────────────────────── */
 const query = ref('')
@@ -99,6 +100,15 @@ watch([category, band], () => { filtersOpen.value = false })
         <h1 class="display cat__h">{{ t('cat.h') }}</h1>
         <p class="lede">{{ t('cat.lede') }}</p>
       </header>
+
+      <!--
+        The sets, as a strip rather than as the section they are on the home
+        page. They are things to buy, so they belong on the page where people
+        buy things — but only while nothing is filtered: somebody who has typed
+        "pendir" is hunting one item, and a seafood set above the results is
+        the clutter this page exists to remove.
+      -->
+      <SetsSection v-if="!active" compact @add="$emit('add-set', $event)" />
 
       <!-- Search and the quick picks sit above everything, because they are
            what most people reach for first. -->

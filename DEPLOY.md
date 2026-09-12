@@ -56,6 +56,10 @@ personal account. Moving it later is a transfer process with real friction.
 
 ## Business decisions that block launch
 
+These are now all editable in the admin panel rather than in code — a price or a
+delivery fee is a row update, visible on the next request, not a release.
+
+
 - **Delivery zones carry a zero fee and no minimum.** Seeded as placeholders so
   the structure exists. A zero fee becomes a real decision the moment an order
   is taken.
@@ -68,6 +72,27 @@ personal account. Moving it later is a transfer process with real friction.
 - **Tuna loin is priced lower per kilo than frozen tuna** on the original
   board. Probably a transcription error on the poster; worth checking with
   whoever sets prices.
+
+## The admin panel
+
+`npm run build` in `web/` now produces two pages: `index.html` (the shop) and
+`admin.html` (the panel). Both are static files with no server-side rendering,
+so the hosting story does not change — but two things are worth doing:
+
+- **Do not link to it.** It carries `noindex, nofollow` and `referrer:
+  no-referrer`, and the API refuses non-admins with a 404, but there is no
+  reason to help anyone find it.
+- **Put it behind the office IP, or on its own hostname,** if the host makes
+  that cheap. The role check is the control; network scoping is the belt.
+
+Appointing the first admin is a console command on the server:
+
+```bash
+php artisan freshness:promote you@example.com admin
+```
+
+The account has to exist first — sign in once as a customer, then promote. This
+is deliberately not a button anywhere.
 
 ## Infrastructure
 

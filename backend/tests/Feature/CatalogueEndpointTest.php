@@ -95,9 +95,34 @@ class CatalogueEndpointTest extends TestCase
     {
         // Their contents and discounts have never been confirmed by the
         // business. In an app an unconfirmed discount is a real transaction.
+        // The endpoint now carries a bundles key — the admin panel can switch
+        // a set on — so the guarantee is that none of them ships switched on,
+        // not that the feature is absent.
         $body = $this->getJson('/api/catalogue')->json();
 
-        $this->assertArrayNotHasKey('bundles', $body);
+        $this->assertSame([], $body['bundles']);
         $this->assertSame(0, \App\Models\Bundle::where('is_active', true)->count());
+    }
+
+    /**
+     * A set is only real while everything in it can be bought.
+     *
+     * Switching a bundle on and then selling out of one of its four products
+     * would otherwise leave a promotion on the front page that the order
+     * endpoint refuses — and the customer finds out at checkout.
+     */
+    public function test_a_bundle_disappears_when_one_of_its_products_sells_out(): void
+    {
+        $bundle = \App\Models\Bundle::with('items')->first();
+        $bundle->forceFill(['is_active' => true])->save();
+
+        $this->assertContains(
+            $bundle->id,
+            collect($this->getJson('/api/catalogue')->json('bundles'))->pluck('id')->all(),
+        );
+
+        Product::find($bundle->items->first()->product_id)->update(['in_stock' => false]);
+
+        $this->assertSame([], $this->getJson('/api/catalogue')->json('bundles'));
     }
 }
