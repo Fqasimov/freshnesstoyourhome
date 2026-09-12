@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { PRODUCTS, CATEGORIES } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
 import ProductCard from '../components/ProductCard.vue'
@@ -16,8 +16,44 @@ const band = ref('any')
 const quick = ref(new Set())
 const sortBy = ref('default')
 
-/* Open on a phone, where the sidebar is a slide-over rather than a column. */
-const filtersOpen = ref(false)
+/**
+ * Whether the filter panel is showing.
+ *
+ * One flag, two layouts. On a phone the panel is a slide-over and starts
+ * closed, because the products are the point and 310px of filters over them is
+ * not. On a desktop it is a column that slides out of the grid, starts open,
+ * and remembers being closed — somebody who wants six products across rather
+ * than four is telling us something about how they shop, and being made to say
+ * it again on every visit is the kind of small rudeness that adds up.
+ */
+const NARROW = '(max-width: 900px)'
+const isNarrow = () => window.matchMedia(NARROW).matches
+
+const STORED = 'fth.catalogue.filters'
+function remembered () {
+  try { return localStorage.getItem(STORED) !== 'closed' } catch { return true }
+}
+
+const filtersOpen = ref(isNarrow() ? false : remembered())
+
+function toggleFilters () {
+  filtersOpen.value = !filtersOpen.value
+  // Only the column's state is worth keeping. A slide-over is a thing you open
+  // and dismiss, not a preference.
+  if (isNarrow()) return
+  try { localStorage.setItem(STORED, filtersOpen.value ? 'open' : 'closed') } catch {}
+}
+
+/* Crossing the breakpoint means the panel changes into a different thing, so
+   its state has to change with it: a slide-over left open would otherwise
+   cover the page the moment a window is narrowed. */
+let mq = null
+const onBreakpoint = e => { filtersOpen.value = e.matches ? false : remembered() }
+onMounted(() => {
+  mq = window.matchMedia(NARROW)
+  mq.addEventListener('change', onBreakpoint)
+})
+onUnmounted(() => mq?.removeEventListener('change', onBreakpoint))
 
 /* Price bands rather than a slider: a two-thumb range is fiddly with a thumb,
    and for fifty-four products between 5 and 110 AZN four bands answer the
@@ -89,8 +125,9 @@ const results = computed(() => {
 const countIn = id => id === 'all' ? PRODUCTS.length : PRODUCTS.filter(p => p.cat === id).length
 
 /* Choosing a filter on a phone should show the result, not leave the customer
-   looking at the panel they just used. */
-watch([category, band], () => { filtersOpen.value = false })
+   looking at the panel they just used. On a desktop the panel is beside the
+   results rather than over them, so it stays where it is. */
+watch([category, band], () => { if (isNarrow()) filtersOpen.value = false })
 </script>
 
 <template>
@@ -130,7 +167,9 @@ watch([category, band], () => { filtersOpen.value = false })
           <BIcon name="chevron-down" :size="11" />
         </div>
 
-        <button class="cat__filterbtn" @click="filtersOpen = true">
+        <button class="cat__filterbtn" :class="{ on: filtersOpen }"
+                :aria-expanded="filtersOpen" aria-controls="cat-filters"
+                @click="toggleFilters">
           <BIcon name="sliders" :size="15" />
           {{ t('cat.filters') }}<span v-if="active" class="cat__badge">{{ active }}</span>
         </button>
@@ -144,12 +183,13 @@ watch([category, band], () => { filtersOpen.value = false })
         <button v-if="active" class="chip chip--reset" @click="reset">{{ t('cat.reset') }}</button>
       </div>
 
-      <div class="cat__body">
-        <!-- A column on a desktop, a slide-over on a phone. Same markup. -->
-        <aside class="cat__side" :class="{ open: filtersOpen }" :aria-hidden="false">
+      <div class="cat__body" :class="{ tucked: !filtersOpen }">
+        <!-- A column on a desktop, a slide-over on a phone. Same markup, and
+             the same flag opens both. -->
+        <aside id="cat-filters" class="cat__side" :class="{ open: filtersOpen }">
           <div class="cat__sidehead">
             <span>{{ t('cat.filters') }}</span>
-            <button class="x" :aria-label="t('shop.clear')" @click="filtersOpen = false">×</button>
+            <button class="x" :aria-label="t('cat.filters')" @click="filtersOpen = false">×</button>
           </div>
 
           <section class="fgroup">
@@ -231,12 +271,17 @@ watch([category, band], () => { filtersOpen.value = false })
 .select select:hover{ border-color:var(--ink); }
 .select .bi{ position:absolute; right:13px; pointer-events:none; color:var(--ink-3); }
 
-/* Only a phone needs this: the sidebar is already on screen above 900px. */
+/* At every width now: on a phone it opens the slide-over, on a desktop it
+   folds the column away. */
 .cat__filterbtn{
-  display:none; align-items:center; gap:8px;
+  display:inline-flex; align-items:center; gap:8px;
   border:1px solid var(--line); border-radius:100px; padding:9px 16px;
-  font-size:.83rem; background:none; cursor:pointer;
+  font-size:.83rem; color:var(--ink-2); background:none; cursor:pointer;
+  transition:background .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease);
 }
+.cat__filterbtn:hover{ border-color:var(--ink); color:var(--ink); }
+.cat__filterbtn.on{ background:var(--forest); border-color:var(--forest); color:var(--paper); }
+.cat__filterbtn.on .cat__badge{ background:var(--acid); color:var(--ink); }
 
 .cat__badge{
   display:grid; place-items:center; min-width:19px; height:19px; padding:0 5px;
@@ -255,9 +300,26 @@ watch([category, band], () => { filtersOpen.value = false })
 .chip--reset{ color:var(--brick); border-color:color-mix(in srgb, var(--brick) 40%, transparent); }
 
 /* Body ------------------------------------------------------------------- */
-.cat__body{ display:grid; grid-template-columns:232px 1fr; gap:clamp(24px,3vw,44px); align-items:start; }
+/* The column is a width this grid can animate to nothing, so the results take
+   the space rather than leaving a hole where the filters were. Browsers that
+   will not interpolate grid-template-columns simply snap, which is a slightly
+   duller version of the same behaviour rather than a broken one. */
+.cat__body{
+  display:grid; grid-template-columns:var(--sidew,232px) 1fr;
+  gap:var(--sidegap,clamp(24px,3vw,44px)); align-items:start;
+  transition:grid-template-columns .42s var(--ease-out), gap .42s var(--ease-out);
+}
+.cat__body.tucked{ --sidew:0px; --sidegap:0px; }
 
-.cat__side{ position:sticky; top:calc(var(--nav-h) + 18px); }
+.cat__side{
+  position:sticky; top:calc(var(--nav-h) + 18px);
+  min-width:0; overflow:hidden;
+  transition:transform .42s var(--ease-out), opacity .28s var(--ease);
+}
+/* Moved out and made inert, so a folded panel cannot be tabbed into. */
+.cat__body.tucked .cat__side{
+  transform:translateX(-18px); opacity:0; visibility:hidden; pointer-events:none;
+}
 .cat__sidehead{ display:none; }
 
 .fgroup + .fgroup{ margin-top:26px; }
@@ -291,8 +353,17 @@ watch([category, band], () => { filtersOpen.value = false })
 }
 
 @media (max-width:900px){
-  .cat__filterbtn{ display:inline-flex; }
-  .cat__body{ grid-template-columns:1fr; }
+  /* A slide-over sits outside the grid, so the column machinery above is
+     switched off rather than fought with: no tucked track, and the panel keeps
+     its own off-screen transform. Visibility stays on so it slides out of view
+     rather than blinking out of it — the fold-away column hides itself instead,
+     where an invisible panel must also be untabbable. */
+  .cat__body,
+  .cat__body.tucked{ grid-template-columns:1fr; gap:0; }
+
+  .cat__body.tucked .cat__side{
+    transform:translateX(-101%); opacity:1; visibility:visible; pointer-events:auto;
+  }
 
   .cat__side{
     position:fixed; inset:0 auto 0 0; z-index:300;

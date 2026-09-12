@@ -60,9 +60,23 @@ product count are identical everywhere; five different labels would read as five
 different places rather than one door.
 
 The catalogue page carries a left sidebar (counters with live counts, price
-bands), a search field, quick-pick buttons and sorting. On a phone the sidebar
-becomes a slide-over that closes as soon as a choice is made, so the customer
-lands on the result rather than back at the panel they just used.
+bands), a search field, quick-pick buttons and sorting.
+
+**The sidebar slides away at every width**, from one flag and one button:
+
+- On a phone it is a slide-over that starts closed and shuts as soon as a
+  choice is made, so the customer lands on the result rather than back at the
+  panel they just used.
+- On a desktop it is a column that folds out of the grid — the products take
+  the space, going from three across to four — and it stays open when a filter
+  is chosen, because there it sits beside the results rather than over them.
+  Being closed is remembered, so somebody who prefers the wider grid is not
+  made to say so again on every visit.
+
+The column animates by interpolating `grid-template-columns`; a browser that
+will not interpolate it snaps instead, which is a duller version of the same
+behaviour rather than a broken one. A folded panel is `visibility: hidden`, so
+it cannot be tabbed into.
 
 The sets appear on the catalogue page too, as a compact strip above the
 products — they are things to buy, so they belong where people buy things. The
