@@ -23,6 +23,13 @@ class CatalogueController extends Controller
 {
     public function index(): JsonResponse
     {
+        // Everything below is reduced to plain arrays with ->all() before it is
+        // cached. A Collection survives a round trip through the cache only if
+        // it can be unserialised on the way back; when it cannot, the endpoint
+        // returns {"__PHP_Incomplete_Class_Name": ...} instead of the
+        // catalogue — and only from the second request onwards, because the
+        // first one is a cache miss and never serialises anything. That is a
+        // bug that passes every smoke test and breaks in production.
         // Cached because it changes when a shopkeeper edits a price, not when
         // a customer opens the app. The seeder and the admin path both clear
         // it, and a minute of staleness on a price is acceptable where a
@@ -35,7 +42,8 @@ class CatalogueController extends Controller
                 ->map(fn (Category $c) => [
                     'id' => $c->id,
                     'name' => $c->translationMap('name'),
-                ]);
+                ])
+                ->all();
 
             $products = Product::with('translations')
                 ->orderable()
@@ -56,7 +64,8 @@ class CatalogueController extends Controller
                     'name' => $p->translationMap('name'),
                     'description' => $p->translationMap('description'),
                     'unit_label' => $p->translationMap('unit_label'),
-                ]);
+                ])
+                ->all();
 
             $zones = DeliveryZone::with('translations')
                 ->where('is_active', true)
@@ -67,7 +76,8 @@ class CatalogueController extends Controller
                     'name' => $z->translationMap('name'),
                     'fee_minor' => $z->fee_minor,
                     'min_order_minor' => $z->min_order_minor,
-                ]);
+                ])
+                ->all();
 
             return [
                 'categories' => $categories,
@@ -79,6 +89,10 @@ class CatalogueController extends Controller
                     'close' => config('freshness.order.delivery_close'),
                     'lead_days' => (int) config('freshness.order.lead_days'),
                     'weight_tolerance_percent' => (int) config('freshness.order.weight_tolerance_percent'),
+                    // So the sign-in screen can tell the customer how long
+                    // their code lasts without hardcoding a number that would
+                    // then have to agree with the server's by luck.
+                    'code_ttl_minutes' => (int) config('freshness.auth.code_ttl_minutes'),
                 ],
             ];
         });

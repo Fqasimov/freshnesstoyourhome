@@ -28,6 +28,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('catalogue', [CatalogueController::class, 'index'])
     ->middleware('throttle:catalogue');
 
+// Pricing a basket is public, and deliberately so. A customer builds a basket
+// before they have an account — an app that demands a sign-in to show a total
+// is both worse to use and the shape App Store review rejects as an empty
+// shell. The endpoint reads the catalogue and a delivery zone and returns
+// arithmetic over them; it touches nothing that belongs to anybody.
+Route::post('orders/quote', [OrderController::class, 'quote'])
+    ->middleware('throttle:catalogue');
+
 Route::prefix('auth')->group(function () {
     // Tightly limited: this endpoint sends mail on request, which makes it the
     // most abusable route in the system. See LoginCodeService for the three
@@ -56,7 +64,6 @@ Route::middleware(['auth:sanctum', 'blocked'])->group(function () {
     Route::apiResource('addresses', AddressController::class)
         ->only(['index', 'store', 'update', 'destroy']);
 
-    Route::post('orders/quote', [OrderController::class, 'quote']);
     Route::get('orders', [OrderController::class, 'index']);
     Route::get('orders/{id}', [OrderController::class, 'show']);
     Route::post('orders', [OrderController::class, 'store'])

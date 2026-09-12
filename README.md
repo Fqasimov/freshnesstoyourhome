@@ -1,135 +1,103 @@
 # Freshness To Your Home
 
-Product catalogue and ordering site for **Freshness To Your Home** — a Baku fishmonger,
-cheese room and import pantry that delivers across the city.
+Premium food delivery in Baku — website, customer app, and the API behind both.
 
-Vue 3 + Vite. Bilingual (Azerbaijani / English), 54 products, basket handed off to
-WhatsApp.
+```
+web/       The public website (Vue 3 + Vite). Browsing and the catalogue.
+app/       The customer app (Vue 3 + Capacitor) for iOS and Android.
+backend/   The API (Laravel 13 + Postgres). Auth, catalogue, orders.
+```
 
----
+One repository, because the three share a catalogue. Keeping the app somewhere
+else would mean maintaining 54 products and their prices in two places, and
+they would drift — the only question is when.
+
+## The three things worth knowing before reading the code
+
+**Prices live in the database, not in the code.** The catalogue used to be a
+JavaScript file. With an app in the picture that would have meant three copies
+of every price — website bundle, app bundle, server — and changing the price of
+salmon would have needed an App Store review. Products, categories, zones and
+all three translations are rows now. `backend/database/data/catalogue.json` is
+the reviewable seed source; the database is the authority.
+
+**The client never decides what anything costs.** A request says which product
+and how many. The server prices it from its own tables. Every app bundle is on
+a customer's own phone and can be modified, so any total that arrives from a
+client is a number somebody chose.
+
+**Most of this catalogue is sold by the kilo, and a kilo is never exactly a
+kilo.** An order carries a server-priced estimate and a stated tolerance; the
+courier records what the scales said; the server re-prices from the unit price
+already on the order. Without that split, every weighed order is an argument at
+the door.
 
 ## Running it
 
-```sh
-npm install
-npm run dev        # dev server with hot reload
-npm run build      # → dist/         static site, hashed assets
-npm run preview    # serve the production build
-npm run build:single   # → dist-single/index.html, one self-contained file
+```bash
+# API
+cd backend
+cp .env.example .env
+php artisan key:generate
+php artisan freshness:generate-keys      # prints BLIND_INDEX_KEY for .env
+php artisan migrate --seed
+php artisan serve
+
+# Website
+cd web && npm install && npm run dev
+
+# App
+cd app && npm install
+cp .env.example .env                     # point VITE_API_URL at the API
+npm run dev
 ```
 
-`build:single` inlines every script, style and photograph as a data URI, producing a
-single HTML file that runs from `file://`. It exists for previews and one-file hosting;
-for a real deployment use `npm run build` and upload `dist/`.
+For sign-in codes in development, set `MAIL_MAILER=log` and read the code out
+of `backend/storage/logs/laravel.log`.
 
-## What's in it
+## Tests
 
-- **54 products** across six counters — smoked fish, fresh fish, seafood, poultry & meat,
-  cheese & dairy, pastry & pantry — each with its own photograph, both names, unit, price
-  in AZN and a short description.
-- **Basket** with quantity control, persisted in `localStorage`. Nothing is charged
-  online: "Send basket" opens WhatsApp with the order already written out, which is how
-  the business actually takes orders.
-- **Bilingual**, AZ ⇄ EN, switched live. Azerbaijani is the default for a first-time
-  visitor; a saved choice wins. The basket survives the switch.
-- **Per-kilo reference prices** computed for anything not sold by the kilo, so a 400 gr
-  lobster at 60 AZN also reads as 150 AZN/kg.
-- **Opening sequence** — the brand mark assembling itself, then a bloom of ripples.
-  Plays once per browser tab, skips on any interaction, and is skipped outright under
-  `prefers-reduced-motion`.
-- Filtering by counter, search across both languages, four sort orders — reflowed with
-  `<TransitionGroup>`, so cards slide to their new positions instead of redrawing.
-
-## Layout
-
-```
-index.html               Vite entry
-vite.config.js           two build modes: hashed assets, or one inlined file
-src/
-  main.js                app bootstrap, favicon injection
-  App.vue                composition root: sections, overlays, add-to-basket flow
-  components/            16 single-file components
-  composables/
-    useI18n.js           language state + translation helpers
-    useCart.js           basket state, totals, WhatsApp composition
-    useMotion.js         reduced-motion flag, toast, fly-to-basket
-  directives/reveal.js   v-reveal — fade-up on first scroll into view
-  data/
-    catalogue.js         products, categories, contact, price helpers
-    messages.js          all interface copy, AZ + EN
-  styles/base.css        design tokens, reset, typography, shared primitives
-  assets/products/       54 product photographs
+```bash
+cd backend && php artisan test           # 72 tests, 444 assertions
+cd app && npm run journey                # the customer journey in a browser
 ```
 
-Component-specific CSS lives in each `.vue` file as `<style scoped>`; only tokens and
-genuinely shared primitives (`.btn`, `.wrap`, `.card` typography scale) are global.
+The backend suite runs on sqlite by default and is also green against Postgres.
+It covers the paths that would hurt rather than chasing coverage: client-set
+prices being ignored, sign-in code brute force and replay, cross-customer order
+and address access, self-promotion to admin, the weighing arithmetic, and that
+personal data is genuinely unreadable in the tables.
 
-## Updating the catalogue
+`npm run journey` drives the built app in a real browser against a real API. It
+is there because three of the bugs found during this build were invisible to
+unit tests: a cached response coming back the wrong shape on the second request
+only, a public endpoint answering in the wrong language, and a token landing in
+`localStorage`.
 
-Everything a shopkeeper needs to change lives in **`src/data/catalogue.js`**.
+## Building the app
 
-**Change a price** — edit `price`:
-
-```js
-{ id:'smoked-salmon', cat:'smoked', price:65, unit:{en:'1 kg',az:'1 kg',kind:'kg',qty:1}, … }
+```bash
+cd app
+npm run build
+npx cap add ios          # once; needs macOS and Xcode
+npx cap add android      # once; needs Android Studio
+npm run ios              # build, sync, open Xcode
+npm run android          # build, sync, open Android Studio
 ```
 
-**Add a product** — copy an existing entry, give it a unique `id`, and save a photo as
-`src/assets/products/<id>.jpg`. Vite resolves photos by `id` at build time, so a missing
-file warns in dev rather than 404-ing in production. Bump the `kicker` count on its
-category while you're there.
+The native projects are generated and not committed. `capacitor.config.json`
+and `app/resources/` are what regenerate them.
 
-`unit.kind` drives the per-kilo badge:
+## Before this goes to a store
 
-| `kind`  | meaning                | badge                     |
-|---------|------------------------|---------------------------|
-| `kg`    | sold by the kilo       | only if `qty` isn't 1     |
-| `g`     | fixed weight in `qty`  | yes, computed from `qty`  |
-| `pc`    | per piece              | no                        |
-| `pack`  | per pack               | no                        |
+See `DEPLOY.md` for the full list. The four that block a launch:
 
-**Two sizes of one product** — add a `variants` array (see `red-caviar`). The card opens
-the quick view so the customer picks a size before it reaches the basket.
-
-**Mark a product as a pick** — set `star:true`. It gains a "Chef's pick" tag and joins
-the *This week's catch* slider.
-
-**Interface wording** lives in `src/data/messages.js`, Azerbaijani and English side by
-side. **Phone and WhatsApp number** are in the `CONTACT` object in `catalogue.js`.
-
-## Design
-
-Palette sampled straight off the shop's printed boards: leaf `#84AB58`, deep forest
-`#2C4223`, brick `#90452E`, cream `#F6F3EA`, acid yellow `#EFE24E`. Fraunces for display,
-Inter for text, a paper grain over the whole sheet. Every colour, spacing step and easing
-curve is a custom property at the top of `src/styles/base.css`.
-
-Motion respects `prefers-reduced-motion` throughout.
-
-## Product photography
-
-The photographs were extracted from the shop's own catalogue boards. To replace one,
-overwrite `src/assets/products/<id>.jpg` with a square-ish image of your own.
-
-## Deploying
-
-`npm run build`, then upload `dist/`. Any static host works — GitHub Pages, Netlify,
-Cloudflare Pages, plain nginx. `base` is `./`, so the build runs from a subdirectory too.
-
-## Notes on the prices
-
-Prices came off the catalogue boards as published and are in AZN. Two things worth
-confirming with the shop:
-
-- **Tuna loin (50 AZN/kg) is cheaper than tuna frozen (68 AZN/kg)** on the board, which
-  is the reverse of what you'd expect. It may be a grade difference, or a typo.
-- Boards 10–15 of the original 15-board catalogue were never supplied, so anything on
-  them is missing here.
-
-## History
-
-This started as a no-build vanilla HTML/CSS/JS site; that version is preserved in git at
-commit `bb57703`. The port to Vue kept the markup, styling and behaviour intact — the
-main structural wins were `<TransitionGroup>` replacing a hand-rolled FLIP animation,
-`<Transition>` replacing class-toggled overlay visibility, and shared state moving out
-of module globals into composables.
+1. **Delivery zones carry a zero fee.** Placeholders, seeded so the structure
+   exists. Set the real areas and prices.
+2. **The three bundles were invented during design.** Seeded inactive on
+   purpose — an unconfirmed discount in an app is a real transaction.
+3. **Hero text, about text and the logo are still placeholders** on the
+   website, and the store icon is upscaled from a 320px mark.
+4. **Apple and Google developer accounts take calendar time.** Google Play
+   makes new personal accounts run 14 days of closed testing before production
+   access. Start both now, not when the code is done.

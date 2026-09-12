@@ -127,6 +127,50 @@ class PricingAuthorityTest extends TestCase
             ->assertJsonValidationErrors('lines');
     }
 
+    /**
+     * The basket renders in the language the app is showing.
+     *
+     * Quoting is public, so there may be no account to read a preference
+     * from — and the framework's own default locale is English, which is the
+     * one language this shop's customers are least likely to want. Without the
+     * client stating its language, an Azerbaijani basket listed its contents
+     * in English.
+     */
+    public function test_a_quote_is_returned_in_the_language_the_client_asks_for(): void
+    {
+        $lines = [['product_id' => 'smoked-salmon', 'qty' => 1]];
+
+        $expected = [
+            'az' => 'Hisə verilmiş qızıl balıq',
+            'ru' => 'Лосось холодного копчения',
+            'en' => 'Smoked Salmon',
+        ];
+
+        foreach ($expected as $locale => $name) {
+            $this->postJson('/api/orders/quote', ['lines' => $lines, 'locale' => $locale])
+                ->assertOk()
+                ->assertJsonPath('lines.0.name', $name);
+        }
+    }
+
+    public function test_a_quote_falls_back_to_azerbaijani_when_no_language_is_given(): void
+    {
+        $this->postJson('/api/orders/quote', [
+            'lines' => [['product_id' => 'smoked-salmon', 'qty' => 1]],
+        ])->assertOk()->assertJsonPath('lines.0.name', 'Hisə verilmiş qızıl balıq');
+    }
+
+    public function test_a_basket_can_be_priced_without_signing_in(): void
+    {
+        // Browsing and building a basket before registering is the point: an
+        // app that demands an account to show a total is both worse to use and
+        // the shape App Store review rejects.
+        $this->postJson('/api/orders/quote', [
+            'lines' => [['product_id' => 'smoked-salmon', 'qty' => 0.5]],
+            'zone_id' => 'baku-city',
+        ])->assertOk()->assertJsonPath('total_minor', 3250);
+    }
+
     public function test_a_quote_matches_what_the_order_is_actually_charged(): void
     {
         [$user, $address] = $this->customerWithAddress();

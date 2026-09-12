@@ -12,6 +12,7 @@ use App\Services\PricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
@@ -56,11 +57,18 @@ class OrderController extends Controller
             'lines.*.product_id' => ['required', 'string', 'max:60'],
             'lines.*.qty' => ['required', 'numeric', 'min:0.001', 'max:'.config('freshness.order.max_qty_per_line')],
             'zone_id' => ['sometimes', 'nullable', 'string', 'max:40'],
+            'locale' => ['sometimes', Rule::in(['az', 'ru', 'en'])],
         ]);
 
         $basket = $this->pricing->quote($data['lines'], $data['zone_id'] ?? null);
 
-        return response()->json($basket->toArray($request->user()?->locale));
+        // The language comes from the request, not from the account. This
+        // endpoint is public, so there may be no account at all — and a
+        // customer who has just switched language expects their basket to
+        // follow immediately, before that choice is saved to a profile.
+        $locale = $data['locale'] ?? $request->user()?->locale ?? 'az';
+
+        return response()->json($basket->toArray($locale));
     }
 
     public function store(StoreOrderRequest $request): JsonResponse

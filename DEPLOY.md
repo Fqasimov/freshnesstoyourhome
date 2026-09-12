@@ -1,0 +1,108 @@
+# Going live
+
+The code is ready before the paperwork is. Read the first section today.
+
+## Start these now — they are the long pole
+
+**Google Play.** $25, once. A new **personal** developer account must run 14
+days of closed testing with 12 testers before production access unlocks. An
+organization account skips the tester requirement but still needs identity
+verification. Either way this is a hard two-week wall that runs in parallel
+with development, so open the account before the app is finished, not after.
+
+**Apple.** $99/year. If the account is registered as an organization it needs a
+D-U-N-S number, which takes its own week or two in Azerbaijan.
+
+**Decide whose account publishes this.** If Freshness To Your Home belongs to
+an employer and the app ships under a personal account, the app lives in that
+personal account. Moving it later is a transfer process with real friction.
+
+## Store requirements the code already covers
+
+- **In-app account deletion** — Apple Guideline 5.1.1(v). Profile → delete.
+- **No in-app purchase conflict** — physical goods are exempt, and nothing is
+  charged in the app anyway.
+- **Browsing without an account** — an app that is a login wall until you
+  register is the shape Guideline 4.2 rejects.
+
+## Still needed for review
+
+- **A better logo.** The store icon is generated from `logo-mark.png`, which is
+  320×320. Upscaled to the required 1024×1024 it is soft, and a soft icon is a
+  visible quality problem on a store listing. Supply the mark at 1024 or larger
+  and re-run `app/resources` generation.
+- **Push notifications.** Not built. Order status is the feature customers
+  actually want, and it is also the strongest answer to "why is this not a
+  website" under Guideline 4.2.
+- **Screenshots** at every required size, for both stores.
+- **A privacy policy on a public URL.** Required by both. It has to match what
+  the app really collects: name, email, phone, delivery address, order history.
+- **App Privacy labels** (Apple) and the **Data Safety form** (Play), filled in
+  accurately.
+- **A demo account for reviewers.** Sign-in is by email code, so the reviewer
+  cannot sign in without receiving mail. Either supply a mailbox they can read
+  or arrange a review account whose code is fixed — and if you do the latter,
+  make it a build-time flag that cannot be set in production.
+
+## Business decisions that block launch
+
+- **Delivery zones carry a zero fee and no minimum.** Seeded as placeholders so
+  the structure exists. A zero fee becomes a real decision the moment an order
+  is taken.
+- **The three bundles were invented while designing the website.** Seeded
+  inactive on purpose. On a web page an unconfirmed discount is a placeholder;
+  in an app it is a transaction someone pays for.
+- **The weight tolerance is set to 10%** (`WEIGHT_TOLERANCE_PERCENT`). This is
+  what the customer is told their bill may move by. Confirm it is the number
+  the business actually wants to stand behind.
+- **Tuna loin is priced lower per kilo than frozen tuna** on the original
+  board. Probably a transcription error on the poster; worth checking with
+  whoever sets prices.
+
+## Infrastructure
+
+**Database.** Managed Postgres, not reachable from the internet. The API should
+be the only thing that can open a connection. Give the application its own
+non-superuser role.
+
+**API.** Any PHP 8.3+ host — Fly.io, Railway, Hetzner with Forge, DigitalOcean.
+Frankfurt is the closest low-latency region to Baku. A queue worker must be
+running (`php artisan queue:work`) or no sign-in code is ever sent.
+
+**Mail.** A transactional provider (SES, Resend, Postmark, Brevo) on a domain
+with SPF, DKIM and DMARC. At this volume it is effectively free. Deliverability
+is the whole product here — sign-in codes are the only way into the app.
+
+**Secrets.** `APP_KEY` and `BLIND_INDEX_KEY` in the platform's secret store,
+not a file on disk. Back both up somewhere that is not the database backup.
+Losing `APP_KEY` makes every encrypted column permanently unreadable; losing
+`BLIND_INDEX_KEY` makes every customer unfindable by email. Neither is
+recoverable.
+
+**Before the first real order:**
+
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan migrate --force
+```
+
+and confirm `APP_DEBUG=false`, `APP_ENV=production`, and that
+`CORS_ALLOWED_ORIGINS` lists only the real website.
+
+## Realistic timeline
+
+Assuming content is final and nothing goes wrong:
+
+| | |
+|---|---|
+| Store accounts, verification | start today, 1–2 weeks in parallel |
+| Delivery zones, prices, bundles confirmed | business decision |
+| Push notifications | 3–5 days |
+| Store assets, privacy policy, forms | 3–5 days |
+| Play closed testing gate | 14 days (personal accounts) |
+| Review, allowing for a rejection | ~1 week |
+
+**Six to eight weeks to live on both stores.** The two-week Play gate is the
+piece that runs in parallel only if the account exists — which is why it is the
+first thing in this document.
