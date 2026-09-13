@@ -430,7 +430,12 @@ function adaptProduct (p) {
     den: p.description?.en ?? '',
     daz: p.description?.az ?? '',
     dru: p.description?.ru ?? '',
-    img: PHOTOS[`../assets/products/${p.image ?? p.id + '.jpg'}`] ?? null,
+    /* A photograph uploaded in the admin panel wins; otherwise the picture
+       that ships in this bundle. Removing an upload therefore restores the
+       original rather than leaving a gap, and a product added today — which
+       has no bundled picture at all — shows the one that was uploaded with
+       it. */
+    img: p.image_url ?? PHOTOS[`../assets/products/${p.image ?? p.id + '.jpg'}`] ?? null,
   }
 }
 

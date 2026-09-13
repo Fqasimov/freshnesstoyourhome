@@ -59,14 +59,18 @@ export async function api (path, { method = 'GET', body, auth = true } = {}) {
     return respond(path, method, body)
   }
 
+  const upload = body instanceof FormData
+
   const headers = { Accept: 'application/json' }
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  // Never set Content-Type for a FormData body: the browser has to write it
+  // itself, because it is the only thing that knows the multipart boundary.
+  if (body !== undefined && !upload) headers['Content-Type'] = 'application/json'
   if (auth && token.value) headers.Authorization = `Bearer ${token.value}`
 
   const response = await fetch(`${API}/api${path}`, {
     method,
     headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : upload ? body : JSON.stringify(body),
   })
 
   if (response.status === 204) return null

@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasTranslations;
+use App\Support\ProductImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -23,6 +25,12 @@ class Product extends Model
         'unit_qty', 'is_popular', 'is_active', 'in_stock', 'image_path', 'sort',
     ];
 
+    /*
+     * `image_file` is absent from $fillable deliberately. It is written only by
+     * the upload path, which puts the file there itself; a caller that could
+     * set it could point a product at any file on the public disk.
+     */
+
     protected function casts(): array
     {
         return [
@@ -31,7 +39,26 @@ class Product extends Model
             'is_popular' => 'boolean',
             'is_active' => 'boolean',
             'in_stock' => 'boolean',
+            'image_uploaded_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The uploaded photograph, if there is one.
+     *
+     * Null rather than a guess when there is not: the clients fall back to the
+     * picture in their own bundle, and a URL that 404s is worse than no URL.
+     */
+    public function imageUrl(): ?string
+    {
+        return $this->image_file ? Storage::disk('public')->url($this->image_file) : null;
+    }
+
+    public function thumbUrl(): ?string
+    {
+        return $this->image_file
+            ? Storage::disk('public')->url(ProductImage::thumbPath($this->image_file))
+            : null;
     }
 
     public function category(): BelongsTo

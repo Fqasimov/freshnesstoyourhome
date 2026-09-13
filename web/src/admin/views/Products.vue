@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { api, toAzn, toMinor } from '../api'
 import { say, complain } from '../toast'
+import ProductPhoto from './ProductPhoto.vue'
+import NewProduct from './NewProduct.vue'
 
 /**
  * The price list.
@@ -16,6 +18,7 @@ const category = ref('')
 const busy = ref(true)
 const saving = ref(null)
 const picked = ref(new Set())
+const adding = ref(false)
 
 /* The edited value lives beside the row, so the row still knows what the
    server last said and can show that the field has been touched. */
@@ -99,12 +102,34 @@ async function bulkStock (inStock) {
   }
 }
 
+/* Replace the row in place rather than reloading the table: a photograph is
+   edited while looking at the row next to it, and a full reload would throw
+   away the scroll position and any half-typed price. */
+function replaceRow (updated) {
+  const row = rows.value.find(r => r.id === updated.id)
+  if (row) Object.assign(row, updated)
+}
+
+function added (product) {
+  adding.value = false
+  rows.value.unshift(product)
+  draft.value[product.id] = toAzn(product.price_minor)
+}
+
 onMounted(load)
 </script>
 
 <template>
-  <h2 class="a-h">Məhsullar və qiymətlər</h2>
-  <p class="a-sub">Qiyməti dəyişin və Enter basın. Dəyişiklik saytda və tətbiqdə dərhal görünür.</p>
+  <div class="a-row" style="align-items:flex-start">
+    <div style="flex:1">
+      <h2 class="a-h">Məhsullar və qiymətlər</h2>
+      <p class="a-sub">
+        Qiyməti dəyişin və Enter basın. Şəkil üçün çərçivəyə toxunun və ya faylı üstünə atın.
+        Dəyişiklik saytda və tətbiqdə dərhal görünür.
+      </p>
+    </div>
+    <button class="a-btn" @click="adding = true">+ Yeni məhsul</button>
+  </div>
 
   <div class="a-row" style="margin-bottom:12px">
     <input v-model="search" class="a-in" style="max-width:260px" placeholder="Axtar…">
@@ -130,6 +155,7 @@ onMounted(load)
       <thead>
         <tr>
           <th style="width:30px"></th>
+          <th style="width:120px">Şəkil</th>
           <th>Məhsul</th>
           <th>Bölmə</th>
           <th>Vahid</th>
@@ -144,6 +170,9 @@ onMounted(load)
           <td>
             <input type="checkbox" :checked="picked.has(r.id)" @change="pick(r.id)"
                    :aria-label="r.name?.az">
+          </td>
+          <td>
+            <ProductPhoto :product="r" @updated="replaceRow" />
           </td>
           <td>
             <b>{{ r.name?.az ?? r.id }}</b>
@@ -178,4 +207,6 @@ onMounted(load)
       </tbody>
     </table>
   </div>
+
+  <NewProduct v-if="adding" :categories="categories" @close="adding = false" @created="added" />
 </template>

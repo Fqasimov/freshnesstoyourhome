@@ -308,7 +308,100 @@ export async function respond (path, method, body) {
   }
 
   /* products */
-  if (route === '/admin/products' && method === 'GET') return { data: db.products }
+  /* Copies, not the stored objects.
+     
+     The panel keeps what it is given in a reactive ref. Handing out the store's
+     own objects means a later mutation in here changes what the component is
+     holding without going through the proxy, so Vue never learns of it — and
+     the follow-up Object.assign then writes values that are already there and
+     triggers nothing either. Removing a photograph left the row still saying
+     "yüklənib". A real API returns fresh objects parsed from JSON; this is how
+     the preview behaves the same way. */
+  if (route === '/admin/products' && method === 'GET') {
+    return { data: db.products.map(p => ({ ...p })) }
+  }
+
+  if (route === '/admin/products' && method === 'POST') {
+    if (db.products.some(p => p.id === body.id)) {
+      throw new DemoError('Bu kod artıq istifadə olunur.', { id: ['Bu kod artıq istifadə olunur.'] })
+    }
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(body.id) || body.id.length < 3) {
+      throw new DemoError('Kod yalnız kiçik hərf, rəqəm və defisdən ibarət ola bilər.',
+        { id: ['Kod yalnız kiçik hərf, rəqəm və defisdən ibarət ola bilər.'] })
+    }
+    const cat = db.products.find(p => p.category_id === body.category_id)?.category ?? {}
+    const created = {
+      id: body.id,
+      category_id: body.category_id,
+      category: cat,
+      price_minor: body.price_minor,
+      currency: 'AZN',
+      unit_kind: body.unit_kind,
+      unit_qty: body.unit_qty ?? 1,
+      is_weight_based: body.unit_kind === 'kg',
+      is_popular: Boolean(body.is_popular),
+      is_active: true,
+      in_stock: body.in_stock !== false,
+      // A product created today has no picture inside anybody's bundle.
+      image: null,
+      image_url: null,
+      thumb_url: null,
+      has_upload: false,
+      sort: db.products.length,
+      name: {
+        az: body.translations?.az?.name,
+        en: body.translations?.en?.name ?? body.translations?.az?.name,
+        ru: body.translations?.ru?.name ?? body.translations?.az?.name,
+      },
+      description: {},
+      unit_label: {
+        az: body.translations?.az?.unit_label,
+        en: body.translations?.en?.unit_label,
+        ru: body.translations?.ru?.unit_label,
+      },
+    }
+    db.products.unshift(created)
+    audit('product.create', 'product', created.id, {
+      price_minor: { from: null, to: created.price_minor },
+      name: { from: null, to: created.name.az },
+    })
+    return { ...created }
+  }
+
+  /* Photographs.
+     
+     The preview has no server to store a file on, so it keeps the browser's
+     own object URL for the picture that was chosen. It looks and behaves like
+     the real thing for as long as the tab is open, and nothing leaves the
+     machine — which is the honest version of an upload with no backend. */
+  if (seg[0] === 'admin' && seg[1] === 'products' && seg[3] === 'photo') {
+    const p = db.products.find(x => x.id === seg[2])
+    if (!p) throw new DemoError('Məhsul tapılmadı.')
+
+    if (method === 'DELETE') {
+      if (p.image_url?.startsWith('blob:')) URL.revokeObjectURL(p.image_url)
+      const was = p.image_url
+      p.image_url = null
+      p.thumb_url = null
+      p.has_upload = false
+      audit('product.photo.remove', 'product', p.id, { image_file: { from: was, to: null } })
+      return { ...p }
+    }
+
+    const file = body instanceof FormData ? body.get('photo') : null
+    if (!file) throw new DemoError('Şəkil göndərilmədi.', { photo: ['Şəkil göndərilmədi.'] })
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      throw new DemoError('Yalnız JPEG, PNG və ya WebP.', { photo: ['Yalnız JPEG, PNG və ya WebP.'] })
+    }
+
+    if (p.image_url?.startsWith('blob:')) URL.revokeObjectURL(p.image_url)
+    const url = URL.createObjectURL(file)
+    p.image_url = url
+    p.thumb_url = url
+    p.has_upload = true
+    audit('product.photo', 'product', p.id, { image_file: { from: null, to: file.name } })
+    return { ...p }
+  }
 
   if (route === '/admin/products/stock' && method === 'POST') {
     const touched = []
@@ -343,7 +436,7 @@ export async function respond (path, method, body) {
       }
     }
     if (Object.keys(changes).length) audit('product.update', 'product', p.id, changes)
-    return p
+    return { ...p }
   }
 
   /* bundles */

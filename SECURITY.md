@@ -115,6 +115,39 @@ bring a CSRF surface with it — a trade worth making only if the panel ever
 renders untrusted HTML, which it does not; Vue escapes every customer-supplied
 string it displays.
 
+## Uploaded photographs
+
+An upload form is the widest door in an admin panel: it takes a file from
+outside and puts it on the server's own disk, under the server's own domain,
+where a stored payload reaches whoever opens the page next.
+
+**Nothing that arrives is stored.** The file is decoded into a bitmap and
+written out again as a fresh JPEG, so what lands on disk is bytes this server
+wrote. A JPEG with a script appended is still a valid JPEG — `getimagesize`
+reads the header and is happy, and every "check the MIME type" defence passes
+it — but only the pixels survive re-encoding. There is a test that appends
+`<?php system($_GET["c"]); ?>` to a real image, uploads it, and asserts the
+stored bytes do not contain it.
+
+Three things fall out of that, all of which matter:
+
+- **EXIF is dropped**, and EXIF on a phone photograph carries GPS coordinates.
+  A shop that publishes the exact spot each product was photographed is
+  publishing its supplier list and its home address.
+- **The filename is ours** — a UUID. The uploaded name is never used, so
+  `../../.env` and `x.php.jpg` are not interesting.
+- **SVG is refused outright.** It is a document format that can carry script,
+  and there is no version of "sanitised SVG" worth defending on a domain where
+  stored XSS reaches the admin session.
+
+Size is capped at 8 MB and pixel count before decoding at 50 megapixels — a
+decompression bomb is a few kilobytes of file that becomes gigabytes of memory,
+and checking after decoding is too late. Uploads have their own rate limiter,
+because an upload costs disk and image decoding where the rest of the admin API
+costs a query. `image_file` is not fillable, so no edit endpoint can point a
+product at an arbitrary file, and deletion refuses any path outside the
+products directory.
+
 ## What the admin panel can see, and what it records
 
 Names, phone numbers, addresses and email addresses are encrypted at rest. An

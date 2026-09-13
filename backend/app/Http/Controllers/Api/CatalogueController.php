@@ -62,7 +62,16 @@ class CatalogueController extends Controller
                     // final price depends on what the scales say.
                     'is_weight_based' => $p->isWeightBased(),
                     'is_popular' => $p->is_popular,
+                    // Two keys, on purpose. `image` names the picture inside
+                    // the client's own bundle and is what every build so far
+                    // has used; `image_url` is a photograph uploaded in the
+                    // admin panel. A client prefers the URL when it is there
+                    // and falls back to the bundle when it is not, so removing
+                    // an upload restores the original rather than leaving a
+                    // gap, and an older app keeps working unchanged.
                     'image' => $p->image_path,
+                    'image_url' => $p->imageUrl(),
+                    'thumb_url' => $p->thumbUrl(),
                     'name' => $p->translationMap('name'),
                     'description' => $p->translationMap('description'),
                     'unit_label' => $p->translationMap('unit_label'),

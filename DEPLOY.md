@@ -85,6 +85,23 @@ so the hosting story does not change — but two things are worth doing:
 - **Put it behind the office IP, or on its own hostname,** if the host makes
   that cheap. The role check is the control; network scoping is the belt.
 
+**Two things must be right before photo uploads work**, and both fail quietly:
+
+```bash
+php artisan storage:link      # public/storage -> storage/app/public
+```
+
+and `APP_URL` in the API's `.env` must be the API's real public address. Every
+photo URL is built from it, so if it still says `http://localhost` in
+production, every uploaded photograph 404s on the website and in the app while
+the admin panel looks perfectly fine. The path is what is stored; the URL is
+computed on read, so correcting `APP_URL` fixes every existing photo at once.
+
+Uploaded photographs live in `storage/app/public/products`. That directory has
+to be on **persistent** storage — a container filesystem that resets on deploy
+takes the shop's product photography with it — and it belongs in the backup
+alongside the database, because the database only holds the filenames.
+
 Appointing the first admin is a console command on the server:
 
 ```bash

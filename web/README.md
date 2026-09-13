@@ -200,6 +200,25 @@ shop does not stay signed in until somebody notices.
 | Müştərilər | masked contact details, one customer at a time in full, block/unblock |
 | Jurnal | who changed what — append-only |
 
+### Photographs
+
+Every row in **Məhsullar** carries its picture. Click the frame or drop a file
+on it to upload, and the tag underneath says where the picture is coming from:
+
+| | |
+|---|---|
+| `paketdə` | the photo that ships inside the website and app bundles — most products, still |
+| `yüklənib` | a photo uploaded here, which overrides the bundled one |
+| `yoxdur` | no picture anywhere; the shop front is showing an empty card |
+
+Removing an upload falls back to the bundled picture rather than leaving a gap.
+**+ Yeni məhsul** adds a product and its photo in one go — a product created
+today has no bundled picture, so the upload is the only one it will have.
+
+The panel shows bundled pictures by importing them as URLs (`?url`), not as
+files, so this costs a table of strings and the browser fetches only the rows
+on screen.
+
 Every edit reaches customers on the next request: the catalogue cache is busted
 by a model hook, not by remembering to call something.
 

@@ -99,6 +99,12 @@ class AppServiceProvider extends ServiceProvider
         // take the shop down.
         RateLimiter::for('admin', fn (Request $r) => Limit::perMinute(120)->by($r->user()?->id ?: $r->ip()));
 
+        // Enough to photograph a delivery, not enough to fill a disk.
+        RateLimiter::for('admin-upload', fn (Request $r) => [
+            Limit::perMinute(20)->by($r->user()?->id ?: $r->ip()),
+            Limit::perDay(400)->by($r->user()?->id ?: $r->ip()),
+        ]);
+
         RateLimiter::for('catalogue', fn (Request $r) => Limit::perMinute(60)->by($r->ip()));
 
         // Laravel's default for everything else.
