@@ -1,8 +1,9 @@
 /* Interface copy — Azerbaijani, Russian, English. Values may contain inline HTML. */
 export const I18N = {
   az: {
-    'nav.shop':'Kataloq','nav.sets':'Aksiyalar','nav.week':'Ən çox sifariş','nav.story':'Haqqımızda',
-    'nav.how':'Necə sifariş etməli','nav.contact':'Əlaqə','nav.cart':'Səbət',
+    'nav.shop':'Kataloq','nav.sets':'Xüsusi təkliflər','nav.week':'Ən çox sifariş olunan',
+    'nav.story':'Haqqımızda','nav.how':'Necə sifariş etmək olar?','nav.delivery':'Çatdırılma',
+    'nav.contact':'Əlaqə','nav.cart':'Səbət',
 
     'intro.tag':'Dad evinizə gəlir',
     'brand.tag':'Dad evinizə gəlir',
@@ -22,11 +23,11 @@ export const I18N = {
     'pr4.t':'1 gün öncədən sifariş',
     'pr4.d':'Sifarişi bir gün əvvəldən vermək məsləhətdir — bəzi məhsullar həmin gün səhər istehsal olunur.',
 
-    'sets.eyebrow':'Sərfəli təkliflər','sets.h2':'Aksiyalar və setlər',
+    'sets.eyebrow':'Sərfəli təkliflər','sets.h2':'Xüsusi təkliflər',
     'sets.copy':'Bir yerdə tez-tez sifariş olunan məhsulları dəst halında topladıq — ayrı-ayrı almaqdan sərfəlidir.',
     'sets.save':'qənaət','sets.includes':'Dəstin tərkibi','sets.add':'Dəsti səbətə at',
 
-    'week.eyebrow':'Müştərilərin seçimi','week.h2':'Ən çox sifariş olunanlar',
+    'week.eyebrow':'Müştərilərin seçimi','week.h2':'Ən çox sifariş olunan',
     'week.copy':'Kataloqumuzda ən çox sifariş edilən məhsullar — daim stokda saxladığımız, ən çox təkrar alınan adlar.',
 
     'shop.eyebrow':'Tam siyahı','shop.h2':'Bütün məhsullarımız',
@@ -35,12 +36,21 @@ export const I18N = {
     'sort.default':'Sıralama: kataloq üzrə','sort.asc':'Qiymət: ucuzdan bahaya',
     'sort.desc':'Qiymət: bahadan ucuza','sort.az':'Ad: A–Z',
 
-    'story.eyebrow':'Niyə buradayıq',
-    'story.quote':'Premium qida məhsullarını Bakıda tapmaq olar. <em>Onları evə təzə və soyuq çatdırmaq</em> — əsl məsələ budur. Ona görə işi qutudan başlayaraq qurduq.',
+    'story.eyebrow':'Haqqımızda',
+    'story.quote':'Freshness to your home — gündəlik və xüsusi süfrələriniz üçün <em>premium qida məhsullarını bir ünvanda</em> birləşdiririk.',
+    'story.copy':'Təzə balıq və dəniz məhsulları, qırmızı və qara kürü, Avropa və yerli pendirlər, İtalyan dondurmaları və desertlər, toyuq məhsulları və digər seçilmiş məhsullar.',
     'story.meta':'Premium qida məhsulları · Bakı',
+
+    'dl.eyebrow':'Çatdırılma şərtləri','dl.h2':'Çatdırılma',
+    'dl.copy':'Sifarişlərinizi Bakı və Bakıətrafı bütün qəsəbələrə çatdırırıq. Məhsulların saxlanması və daşınması zamanı keyfiyyətinə isə zəmanət veririk.',
+    'dl.close':'Həftənin 7 günü, 10:00–22:00 — seçin, sifariş edin, təzə və soyuq şəkildə evinizdə qəbul edin.',
+    'dl.zones':'Çatdırılma əraziləri','dl.fee':'Çatdırılma haqqı','dl.min':'Minimum sifariş',
+    'dl.ask':'Sifariş zamanı dəqiqləşdirilir',
+    'dl.cold.t':'Soyuq zəncir','dl.cold.d':'Məhsullar soyuq qablaşdırma ilə daşınır — qapınıza qədər zəncir pozulmur.',
+    'dl.pay.t':'Ödəniş','dl.pay.d':'Çatdırılma zamanı nağd və ya POS terminal ilə.',
     'st1':'Kataloqda məhsul','st2':'Bölmə, bir çatdırılma','st3':'Hər gün, saat 10–22','st4':'Dəstək xidməti 24/7',
 
-    'how.eyebrow':'Üç addım','how.h2':'Necə sifariş etməli',
+    'how.eyebrow':'Üç addım','how.h2':'Necə sifariş etmək olar?',
     's1.t':'Səbəti doldurun',
     's1.d':'Kataloqdan istədiyinizi əlavə edin. Burada heç bir ödəniş alınmır — səbət sadəcə sizin siyahınızdır.',
     's2.t':'Bizə göndərin',
@@ -100,7 +110,7 @@ export const I18N = {
 
   ru: {
     'nav.shop':'Каталог','nav.sets':'Акции','nav.week':'Хиты заказов','nav.story':'О нас',
-    'nav.how':'Как заказать','nav.contact':'Контакты','nav.cart':'Корзина',
+    'nav.how':'Как заказать?','nav.delivery':'Доставка','nav.contact':'Контакты','nav.cart':'Корзина',
 
     'intro.tag':'Вкус приезжает к вам домой',
     'brand.tag':'Вкус приезжает к вам домой',
@@ -120,11 +130,11 @@ export const I18N = {
     'pr4.t':'Заказ за день',
     'pr4.d':'Заказ лучше оформить за день — часть продуктов производится утром того же дня.',
 
-    'sets.eyebrow':'Выгодные предложения','sets.h2':'Акции и наборы',
+    'sets.eyebrow':'Выгодные предложения','sets.h2':'Специальные предложения',
     'sets.copy':'Мы собрали в наборы то, что чаще всего заказывают вместе — выгоднее, чем покупать по отдельности.',
     'sets.save':'выгода','sets.includes':'Состав набора','sets.add':'Добавить набор',
 
-    'week.eyebrow':'Выбор покупателей','week.h2':'Чаще всего заказывают',
+    'week.eyebrow':'Выбор покупателей','week.h2':'Хиты заказов',
     'week.copy':'Самые заказываемые позиции каталога — то, что мы держим в наличии постоянно и что берут снова и снова.',
 
     'shop.eyebrow':'Полный список','shop.h2':'Весь наш ассортимент',
@@ -133,12 +143,21 @@ export const I18N = {
     'sort.default':'Сортировка: по каталогу','sort.asc':'Цена: по возрастанию',
     'sort.desc':'Цена: по убыванию','sort.az':'Название: А–Я',
 
-    'story.eyebrow':'Почему мы здесь',
-    'story.quote':'Премиальные продукты в Баку найти можно. <em>Довезти их до дома свежими и холодными</em> — вот настоящая задача. Поэтому мы построили работу вокруг коробки.',
+    'story.eyebrow':'О нас',
+    'story.quote':'Freshness to your home — собираем <em>премиальные продукты в одном месте</em> для ваших ежедневных и праздничных столов.',
+    'story.copy':'Свежая рыба и морепродукты, красная и чёрная икра, европейские и местные сыры, итальянское мороженое и десерты, птица и другие отборные продукты.',
     'story.meta':'Премиальные продукты питания · Баку',
+
+    'dl.eyebrow':'Условия доставки','dl.h2':'Доставка',
+    'dl.copy':'Доставляем по Баку и во все посёлки вокруг города. Гарантируем качество продуктов при хранении и перевозке.',
+    'dl.close':'Семь дней в неделю, 10:00–22:00 — выбирайте, заказывайте и принимайте дома свежим и холодным.',
+    'dl.zones':'Зоны доставки','dl.fee':'Стоимость доставки','dl.min':'Минимальный заказ',
+    'dl.ask':'Уточняется при заказе',
+    'dl.cold.t':'Холодовая цепь','dl.cold.d':'Продукты едут в холодной упаковке — цепь не прерывается до вашей двери.',
+    'dl.pay.t':'Оплата','dl.pay.d':'При доставке — наличными или картой через POS-терминал.',
     'st1':'товаров в каталоге','st2':'разделов, одна доставка','st3':'ежедневно, с 10 до 22','st4':'поддержка 24/7',
 
-    'how.eyebrow':'Три шага','how.h2':'Как заказать',
+    'how.eyebrow':'Три шага','how.h2':'Как заказать?',
     's1.t':'Соберите корзину',
     's1.d':'Добавьте нужное из каталога. Здесь ничего не списывается — корзина это просто ваш список.',
     's2.t':'Отправьте нам',
@@ -197,8 +216,8 @@ export const I18N = {
   },
 
   en: {
-    'nav.shop':'Catalogue','nav.sets':'Offers','nav.week':'Most ordered','nav.story':'About',
-    'nav.how':'How to order','nav.contact':'Contact','nav.cart':'Basket',
+    'nav.shop':'Catalogue','nav.sets':'Special offers','nav.week':'Most ordered','nav.story':'About',
+    'nav.how':'How to order?','nav.delivery':'Delivery','nav.contact':'Contact','nav.cart':'Basket',
 
     'intro.tag':'Taste, delivered home',
     'brand.tag':'Taste, delivered home',
@@ -218,7 +237,7 @@ export const I18N = {
     'pr4.t':'Order a day ahead',
     'pr4.d':'Ordering a day in advance is best — some items are made fresh on the morning they ship.',
 
-    'sets.eyebrow':'Better together','sets.h2':'Offers & sets',
+    'sets.eyebrow':'Better together','sets.h2':'Special offers',
     'sets.copy':'The things people order together, gathered into sets — cheaper than buying them one by one.',
     'sets.save':'saving','sets.includes':'What is in the set','sets.add':'Add the set',
 
@@ -231,12 +250,21 @@ export const I18N = {
     'sort.default':'Sort: counter order','sort.asc':'Price: low to high',
     'sort.desc':'Price: high to low','sort.az':'Name: A–Z',
 
-    'story.eyebrow':'Why we exist',
-    'story.quote':'Premium food can be found in Baku. <em>Getting it home fresh and still cold</em> — that is the real problem. So we built the business around the box.',
+    'story.eyebrow':'About us',
+    'story.quote':'Freshness to your home — premium food for your everyday table and your special ones, <em>gathered in one place</em>.',
+    'story.copy':'Fresh fish and seafood, red and black caviar, European and local cheeses, Italian ice cream and desserts, poultry and other chosen goods.',
     'story.meta':'Premium food products · Baku',
+
+    'dl.eyebrow':'How delivery works','dl.h2':'Delivery',
+    'dl.copy':'We deliver across Baku and to every settlement around it, and we guarantee the quality of what we sell — in storage and on the way to you.',
+    'dl.close':'Seven days a week, 10:00–22:00 — choose, order, and take it in at your door, fresh and cold.',
+    'dl.zones':'Where we deliver','dl.fee':'Delivery','dl.min':'Minimum order',
+    'dl.ask':'Confirmed when you order',
+    'dl.cold.t':'The cold chain','dl.cold.d':'Everything travels in cold packaging — the chain is not broken before your door.',
+    'dl.pay.t':'Payment','dl.pay.d':'On delivery, in cash or by card on the POS terminal.',
     'st1':'Products in the catalogue','st2':'Counters, one delivery','st3':'Every day, 10 till 22','st4':'Support, 24/7',
 
-    'how.eyebrow':'Three steps','how.h2':'How to order',
+    'how.eyebrow':'Three steps','how.h2':'How to order?',
     's1.t':'Fill your basket',
     's1.d':'Add what you want from the catalogue. Nothing is charged here — the basket is just your list.',
     's2.t':'Send it to us',

@@ -12,11 +12,12 @@ const year = new Date().getFullYear()
    and lands the visitor back at the top of the home page — these five links
    had all stopped working when the catalogue moved to its own page. */
 const links = computed(() => [
+  [{ path: '/', hash: '#story' }, 'nav.story'],
   // Same reason as the header: no active set, no link to one.
   ...(SETS.length ? [[{ path: '/', hash: '#sets' }, 'nav.sets']] : []),
   [{ path: '/', hash: '#week' }, 'nav.week'],
-  [{ path: '/', hash: '#story' }, 'nav.story'],
   [{ path: '/', hash: '#order' }, 'nav.how'],
+  [{ path: '/', hash: '#delivery' }, 'nav.delivery'],
 ])
 </script>
 

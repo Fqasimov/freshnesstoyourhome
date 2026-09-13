@@ -26,9 +26,11 @@ defineExpose({ cartBtn })
    so without this the menu offers a link to a section the page does not
    render — which reads as a broken site rather than as an empty promotion. */
 const links = computed(() => [
+  { to: { path: '/', hash: '#story' }, key: 'nav.story' },
   ...(SETS.length ? [{ to: { path: '/', hash: '#sets' }, key: 'nav.sets' }] : []),
   { to: { path: '/', hash: '#week' }, key: 'nav.week' },
-  { to: { path: '/', hash: '#story' }, key: 'nav.story' },
+  { to: { path: '/', hash: '#order' }, key: 'nav.how' },
+  { to: { path: '/', hash: '#delivery' }, key: 'nav.delivery' },
   { to: { path: '/', hash: '#contact' }, key: 'nav.contact' },
 ])
 

@@ -6,6 +6,7 @@ import FeaturedSlider from '../components/FeaturedSlider.vue'
 import SetsSection from '../components/SetsSection.vue'
 import StorySection from '../components/StorySection.vue'
 import OrderSteps from '../components/OrderSteps.vue'
+import DeliverySection from '../components/DeliverySection.vue'
 import ContactSection from '../components/ContactSection.vue'
 import CatalogueCta from '../components/CatalogueCta.vue'
 
@@ -31,5 +32,6 @@ defineEmits(['add', 'add-set', 'peek'])
 
   <StorySection />
   <OrderSteps />
+  <DeliverySection />
   <ContactSection />
 </template>

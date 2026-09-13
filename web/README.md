@@ -253,10 +253,29 @@ re-checking after touching `api.js`:
 grep -l 'Preview has no answer' dist/assets/admin-*.js   # must find nothing
 ```
 
+## Sections
+
+The home page, top to bottom: hero, ticker, four promises, special offers
+(when at least one is switched on), most-ordered, a catalogue banner, about,
+how to order, **delivery**, contact. The nav mirrors that order — Haqqımızda,
+Xüsusi təkliflər, Ən çox sifariş olunan, Necə sifariş etmək olar?, Çatdırılma,
+Əlaqə — with the catalogue itself living in the toolbar as a button rather
+than a nav word, since it's a page you go to rather than a section you scroll
+past.
+
+**Delivery** (`DeliverySection.vue`, `#delivery`) is the one new section: what
+the shop actually said about zones, the cold chain and payment, plus a terms
+card. Two facts there — hours and the day-ahead notice — are deliberately not
+repeated as icon cards, because the promise row right above the fold already
+carries them; saying them twice would read as filler. The zones/fee/minimum
+values in the terms card say "confirmed when you order" rather than a number,
+because every delivery zone still ships with a zero fee — a fabricated "5
+AZN" would be a lie the admin panel could not silently correct later.
+
 ## Still placeholder content
 
-- the hero text and the "about" text
 - the logo
-- delivery areas and prices
+- delivery areas and prices — the admin panel's **Zonalar** tab is where
+  real numbers go in; the website reads `dl.ask` until it does
 - the three bundles and their discounts, which were invented during design and
   ship switched **off** — the admin panel is what turns them on

@@ -52,6 +52,7 @@ onUnmounted(() => io && io.disconnect())
       <div v-reveal>
         <p class="eyebrow">{{ t('story.eyebrow') }}</p>
         <blockquote v-html="t('story.quote')"></blockquote>
+        <p class="story__copy">{{ t('story.copy') }}</p>
         <div class="story__meta">
           <img :src="logo" alt="">
           <div>
@@ -80,6 +81,7 @@ onUnmounted(() => io && io.disconnect())
   line-height:1.16; letter-spacing:-.022em; font-weight:400;
 }
 .story blockquote em{ font-style:italic; color:var(--brick); }
+.story__copy{ margin:18px 0 0; color:var(--ink-2); font-size:.96rem; line-height:1.6; max-width:52ch; }
 .story__meta{ margin-top:26px; display:flex; align-items:center; gap:14px; }
 .story__meta img{ width:52px; height:52px; border-radius:50%; object-fit:cover; }
 .story__meta div{ font-size:.82rem; line-height:1.4; }
