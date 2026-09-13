@@ -313,7 +313,16 @@ watch([category, band], () => { if (isNarrow()) filtersOpen.value = false })
 
 .cat__side{
   position:sticky; top:calc(var(--nav-h) + 18px);
-  min-width:0; overflow:hidden;
+  min-width:0;
+  /* Its own scrollbar, capped to what actually fits under the sticky offset.
+     Sticky only pins the element's position — it does not clip or scroll
+     content taller than the viewport, so seven counters plus five price bands
+     could run off the bottom of the screen with no way to reach them short of
+     scrolling the whole page past all fifty-four product cards. This scrolls
+     just the filters instead. overflow-x stays hidden so the fold-away
+     transform below does not grow a horizontal scrollbar mid-animation. */
+  max-height:calc(100dvh - var(--nav-h) - 30px);
+  overflow-y:auto; overflow-x:hidden;
   transition:transform .42s var(--ease-out), opacity .28s var(--ease);
 }
 /* Moved out and made inert, so a folded panel cannot be tabbed into. */
@@ -368,6 +377,9 @@ watch([category, band], () => { if (isNarrow()) filtersOpen.value = false })
   .cat__side{
     position:fixed; inset:0 auto 0 0; z-index:300;
     width:min(310px,86vw);
+    /* The desktop rule's max-height would fight this fixed inset — none, so
+       the pane fills top-to-bottom exactly as inset:0 asks. */
+    max-height:none;
     background:var(--paper); padding:20px var(--gutter) 30px;
     overflow-y:auto;
     transform:translateX(-101%);
