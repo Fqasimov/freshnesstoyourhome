@@ -215,9 +215,21 @@ Removing an upload falls back to the bundled picture rather than leaving a gap.
 **+ Yeni məhsul** adds a product and its photo in one go — a product created
 today has no bundled picture, so the upload is the only one it will have.
 
+**Aksiyalar** has the same control. A set has never had a photograph of its
+own — the site draws it as the pictures of the four things inside it — so the
+tag there says `kollaj`, and uploading one replaces the collage with a single
+picture of the actual box. Removing it puts the collage back.
+
 The panel shows bundled pictures by importing them as URLs (`?url`), not as
 files, so this costs a table of strings and the browser fetches only the rows
 on screen.
+
+The collage is a 2×2 at 16:9 rather than the row of four squares it used to
+be, so a photographed set and an unphotographed one are the same height. Four
+squares in a row are a quarter as tall as a single 16:9 picture, and mixing
+them left one card's title a hundred pixels below its neighbours' — which is
+exactly the state the shop is in while the photographs are being taken one at
+a time.
 
 Every edit reaches customers on the next request: the catalogue cache is busted
 by a model hook, not by remembering to call something.

@@ -214,6 +214,9 @@ function bundleShape (b) {
   const price = Math.round(full * (100 - b.discount_percent) / 100)
   return {
     ...b,
+    image_url: b.image_url ?? null,
+    thumb_url: b.thumb_url ?? null,
+    has_upload: Boolean(b.image_url),
     items,
     full_minor: full,
     price_minor: price,
@@ -442,6 +445,36 @@ export async function respond (path, method, body) {
   /* bundles */
   if (route === '/admin/bundles' && method === 'GET') {
     return { data: db.bundles.map(bundleShape) }
+  }
+
+  /* A set's own photograph, same arrangement as a product's: the preview keeps
+     the browser's object URL, so it behaves like the real thing for as long as
+     the tab is open and nothing leaves the machine. */
+  if (seg[0] === 'admin' && seg[1] === 'bundles' && seg[3] === 'photo') {
+    const b = db.bundles.find(x => x.id === seg[2])
+    if (!b) throw new DemoError('Set tapılmadı.')
+
+    if (method === 'DELETE') {
+      if (b.image_url?.startsWith('blob:')) URL.revokeObjectURL(b.image_url)
+      const was = b.image_url
+      b.image_url = null
+      b.thumb_url = null
+      audit('bundle.photo.remove', 'bundle', b.id, { image_file: { from: was, to: null } })
+      return bundleShape(b)
+    }
+
+    const file = body instanceof FormData ? body.get('photo') : null
+    if (!file) throw new DemoError('Şəkil göndərilmədi.', { photo: ['Şəkil göndərilmədi.'] })
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      throw new DemoError('Yalnız JPEG, PNG və ya WebP.', { photo: ['Yalnız JPEG, PNG və ya WebP.'] })
+    }
+
+    if (b.image_url?.startsWith('blob:')) URL.revokeObjectURL(b.image_url)
+    const url = URL.createObjectURL(file)
+    b.image_url = url
+    b.thumb_url = url
+    audit('bundle.photo', 'bundle', b.id, { image_file: { from: null, to: file.name } })
+    return bundleShape(b)
   }
   if (seg[0] === 'admin' && seg[1] === 'bundles' && method === 'PATCH') {
     const b = db.bundles.find(x => x.id === seg[2])

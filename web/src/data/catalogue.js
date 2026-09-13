@@ -457,6 +457,10 @@ function adaptBundle (b) {
     den: b.description?.en ?? '',
     daz: b.description?.az ?? '',
     dru: b.description?.ru ?? '',
+    /* A photograph of the set itself, when the shop has taken one. Null
+       otherwise, and the card falls back to the strip of its products —
+       which is what every set has looked like until now. */
+    img: b.image_url ?? null,
   }
 }
 

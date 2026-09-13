@@ -8,9 +8,12 @@ use App\Models\BundleItem;
 use App\Models\BundleTranslation;
 use App\Models\Product;
 use App\Support\Audit;
+use App\Support\StoredImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 /**
  * Aksiyalar — the discounted sets.
@@ -109,6 +112,69 @@ class BundleController extends Controller
     }
 
     /**
+     * Attach a photograph of the set, or replace the one that is there.
+     *
+     * The same pipeline as a product's: decoded and written out again as a
+     * fresh JPEG, so nothing a client sent is what ends up on disk.
+     */
+    public function photo(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'photo' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
+        ], [
+            'photo.required' => 'Şəkil seçilməyib.',
+            'photo.image' => 'Bu fayl şəkil deyil. JPEG, PNG və ya WebP seçin.',
+            'photo.mimes' => 'Yalnız JPEG, PNG və ya WebP qəbul olunur.',
+            'photo.max' => 'Şəkil 8 MB-dan böyük olmamalıdır.',
+        ]);
+
+        $bundle = Bundle::with(['translations', 'items.product.translations'])->findOrFail($id);
+        $was = $bundle->image_file;
+
+        try {
+            $stored = StoredImage::store($request->file('photo'), 'bundles');
+        } catch (RuntimeException $e) {
+            throw ValidationException::withMessages(['photo' => $e->getMessage()]);
+        }
+
+        $bundle->forceFill(['image_file' => $stored, 'image_uploaded_at' => now()])->save();
+
+        // Only once the new one is safely written, so a failed upload leaves
+        // the old photograph rather than none.
+        StoredImage::forget($was);
+
+        Audit::record($request->user(), 'bundle.photo', 'bundle', $bundle->id, [
+            'image_file' => ['from' => $was, 'to' => $stored],
+        ]);
+
+        return response()->json($this->shape(
+            $bundle->fresh(['translations', 'items.product.translations'])
+        ));
+    }
+
+    /** Take it off; the website goes back to the strip of product pictures. */
+    public function removePhoto(Request $request, string $id): JsonResponse
+    {
+        $bundle = Bundle::with(['translations', 'items.product.translations'])->findOrFail($id);
+        $was = $bundle->image_file;
+
+        if ($was === null) {
+            return response()->json($this->shape($bundle));
+        }
+
+        $bundle->forceFill(['image_file' => null, 'image_uploaded_at' => null])->save();
+        StoredImage::forget($was);
+
+        Audit::record($request->user(), 'bundle.photo.remove', 'bundle', $bundle->id, [
+            'image_file' => ['from' => $was, 'to' => null],
+        ]);
+
+        return response()->json($this->shape(
+            $bundle->fresh(['translations', 'items.product.translations'])
+        ));
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function shape(Bundle $b): array
@@ -117,6 +183,10 @@ class BundleController extends Controller
             'product_id' => $i->product_id,
             'qty' => (float) $i->qty,
             'name' => $i->product?->translationMap('name'),
+            // So the panel can draw the same strip the website draws when a
+            // set has no photograph of its own.
+            'image' => $i->product?->image_path,
+            'image_url' => $i->product?->imageUrl(),
             'price_minor' => $i->product?->price_minor,
             'orderable' => (bool) ($i->product?->is_active && $i->product?->in_stock),
         ]);
@@ -130,6 +200,9 @@ class BundleController extends Controller
         return [
             'id' => $b->id,
             'discount_percent' => $b->discount_percent,
+            'image_url' => $b->imageUrl(),
+            'thumb_url' => $b->thumbUrl(),
+            'has_upload' => $b->image_file !== null,
             'is_active' => $b->is_active,
             'sort' => $b->sort,
             'name' => $b->translationMap('name'),

@@ -28,11 +28,15 @@ use RuntimeException;
  * SVG is refused outright. It is a document format that can carry script, and
  * there is no version of "sanitised SVG" worth defending on a shop's own
  * domain, where a stored XSS reaches the admin session.
+ *
+ * Products and bundles both go through here. The directory is a parameter, but
+ * only from a fixed list — a caller that could name the directory could write
+ * anywhere the disk reaches.
  */
-final class ProductImage
+final class StoredImage
 {
-    /** Where the full-size photograph is served from. */
-    public const DIR = 'products';
+    /** The only places a photograph may be written or deleted. */
+    public const DIRS = ['products', 'bundles'];
 
     /** Big enough for a retina product card, small enough to send over 4G. */
     private const MAX_EDGE = 1400;
@@ -52,8 +56,12 @@ final class ProductImage
      *
      * @throws RuntimeException when the bytes are not an image we can decode
      */
-    public static function store(UploadedFile $file): string
+    public static function store(UploadedFile $file, string $dir): string
     {
+        if (! in_array($dir, self::DIRS, true)) {
+            throw new RuntimeException("Unknown image directory [{$dir}].");
+        }
+
         $path = $file->getRealPath();
 
         // Read the actual bytes rather than the name or the Content-Type
@@ -90,7 +98,7 @@ final class ProductImage
             $source = self::applyExifRotation($source, $path, $info[2]);
 
             $name = (string) Str::uuid();
-            $full = self::DIR.'/'.$name.'.jpg';
+            $full = $dir.'/'.$name.'.jpg';
             $thumb = self::thumbPath($full);
 
             Storage::disk('public')->put($full, self::encode($source, self::MAX_EDGE, self::QUALITY));
@@ -109,10 +117,11 @@ final class ProductImage
             return;
         }
 
-        // Only ever inside our own directory: a stored value is written by
+        // Only ever inside our own directories: a stored value is written by
         // store() above, but a delete that trusts a path is one bad migration
         // away from removing something else.
-        if (! str_starts_with($path, self::DIR.'/')) {
+        $inside = array_filter(self::DIRS, fn (string $d) => str_starts_with($path, $d.'/'));
+        if ($inside === []) {
             return;
         }
 

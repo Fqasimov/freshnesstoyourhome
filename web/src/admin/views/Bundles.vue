@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { api, money } from '../api'
 import { say, complain } from '../toast'
+import PhotoField from './PhotoField.vue'
+import { bundledPhoto } from '../bundledPhotos'
 
 /**
  * Aksiyalar.
@@ -39,6 +41,17 @@ async function patch (bundle, body, note) {
   }
 }
 
+/* What the website draws when a set has no photograph of its own: the pictures
+   of the things inside it. */
+const collage = b => b.items
+  .map(i => i.image_url ?? bundledPhoto(i.image ?? `${i.product_id}.jpg`))
+  .filter(Boolean)
+
+function replaceCard (updated) {
+  const card = rows.value.find(b => b.id === updated.id)
+  if (card) Object.assign(card, updated)
+}
+
 const toggle = b =>
   patch(b, { is_active: !b.is_active },
     `${b.name?.az ?? b.id} ${b.is_active ? 'söndürüldü' : 'yandırıldı'}`)
@@ -56,7 +69,8 @@ onMounted(load)
   <h2 class="a-h">Aksiyalar və setlər</h2>
   <p class="a-sub">
     Setlər söndürülmüş vəziyyətdə gəlir. Yandırılan set yalnız tərkibindəki
-    bütün məhsullar stokda olduqda saytda görünür.
+    bütün məhsullar stokda olduqda saytda görünür. Şəkil yükləsəniz, sayt
+    məhsul şəkillərinin kollajı yerinə həmin şəkli göstərəcək.
   </p>
 
   <div v-if="busy" class="a-empty">Yüklənir…</div>
@@ -64,6 +78,15 @@ onMounted(load)
 
   <div v-else class="a-grid" style="grid-template-columns:repeat(auto-fill,minmax(310px,1fr))">
     <div v-for="b in rows" :key="b.id" class="a-card">
+      <div class="a-row" style="margin-bottom:10px; align-items:flex-start">
+        <PhotoField
+          :subject="b"
+          :endpoint="`/admin/bundles/${b.id}/photo`"
+          :fallback-srcs="collage(b)"
+          fallback-label="kollaj"
+          @updated="replaceCard" />
+      </div>
+
       <div class="a-row" style="margin-bottom:8px">
         <b style="flex:1">{{ b.name?.az ?? b.id }}</b>
         <label class="a-sw">

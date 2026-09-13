@@ -2,7 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { api, toAzn, toMinor } from '../api'
 import { say, complain } from '../toast'
-import ProductPhoto from './ProductPhoto.vue'
+import PhotoField from './PhotoField.vue'
+import { bundledPhoto } from '../bundledPhotos'
 import NewProduct from './NewProduct.vue'
 
 /**
@@ -172,7 +173,12 @@ onMounted(load)
                    :aria-label="r.name?.az">
           </td>
           <td>
-            <ProductPhoto :product="r" @updated="replaceRow" />
+            <PhotoField
+              :subject="r"
+              :endpoint="`/admin/products/${r.id}/photo`"
+              :fallback-srcs="bundledPhoto(r.image) ? [bundledPhoto(r.image)] : []"
+              fallback-label="paketdə"
+              @updated="replaceRow" />
           </td>
           <td>
             <b>{{ r.name?.az ?? r.id }}</b>

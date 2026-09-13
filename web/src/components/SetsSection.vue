@@ -45,8 +45,13 @@ function addSet (set, ev) {
 
       <div class="sets__grid">
         <article v-for="(s, i) in sets" :key="s.id" class="set" v-reveal="i * 110 + 'ms'">
-          <div class="set__shots">
-            <img v-for="p in s.items" :key="p.id" :src="p.img" :alt="nm(p)" loading="lazy">
+          <!-- One photograph of the set when the shop has taken one, and the
+               strip of what is in it when they have not. The strip is honest
+               and shows the contents; a single picture of the actual box sells
+               it better, so the shop chooses. -->
+          <div class="set__shots" :class="{ 'set__shots--one': s.img }">
+            <img v-if="s.img" :src="s.img" :alt="nm(s)" loading="lazy">
+            <img v-else v-for="p in s.items" :key="p.id" :src="p.img" :alt="nm(p)" loading="lazy">
           </div>
 
           <div class="set__body">
@@ -99,9 +104,24 @@ function addSet (set, ev) {
 }
 .set:hover{ border-color:rgba(27,41,22,.3); box-shadow:0 22px 46px -24px rgba(27,41,22,.42); transform:translateY(-3px); }
 
-/* four photographs shown as one strip, so the set reads as a bundle */
-.set__shots{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); }
-.set__shots img{ width:100%; aspect-ratio:1; object-fit:cover; transition:transform 1s var(--ease-out); }
+/* Four photographs as one block, so the set reads as a bundle.
+   
+   Two by two rather than the four-in-a-row it used to be, and the block has a
+   fixed shape. Both of those are so that a set with its own photograph and a
+   set without are the same height: a row of four squares is a quarter the
+   height of a single 16:9 picture, and mixing them left one card's title
+   sitting a hundred pixels below its neighbours' — which is the state the shop
+   will be in for as long as it takes to photograph them all. */
+.set__shots{
+  display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:1px;
+  aspect-ratio:16/9; overflow:hidden; background:var(--line);
+}
+/* The rows have to be stated. Left to `auto` they size to the pictures, the
+   images' own `height:100%` resolves against nothing, and the block takes
+   whatever height the photographs happen to be — which is the mismatch this
+   was meant to remove. */
+.set__shots img{ width:100%; height:100%; min-height:0; object-fit:cover; transition:transform 1s var(--ease-out); }
+.set__shots--one{ grid-template-columns:1fr; grid-template-rows:1fr; }
 .set:hover .set__shots img{ transform:scale(1.05); }
 
 .set__body{ padding:clamp(16px,1.8vw,22px); display:flex; flex-direction:column; flex:1; }

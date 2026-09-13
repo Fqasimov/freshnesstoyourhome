@@ -135,6 +135,9 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
 
         Route::get('bundles', [BundleController::class, 'index']);
         Route::patch('bundles/{id}', [BundleController::class, 'update']);
+        Route::post('bundles/{id}/photo', [BundleController::class, 'photo'])
+            ->middleware('throttle:admin-upload');
+        Route::delete('bundles/{id}/photo', [BundleController::class, 'removePhoto']);
 
         Route::get('zones', [DeliveryZoneController::class, 'index']);
         Route::patch('zones/{id}', [DeliveryZoneController::class, 'update']);

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductTranslation;
 use App\Support\Audit;
-use App\Support\ProductImage;
+use App\Support\StoredImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -148,7 +148,7 @@ class ProductController extends Controller
      * Attach a photograph, or replace the one that is there.
      *
      * Nothing the client sent is stored: the file is decoded and re-encoded
-     * (see ProductImage), so what lands on disk is bytes this server wrote.
+     * (see StoredImage), so what lands on disk is bytes this server wrote.
      */
     public function photo(Request $request, string $id): JsonResponse
     {
@@ -172,7 +172,7 @@ class ProductController extends Controller
         $was = $product->image_file;
 
         try {
-            $stored = ProductImage::store($request->file('photo'));
+            $stored = StoredImage::store($request->file('photo'), 'products');
         } catch (RuntimeException $e) {
             throw ValidationException::withMessages(['photo' => $e->getMessage()]);
         }
@@ -184,7 +184,7 @@ class ProductController extends Controller
 
         // Only after the new one is safely written, so a failed upload leaves
         // the old photograph in place rather than none at all.
-        ProductImage::forget($was);
+        StoredImage::forget($was);
 
         Audit::record($request->user(), 'product.photo', 'product', $product->id, [
             'image_file' => ['from' => $was, 'to' => $stored],
@@ -204,7 +204,7 @@ class ProductController extends Controller
         }
 
         $product->forceFill(['image_file' => null, 'image_uploaded_at' => null])->save();
-        ProductImage::forget($was);
+        StoredImage::forget($was);
 
         Audit::record($request->user(), 'product.photo.remove', 'product', $product->id, [
             'image_file' => ['from' => $was, 'to' => null],

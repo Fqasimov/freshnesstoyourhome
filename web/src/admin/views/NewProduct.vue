@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { api, toMinor } from '../api'
 import { say, complain } from '../toast'
-import ProductPhoto from './ProductPhoto.vue'
+import PhotoField from './PhotoField.vue'
 
 /**
  * Adding a product.
@@ -63,7 +63,7 @@ const ready = computed(() => idOk.value && form.value.az.trim() && Number(form.v
 
 /* A fake product row, so the photo control is the same component here as in
    the table rather than a second one that drifts from it. */
-const pending = computed(() => ({ id: form.value.id, image: null, image_url: null, thumb_url: null, has_upload: false }))
+const pending = computed(() => ({ id: form.value.id, image_url: null, thumb_url: null, has_upload: false }))
 
 async function submit () {
   if (!ready.value) return
@@ -121,7 +121,7 @@ async function submit () {
 
     <div class="a-sec" style="margin-top:0">
       <h3>Şəkil</h3>
-      <ProductPhoto :product="pending" deferred @picked="photo = $event" />
+      <PhotoField :subject="pending" deferred @picked="photo = $event" />
       <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
         JPEG, PNG və ya WebP · 8 MB-a qədər. Şəkil məhsul yaradıldıqdan sonra yüklənir.
       </p>

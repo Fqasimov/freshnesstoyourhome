@@ -99,6 +99,11 @@ class CatalogueController extends Controller
                 ->map(fn (Bundle $b) => [
                     'id' => $b->id,
                     'discount_percent' => $b->discount_percent,
+                    // Null unless the shop photographed the set itself, in
+                    // which case the website shows it instead of the strip of
+                    // its four products.
+                    'image_url' => $b->imageUrl(),
+                    'thumb_url' => $b->thumbUrl(),
                     'name' => $b->translationMap('name'),
                     'description' => $b->translationMap('description'),
                     'items' => $b->items

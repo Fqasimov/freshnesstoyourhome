@@ -140,13 +140,17 @@ Three things fall out of that, all of which matter:
   and there is no version of "sanitised SVG" worth defending on a domain where
   stored XSS reaches the admin session.
 
+Products and sets both go through this, into separate directories. The
+directory is a parameter of the one function that writes files, but only from a
+fixed list — a caller that could name the directory could write anywhere the
+disk reaches — and deletion refuses any path outside those directories.
+
 Size is capped at 8 MB and pixel count before decoding at 50 megapixels — a
 decompression bomb is a few kilobytes of file that becomes gigabytes of memory,
 and checking after decoding is too late. Uploads have their own rate limiter,
 because an upload costs disk and image decoding where the rest of the admin API
-costs a query. `image_file` is not fillable, so no edit endpoint can point a
-product at an arbitrary file, and deletion refuses any path outside the
-products directory.
+costs a query. `image_file` is not fillable on either model, so no edit endpoint can
+point a product or a set at an arbitrary file.
 
 ## What the admin panel can see, and what it records
 

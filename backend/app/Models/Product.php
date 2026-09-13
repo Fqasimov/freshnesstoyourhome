@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasTranslations;
-use App\Support\ProductImage;
+use App\Support\StoredImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -57,7 +57,7 @@ class Product extends Model
     public function thumbUrl(): ?string
     {
         return $this->image_file
-            ? Storage::disk('public')->url(ProductImage::thumbPath($this->image_file))
+            ? Storage::disk('public')->url(StoredImage::thumbPath($this->image_file))
             : null;
     }
 

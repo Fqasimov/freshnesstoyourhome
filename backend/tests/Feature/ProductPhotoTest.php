@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\AdminAudit;
 use App\Models\Product;
 use App\Models\User;
-use App\Support\ProductImage;
+use App\Support\StoredImage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -56,7 +56,7 @@ class ProductPhotoTest extends TestCase
 
         $stored = Product::find('smoked-salmon')->image_file;
         Storage::disk('public')->assertExists($stored);
-        Storage::disk('public')->assertExists(ProductImage::thumbPath($stored));
+        Storage::disk('public')->assertExists(StoredImage::thumbPath($stored));
     }
 
     /** The name the client chose is never the name on disk. */
@@ -146,7 +146,7 @@ class ProductPhotoTest extends TestCase
         $this->assertEqualsWithDelta(4000 / 3000, $w / $h, 0.01);
 
         [$tw] = getimagesizefromstring(
-            Storage::disk('public')->get(ProductImage::thumbPath($stored))
+            Storage::disk('public')->get(StoredImage::thumbPath($stored))
         );
         $this->assertLessThanOrEqual(360, $tw);
     }
@@ -169,7 +169,7 @@ class ProductPhotoTest extends TestCase
 
         $this->assertNotSame($first, $second);
         Storage::disk('public')->assertMissing($first);
-        Storage::disk('public')->assertMissing(ProductImage::thumbPath($first));
+        Storage::disk('public')->assertMissing(StoredImage::thumbPath($first));
         Storage::disk('public')->assertExists($second);
     }
 
