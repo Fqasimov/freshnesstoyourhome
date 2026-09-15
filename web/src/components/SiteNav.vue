@@ -6,6 +6,9 @@ import { useCart } from '../composables/useCart'
 import { SETS } from '../data/catalogue'
 import mark from '../assets/logo-mark.png'
 import BIcon from './BIcon.vue'
+import flagAz from '../assets/flags/az.svg'
+import flagRu from '../assets/flags/ru.svg'
+import flagGb from '../assets/flags/gb.svg'
 
 const { t } = useI18n()
 const { count, open } = useCart()
@@ -17,9 +20,10 @@ const popped = ref(false)
 
 defineExpose({ cartBtn })
 
-// Emoji flags need no asset and no font check — they render from the OS,
-// the one place in this project that rule doesn't apply.
-const FLAGS = { az: '🇦🇿', ru: '🇷🇺', en: '🇬🇧' }
+// Drawn SVGs, not emoji — flag emoji fall back to their bare two-letter
+// code on platforms without a flag-capable font (Windows and plenty of
+// Linux included), which is indistinguishable from a rendering bug.
+const FLAGS = { az: flagAz, ru: flagRu, en: flagGb }
 
 const langOpen = ref(false)
 const langBox = ref(null)
@@ -122,14 +126,14 @@ watch(count, (now, before) => {
         <div class="lang" ref="langBox" :class="{ open: langOpen }">
           <button class="lang__trigger" :aria-expanded="langOpen" aria-haspopup="listbox"
                   aria-label="Choose language" @click="langOpen = !langOpen">
-            <span class="lang__flag">{{ FLAGS[lang] }}</span>
+            <img class="lang__flag" :src="FLAGS[lang]" alt="">
             <BIcon name="chevron-down" :size="9" />
           </button>
           <ul class="lang__menu" role="listbox">
             <li v-for="l in LANGS" :key="l">
               <button role="option" :aria-selected="lang === l" :class="{ on: lang === l }" @click="pickLang(l)">
                 <span>{{ l.toUpperCase() }}</span>
-                <span class="lang__flag">{{ FLAGS[l] }}</span>
+                <img class="lang__flag" :src="FLAGS[l]" alt="">
               </button>
             </li>
           </ul>
@@ -215,7 +219,7 @@ watch(count, (now, before) => {
 }
 .lang__trigger:hover{ opacity:1; background:color-mix(in srgb, currentColor 14%, transparent); }
 .lang.open .lang__trigger{ opacity:1; }
-.lang__flag{ font-size:1.05rem; line-height:1; }
+.lang__flag{ width:19px; height:13px; border-radius:2px; object-fit:cover; flex:none; box-shadow:0 0 0 1px rgba(0,0,0,.12); }
 
 .lang__menu{
   position:absolute; top:calc(100% + 8px); right:0; left:auto; z-index:10;
