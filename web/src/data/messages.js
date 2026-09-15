@@ -5,7 +5,6 @@ export const I18N = {
     'nav.story':'Haqqımızda','nav.how':'Necə sifariş etmək olar?','nav.delivery':'Çatdırılma',
     'nav.contact':'Əlaqə','nav.cart':'Səbət',
 
-    'intro.tag':'Dad evinizə gəlir',
     'brand.tag':'Dad evinizə gəlir',
 
     'hero.eyebrow':'Bakı · Həftənin 7 günü · 10:00 – 22:00',
@@ -112,7 +111,6 @@ export const I18N = {
     'nav.shop':'Каталог','nav.sets':'Акции','nav.week':'Хиты заказов','nav.story':'О нас',
     'nav.how':'Как заказать?','nav.delivery':'Доставка','nav.contact':'Контакты','nav.cart':'Корзина',
 
-    'intro.tag':'Вкус приезжает к вам домой',
     'brand.tag':'Вкус приезжает к вам домой',
 
     'hero.eyebrow':'Баку · 7 дней в неделю · 10:00 – 22:00',
@@ -219,7 +217,6 @@ export const I18N = {
     'nav.shop':'Catalogue','nav.sets':'Special offers','nav.week':'Most ordered','nav.story':'About',
     'nav.how':'How to order?','nav.delivery':'Delivery','nav.contact':'Contact','nav.cart':'Basket',
 
-    'intro.tag':'Taste, delivered home',
     'brand.tag':'Taste, delivered home',
 
     'hero.eyebrow':'Baku · Seven days a week · 10:00 – 22:00',

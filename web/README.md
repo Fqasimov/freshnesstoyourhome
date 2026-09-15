@@ -153,6 +153,34 @@ the same thing.
 The two SVGs left in the source are not icons — the hand-drawn rule under the
 wordmark, and the mark that draws itself in the intro.
 
+## The opening sequence
+
+`IntroSequence.vue`, once per tab, skipped outright for reduced motion and
+dismissed by a click, a key or a scroll.
+
+The mark is **the real logo, traced to vector** rather than an impression of
+it. The artwork was auto-traced off the supplied JPEG (potrace, via a script
+kept out of the bundle) and split by connected components into the parts the
+animation needs: one compound path for the leaf and its veins, three circles
+for the seeds, and a circle fitted through the eleven dashes so the arc can be
+one stroke with a `dasharray` instead of eleven. 4.3 KB of path data, sharp at
+any size, and no image request before the first frame.
+
+That compound path is drawn twice: once stroked as a hairline that draws on
+with `stroke-dashoffset`, then again filled underneath as the hairline fades —
+the pen passes, the ink follows.
+
+The wordmark sits to its left and fills from the bottom up: a gradient
+anchored to the bottom of the letters whose `background-size` grows from 0 to
+full through `background-clip: text`, so the green climbs the letterforms
+rather than sliding across them. Its top stop fades to transparent, which
+keeps the rising edge soft instead of a ruled line.
+
+It is deliberately **not** on `--ease-out` like everything else here. That
+curve is front-loaded enough to look finished in under a second; this one
+holds a steady climb so it reads as loading. The fill lands around 2.3s, the
+overlay leaves at 3.2s.
+
 ## Goods sold by weight
 
 Most of this catalogue is sold by the kilo, and a kilo is never exactly a kilo.
