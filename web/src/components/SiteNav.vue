@@ -93,23 +93,6 @@ watch(count, (now, before) => {
 <template>
   <header class="nav" :class="{ solid }">
     <div class="nav__in">
-      <div class="lang" ref="langBox" :class="{ open: langOpen }">
-        <button class="lang__trigger" :aria-expanded="langOpen" aria-haspopup="listbox"
-                @click="langOpen = !langOpen">
-          <span>{{ lang.toUpperCase() }}</span>
-          <span class="lang__flag">{{ FLAGS[lang] }}</span>
-          <BIcon name="chevron-down" :size="9" />
-        </button>
-        <ul class="lang__menu" role="listbox">
-          <li v-for="l in LANGS" :key="l">
-            <button role="option" :aria-selected="lang === l" :class="{ on: lang === l }" @click="pickLang(l)">
-              <span>{{ l.toUpperCase() }}</span>
-              <span class="lang__flag">{{ FLAGS[l] }}</span>
-            </button>
-          </li>
-        </ul>
-      </div>
-
       <RouterLink to="/" class="nav__brand">
         <span class="nav__mark"><img :src="mark" alt="Freshness To Your Home"></span>
         <span class="nav__name">
@@ -135,6 +118,22 @@ watch(count, (now, before) => {
         </button>
 
         <button class="burger" :class="{ x: menu }" aria-label="Menu" @click="menu = !menu"><i></i></button>
+
+        <div class="lang" ref="langBox" :class="{ open: langOpen }">
+          <button class="lang__trigger" :aria-expanded="langOpen" aria-haspopup="listbox"
+                  aria-label="Choose language" @click="langOpen = !langOpen">
+            <span class="lang__flag">{{ FLAGS[lang] }}</span>
+            <BIcon name="chevron-down" :size="9" />
+          </button>
+          <ul class="lang__menu" role="listbox">
+            <li v-for="l in LANGS" :key="l">
+              <button role="option" :aria-selected="lang === l" :class="{ on: lang === l }" @click="pickLang(l)">
+                <span>{{ l.toUpperCase() }}</span>
+                <span class="lang__flag">{{ FLAGS[l] }}</span>
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </header>
@@ -204,23 +203,22 @@ watch(count, (now, before) => {
 
 .nav__tools{ display:flex; align-items:center; gap:10px; margin-left:auto; }
 
-/* Leftmost, and its own small thing — a flag-and-code trigger rather than
-   the three-way AZ/RU/EN toggle that used to sit in the toolbar. Only the
-   active language shows until it's opened, so it no longer competes with
-   the logo for the first thing a visitor's eye lands on. */
-.lang{ position:relative; }
+/* Rightmost, and the smallest thing in the toolbar — a flag alone, not the
+   three-way AZ/RU/EN toggle that used to sit here. The trigger names the
+   language once, as a flag; the open menu names each language once, as code
+   plus flag — nothing repeats between the two. */
+.lang{ position:relative; order:4; }
 .lang__trigger{
-  display:flex; align-items:center; gap:6px;
-  border:1px solid currentColor; border-radius:100px; padding:6px 10px;
-  font-size:.7rem; font-weight:600; letter-spacing:.05em; opacity:.8;
-  transition:opacity .3s var(--ease);
+  display:flex; align-items:center; gap:2px;
+  width:34px; height:34px; border-radius:50%;
+  opacity:.8; transition:opacity .3s var(--ease), background .3s var(--ease);
 }
-.lang__trigger:hover{ opacity:1; }
+.lang__trigger:hover{ opacity:1; background:color-mix(in srgb, currentColor 14%, transparent); }
 .lang.open .lang__trigger{ opacity:1; }
-.lang__flag{ font-size:.92rem; line-height:1; }
+.lang__flag{ font-size:1.05rem; line-height:1; }
 
 .lang__menu{
-  position:absolute; top:calc(100% + 8px); left:0; z-index:10;
+  position:absolute; top:calc(100% + 8px); right:0; left:auto; z-index:10;
   min-width:92px; padding:6px; border-radius:14px;
   background:var(--paper); color:var(--ink); box-shadow:0 14px 34px rgba(0,0,0,.18);
   opacity:0; visibility:hidden; transform:translateY(-6px);
@@ -287,7 +285,6 @@ watch(count, (now, before) => {
   .cartbtn{ padding:8px 11px; }
   .nav__in{ gap:10px; }
   .nav__brand{ min-width:0; }
-  .lang__trigger{ padding:5px 8px; }
 }
 
 @media (max-width:440px){
