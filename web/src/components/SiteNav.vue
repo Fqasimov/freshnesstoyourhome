@@ -30,7 +30,6 @@ const links = computed(() => [
   ...(SETS.length ? [{ to: { path: '/', hash: '#sets' }, key: 'nav.sets' }] : []),
   { to: { path: '/', hash: '#week' }, key: 'nav.week' },
   { to: { path: '/', hash: '#order' }, key: 'nav.how' },
-  { to: { path: '/', hash: '#delivery' }, key: 'nav.delivery' },
   { to: { path: '/', hash: '#contact' }, key: 'nav.contact' },
 ])
 
@@ -151,7 +150,7 @@ watch(count, (now, before) => {
   width:100%; max-width:var(--maxw); margin-inline:auto; padding-inline:var(--gutter);
   display:flex; align-items:center; gap:clamp(16px,3vw,48px);
 }
-.nav__brand{ display:flex; align-items:center; gap:12px; margin-right:auto; }
+.nav__brand{ display:flex; align-items:center; gap:12px; }
 .nav__mark{
   width:40px; height:40px; border-radius:50%; background:var(--paper);
   display:grid; place-items:center; overflow:hidden; flex:none;
@@ -181,7 +180,7 @@ watch(count, (now, before) => {
 .nav__links a:hover{ opacity:1; }
 .nav__links a:hover::after{ transform:scaleX(1); transform-origin:left; }
 
-.nav__tools{ display:flex; align-items:center; gap:10px; }
+.nav__tools{ display:flex; align-items:center; gap:10px; margin-left:auto; }
 
 .lang{
   display:flex; align-items:center; border:1px solid currentColor; border-radius:100px;
