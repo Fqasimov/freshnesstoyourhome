@@ -167,9 +167,10 @@ watch(count, (now, before) => {
 .nav__name b{ font-family:var(--wordmark); font-size:1.16rem; font-weight:600; letter-spacing:-.022em; white-space:nowrap; }
 .nav__name span{ font-family:var(--wordmark); font-size:.64rem; letter-spacing:.01em; opacity:.72; margin-top:3px; white-space:nowrap; }
 
-.nav__links{ display:flex; gap:clamp(14px,1.8vw,30px); }
+.nav__links{ display:flex; gap:clamp(10px,1.4vw,26px); }
 .nav__links a{
   font-size:.83rem; letter-spacing:.01em; position:relative; padding:6px 0; opacity:.85;
+  white-space:nowrap; flex:none;
   transition:opacity .3s var(--ease);
 }
 .nav__links a::after{
