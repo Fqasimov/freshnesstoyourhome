@@ -17,6 +17,19 @@ const popped = ref(false)
 
 defineExpose({ cartBtn })
 
+// Emoji flags need no asset and no font check — they render from the OS,
+// the one place in this project that rule doesn't apply.
+const FLAGS = { az: '🇦🇿', ru: '🇷🇺', en: '🇬🇧' }
+
+const langOpen = ref(false)
+const langBox = ref(null)
+const pickLang = l => { lang.value = l; langOpen.value = false }
+// Outside click, not blur: blur fires before the option's own click lands,
+// which would close the menu a frame before the pick registers.
+const onDocClick = e => { if (langBox.value && !langBox.value.contains(e.target)) langOpen.value = false }
+onMounted(() => document.addEventListener('click', onDocClick))
+onUnmounted(() => document.removeEventListener('click', onDocClick))
+
 /* Sections of the home page, each carrying the route as well as the anchor —
    otherwise these links do nothing when the customer is already on the
    catalogue. The catalogue itself is not in this list: it is a page, not a
@@ -80,6 +93,23 @@ watch(count, (now, before) => {
 <template>
   <header class="nav" :class="{ solid }">
     <div class="nav__in">
+      <div class="lang" ref="langBox" :class="{ open: langOpen }">
+        <button class="lang__trigger" :aria-expanded="langOpen" aria-haspopup="listbox"
+                @click="langOpen = !langOpen">
+          <span>{{ lang.toUpperCase() }}</span>
+          <span class="lang__flag">{{ FLAGS[lang] }}</span>
+          <BIcon name="chevron-down" :size="9" />
+        </button>
+        <ul class="lang__menu" role="listbox">
+          <li v-for="l in LANGS" :key="l">
+            <button role="option" :aria-selected="lang === l" :class="{ on: lang === l }" @click="pickLang(l)">
+              <span>{{ l.toUpperCase() }}</span>
+              <span class="lang__flag">{{ FLAGS[l] }}</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
       <RouterLink to="/" class="nav__brand">
         <span class="nav__mark"><img :src="mark" alt="Freshness To Your Home"></span>
         <span class="nav__name">
@@ -97,13 +127,6 @@ watch(count, (now, before) => {
           <BIcon name="list" :size="15" />
           <span>{{ t('cta.go') }}</span>
         </RouterLink>
-
-        <div class="lang">
-          <button v-for="l in LANGS" :key="l" :class="{ on: lang === l }"
-                  :aria-pressed="lang === l" @click="lang = l">
-            <span>{{ l.toUpperCase() }}</span>
-          </button>
-        </div>
 
         <button class="cartbtn" ref="cartBtn" aria-label="Open cart" @click="open = true">
           <BIcon name="bag" :size="14" />
@@ -181,17 +204,37 @@ watch(count, (now, before) => {
 
 .nav__tools{ display:flex; align-items:center; gap:10px; margin-left:auto; }
 
-.lang{
-  display:flex; align-items:center; border:1px solid currentColor; border-radius:100px;
-  padding:2px; opacity:.8; transition:opacity .3s var(--ease);
+/* Leftmost, and its own small thing — a flag-and-code trigger rather than
+   the three-way AZ/RU/EN toggle that used to sit in the toolbar. Only the
+   active language shows until it's opened, so it no longer competes with
+   the logo for the first thing a visitor's eye lands on. */
+.lang{ position:relative; }
+.lang__trigger{
+  display:flex; align-items:center; gap:6px;
+  border:1px solid currentColor; border-radius:100px; padding:6px 10px;
+  font-size:.7rem; font-weight:600; letter-spacing:.05em; opacity:.8;
+  transition:opacity .3s var(--ease);
 }
-.lang:hover{ opacity:1; }
-.lang button{
-  font-size:.68rem; font-weight:600; letter-spacing:.09em; padding:4px 10px; border-radius:100px;
-  opacity:.62; transition:background .35s var(--ease), color .35s var(--ease), opacity .3s var(--ease);
+.lang__trigger:hover{ opacity:1; }
+.lang.open .lang__trigger{ opacity:1; }
+.lang__flag{ font-size:.92rem; line-height:1; }
+
+.lang__menu{
+  position:absolute; top:calc(100% + 8px); left:0; z-index:10;
+  min-width:92px; padding:6px; border-radius:14px;
+  background:var(--paper); color:var(--ink); box-shadow:0 14px 34px rgba(0,0,0,.18);
+  opacity:0; visibility:hidden; transform:translateY(-6px);
+  transition:opacity .22s var(--ease), transform .22s var(--ease-out), visibility .22s;
 }
-.lang button:hover{ opacity:1; }
-.lang button.on{ background:var(--acid); color:var(--ink); opacity:1; }
+.lang.open .lang__menu{ opacity:1; visibility:visible; transform:none; }
+.lang__menu li{ list-style:none; }
+.lang__menu button{
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:8px 10px; border-radius:9px; font-size:.78rem; font-weight:600; letter-spacing:.03em;
+  transition:background .2s var(--ease);
+}
+.lang__menu button:hover{ background:var(--paper-2); }
+.lang__menu button.on{ background:var(--acid); }
 
 .cartbtn{
   display:flex; align-items:center; gap:9px;
@@ -244,7 +287,7 @@ watch(count, (now, before) => {
   .cartbtn{ padding:8px 11px; }
   .nav__in{ gap:10px; }
   .nav__brand{ min-width:0; }
-  .lang button{ padding:4px 8px; }
+  .lang__trigger{ padding:5px 8px; }
 }
 
 @media (max-width:440px){
