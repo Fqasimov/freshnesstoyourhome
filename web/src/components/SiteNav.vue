@@ -30,7 +30,6 @@ const links = computed(() => [
   ...(SETS.length ? [{ to: { path: '/', hash: '#sets' }, key: 'nav.sets' }] : []),
   { to: { path: '/', hash: '#week' }, key: 'nav.week' },
   { to: { path: '/', hash: '#order' }, key: 'nav.how' },
-  { to: { path: '/', hash: '#contact' }, key: 'nav.contact' },
 ])
 
 const route = useRoute()
