@@ -150,25 +150,46 @@ icon with a `label` becomes an image with a name; one without is hidden from
 screen readers, which is right when it sits next to a word that already says
 the same thing.
 
-The two SVGs left in the source are not icons — the hand-drawn rule under the
-wordmark, and the mark that draws itself in the intro.
+The SVGs left in the source are not icons: the hand-drawn rule under the
+wordmark, the brand mark below, and the three flags in the language switch —
+Bootstrap Icons has no national flags, and emoji ones fall back to a bare
+two-letter code on any platform without a flag-capable font.
+
+## The mark
+
+`src/assets/logo-mark.svg` — **the real logo, traced to vector**, and the only
+logo the site uses. It replaced two soft PNGs: the nav's `logo-mark.png`, and
+`logo.png`, which was the full lockup and was being squeezed into 52–56px
+discs in the footer and the story block, where its wordmark was an illegible
+smudge. The mark alone is legible at that size; the words next to it were
+already saying the name.
+
+The artwork was auto-traced off the supplied JPEG (potrace, via a script kept
+out of the bundle) and split by connected components into the parts an
+animation can address separately: one compound path for the leaf and its veins
+— `evenodd` on a single element, since separate `<path>`s cannot punch holes in
+each other — three circles for the seeds, and a circle fitted through the
+eleven dashes, so the arc is one stroke with a `dasharray` rather than eleven
+shapes. 4.6 KB, sharp at any size.
+
+Its ink is `--logo`, sampled from the artwork rather than guessed. It is close
+to `--forest-2` but not equal to it, and the mark should match its own file.
+That colour is dark, so anywhere it sits on a dark panel — the footer, the nav
+over the hero — it gets a paper disc behind it, the way the nav always did.
 
 ## The opening sequence
 
 `IntroSequence.vue`, once per tab, skipped outright for reduced motion and
 dismissed by a click, a key or a scroll.
 
-The mark is **the real logo, traced to vector** rather than an impression of
-it. The artwork was auto-traced off the supplied JPEG (potrace, via a script
-kept out of the bundle) and split by connected components into the parts the
-animation needs: one compound path for the leaf and its veins, three circles
-for the seeds, and a circle fitted through the eleven dashes so the arc can be
-one stroke with a `dasharray` instead of eleven. 4.3 KB of path data, sharp at
-any size, and no image request before the first frame.
+It plays on **paper, not forest**, so the mark can wear its own dark green
+instead of being restated in `--acid` to survive a dark background. The
+texture over it switches to `multiply` for the same reason: a screened
+light-green line is invisible on cream.
 
-That compound path is drawn twice: once stroked as a hairline that draws on
-with `stroke-dashoffset`, then again filled underneath as the hairline fades —
-the pen passes, the ink follows.
+The leaf path is drawn twice: once stroked as a hairline that draws on with
+`stroke-dashoffset`, then again filled underneath as the hairline fades — the
+pen passes, the ink follows.
 
 The wordmark sits to its left and fills from the bottom up: a gradient
 anchored to the bottom of the letters whose `background-size` grows from 0 to
@@ -302,7 +323,6 @@ AZN" would be a lie the admin panel could not silently correct later.
 
 ## Still placeholder content
 
-- the logo
 - delivery areas and prices — the admin panel's **Zonalar** tab is where
   real numbers go in; the website reads `dl.ask` until it does
 - the three bundles and their discounts, which were invented during design and

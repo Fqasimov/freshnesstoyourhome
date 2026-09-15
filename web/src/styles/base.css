@@ -11,6 +11,9 @@
   /* brand */
   --forest:       #3A6A2C;
   --forest-2:     #2C5121;
+  /* the ink of the logo artwork itself, sampled from the supplied file —
+     close to --forest-2 but not it, and the mark should match its own file */
+  --logo:         #245A2A;
   --leaf:         #84AB58;
   --leaf-d:       #52712F;
   --leaf-l:       #A8C782;

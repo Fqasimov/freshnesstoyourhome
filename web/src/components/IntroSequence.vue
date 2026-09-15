@@ -90,14 +90,16 @@ onUnmounted(() => {
    skips instantly for reduced motion. */
 .intro{
   position:fixed; inset:0; z-index:5000;
-  background:var(--forest);
+  background:var(--paper);
   display:flex; align-items:center; justify-content:center;
   cursor:pointer;
 }
+/* multiply, not screen: on cream a screened light-green line is invisible,
+   so the texture has to darken the paper rather than lighten the dark. */
 .intro::before{
-  content:''; position:absolute; inset:0; opacity:.14; mix-blend-mode:screen;
+  content:''; position:absolute; inset:0; opacity:.09; mix-blend-mode:multiply;
   background:
-    repeating-linear-gradient(102deg, transparent 0 46px, rgba(168,199,130,.9) 46px 47px);
+    repeating-linear-gradient(102deg, transparent 0 46px, rgba(36,90,42,.85) 46px 47px);
 }
 
 /* Text left, mark right, the pair centred on the screen. */
@@ -109,17 +111,17 @@ onUnmounted(() => {
 
 /* ---- the mark ---- */
 .intro__arc{
-  fill:none; stroke:var(--leaf-l); stroke-width:7; stroke-linecap:round;
+  fill:none; stroke:var(--logo); stroke-width:7; stroke-linecap:round;
   stroke-dasharray:18.7 17.2;
   opacity:0; transform:rotate(-16deg); transform-origin:491px 151px;
   transition:opacity .75s var(--ease), transform 1.1s var(--ease-out);
 }
-.intro.go .intro__arc{ opacity:.85; transform:none; }
+.intro.go .intro__arc{ opacity:.9; transform:none; }
 
 /* Drawn first as a hairline, then the real weight of the mark fades up
    underneath it — the pen passes, the ink follows. */
 .intro__draw{
-  fill:none; stroke:var(--acid); stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round;
+  fill:none; stroke:var(--logo); stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round;
   stroke-dasharray:var(--len,4000); stroke-dashoffset:var(--len,4000);
   transition:stroke-dashoffset 1.25s var(--ease-out), opacity .5s var(--ease);
   transition-delay:.1s, 1.45s;
@@ -127,13 +129,13 @@ onUnmounted(() => {
 .intro.go .intro__draw{ stroke-dashoffset:0; opacity:0; }
 
 .intro__fill{
-  fill:var(--acid); fill-rule:evenodd;
+  fill:var(--logo); fill-rule:evenodd;
   opacity:0; transition:opacity .6s var(--ease-out); transition-delay:1.15s;
 }
 .intro.go .intro__fill{ opacity:1; }
 
 .intro__dot{
-  fill:var(--acid); opacity:0; transform:scale(.2); transform-origin:center;
+  fill:var(--logo); opacity:0; transform:scale(.2); transform-origin:center;
   transform-box:fill-box;
   transition:opacity .45s var(--ease-out), transform .55s var(--ease-out);
 }
@@ -143,7 +145,7 @@ onUnmounted(() => {
 .intro__dot:nth-of-type(3){ transition-delay:1.17s; }
 
 .intro__ripples circle{
-  fill:none; stroke:var(--leaf-l); stroke-width:1.5; opacity:0; transform-origin:510px 144px;
+  fill:none; stroke:var(--leaf-d); stroke-width:1.5; opacity:0; transform-origin:510px 144px;
 }
 .intro.pulse .intro__ripples circle{ animation:introBloom 1.05s var(--ease-out) forwards; }
 .intro.pulse .intro__ripples circle:nth-child(1){ animation-delay:0ms; }
@@ -169,7 +171,7 @@ onUnmounted(() => {
    green climbs through the letters behind it. */
 .intro__rise{
   display:block; position:relative;
-  color:rgba(246,243,234,.16);
+  color:rgba(36,90,42,.15);
   transform:translateY(112%);
   transition:transform 1.1s var(--ease-out);
   transition-delay:.35s;
@@ -181,7 +183,7 @@ onUnmounted(() => {
   content:attr(data-t);
   position:absolute; inset:0;
   background-image:linear-gradient(to top,
-    var(--acid) 0%, var(--leaf-xl) 46%, var(--paper) 86%, rgba(246,243,234,0) 100%);
+    var(--leaf-d) 0%, var(--logo) 52%, var(--logo) 88%, rgba(36,90,42,0) 100%);
   background-repeat:no-repeat;
   /* anchored to the bottom and grown upward: the fill rises, it never slides */
   background-position:0 100%;

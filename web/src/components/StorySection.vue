@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { PRODUCTS, CATEGORIES } from '../data/catalogue'
 import { reducedMotion } from '../composables/useMotion'
-import logo from '../assets/logo.png'
+import logo from '../assets/logo-mark.svg'
 
 const { t } = useI18n()
 
@@ -83,7 +83,12 @@ onUnmounted(() => io && io.disconnect())
 .story blockquote em{ font-style:italic; color:var(--brick); }
 .story__copy{ margin:18px 0 0; color:var(--ink-2); font-size:.96rem; line-height:1.6; max-width:52ch; }
 .story__meta{ margin-top:26px; display:flex; align-items:center; gap:14px; }
-.story__meta img{ width:52px; height:52px; border-radius:50%; object-fit:cover; }
+/* contain, not cover: the mark is artwork with its own margins, not a photo
+   to be cropped to the circle. */
+.story__meta img{
+  width:52px; height:52px; border-radius:50%;
+  background:var(--paper); padding:6px; object-fit:contain;
+}
 .story__meta div{ font-size:.82rem; line-height:1.4; }
 .story__meta b{ display:block; font-weight:600; }
 .story__meta span{ color:var(--ink-3); }

@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { CONTACT, SETS } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
 import CatalogueCta from './CatalogueCta.vue'
-import logo from '../assets/logo.png'
+import logo from '../assets/logo-mark.svg'
 
 const { t } = useI18n()
 const year = new Date().getFullYear()
@@ -56,7 +56,12 @@ const links = computed(() => [
 .foot{ background:var(--forest-2); color:rgba(246,243,234,.7); padding:clamp(40px,5vw,64px) 0 34px; }
 .foot__top{ display:flex; justify-content:space-between; gap:32px 40px; flex-wrap:wrap; align-items:center; padding-bottom:32px; border-bottom:1px solid var(--line-inv); }
 .foot__brand{ display:flex; align-items:center; gap:14px; }
-.foot__brand img{ width:56px; height:56px; border-radius:50%; }
+/* The mark is its own dark green, and the footer is dark green — without a
+   paper disc behind it the logo disappears into the panel. */
+.foot__brand img{
+  width:56px; height:56px; border-radius:50%;
+  background:var(--paper); padding:7px; object-fit:contain;
+}
 .foot__brand b{ font-family:var(--wordmark); color:var(--paper); font-size:1.5rem; font-weight:600; display:block; letter-spacing:-.024em; }
 .foot__brand span{ font-family:var(--wordmark); font-size:.82rem; letter-spacing:.01em; }
 .foot__nav{ display:flex; gap:clamp(18px,3vw,44px); flex-wrap:wrap; font-size:.86rem; }
