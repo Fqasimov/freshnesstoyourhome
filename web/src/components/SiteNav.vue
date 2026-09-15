@@ -172,7 +172,11 @@ watch(count, (now, before) => {
   transition:background .45s var(--ease), height .45s var(--ease), box-shadow .45s var(--ease);
 }
 .nav__in{
-  width:100%; max-width:var(--maxw); margin-inline:auto; padding-inline:var(--gutter);
+  width:100%; max-width:var(--maxw); margin-inline:auto;
+  /* A bit more than the page's shared gutter on both sides — the toolbar
+     (basket, catalogue button, language flag) was sitting flush against the
+     edge with nothing but its own padding between it and the viewport. */
+  padding-inline:calc(var(--gutter) + 18px);
   display:flex; align-items:center; gap:clamp(16px,3vw,48px);
 }
 .nav__brand{ display:flex; align-items:center; gap:12px; }
@@ -270,7 +274,11 @@ watch(count, (now, before) => {
 }
 .nav.solid .nav__mark{ box-shadow:0 0 0 1px var(--line); }
 
-@media (max-width:860px){
+/* Four links plus a full toolbar don't fit between roughly 900 and 1150px —
+   nothing here shrinks, so that band used to overflow off the right edge
+   instead of just looking tight. Raised from 860 to clear it: the burger
+   now covers the whole width where the two rows can't coexist. */
+@media (max-width:1180px){
   .nav__links{
     position:fixed; inset:0 0 auto 0; z-index:-1;
     flex-direction:column; gap:0;
