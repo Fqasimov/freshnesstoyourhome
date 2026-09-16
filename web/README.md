@@ -312,6 +312,22 @@ Xüsusi təkliflər, Ən çox sifariş olunan, Necə sifariş etmək olar?, Çat
 than a nav word, since it's a page you go to rather than a section you scroll
 past.
 
+**How to order** (`OrderSteps.vue`, `#order`) is a stepper rather than three
+static columns. It walks itself while it is on screen — an
+IntersectionObserver starts and stops the timer, so it is not counting against
+a section nobody is looking at — and each card draws its own dwell as a bar,
+the same "this is loading" idea as the intro. Hovering or focusing a step
+pauses the walk; clicking one ends it for good, because having the thing move
+under somebody who has taken hold of it is rude. Arrow keys walk it too.
+
+Two rules it keeps: **no copy is ever hidden** — all three steps stay legible
+and only the emphasis moves, so nobody has to wait for a carousel to reach the
+answer — and under `prefers-reduced-motion` nothing advances, nothing is
+dimmed, and the dwell bars never render. The numerals are still joined by the
+old dashed rule, except the rule now fills in behind the walk; stacked on a
+phone it turns and runs down the numerals, where a horizontal one would point
+at nothing.
+
 **Delivery** (`DeliverySection.vue`, `#delivery`) is the one new section: what
 the shop actually said about zones, the cold chain and payment, plus a terms
 card. Two facts there — hours and the day-ahead notice — are deliberately not
