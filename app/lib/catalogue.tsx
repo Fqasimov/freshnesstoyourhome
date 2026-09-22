@@ -4,6 +4,7 @@ import {
 } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { api, type CatalogueResponse, type Category, type Product, type Zone } from './api'
+import { FALLBACK_CATALOGUE } from './fallbackCatalogue'
 
 /**
  * The catalogue, fetched from the server and cached on the device.
@@ -16,6 +17,11 @@ import { api, type CatalogueResponse, type Category, type Product, type Zone } f
  * It is never used to price an order — the server does that at checkout — so a
  * stale cache costs a corrected total, not a wrong bill. AsyncStorage is the
  * right home for it precisely because none of it is secret.
+ *
+ * Before there is even a cache — a new phone, a first run with no signal —
+ * the bundled copy in fallbackCatalogue.ts renders instead of an empty shop.
+ * It is generated from shared/catalogue.json, the same file that seeds the
+ * database and that the website falls back to, so all three agree.
  */
 const CACHE_KEY = 'catalogue_cache_v1'
 
@@ -37,8 +43,12 @@ type CatalogueValue = {
 const CatalogueContext = createContext<CatalogueValue | undefined>(undefined)
 
 export function CatalogueProvider ({ children }: PropsWithChildren) {
-  const [data, setData] = useState<CatalogueResponse | null>(null)
-  const [loaded, setLoaded] = useState(false)
+  // The bundled copy is on screen from the first frame, so the shop is never
+  // an empty list. `stale` still means what it meant — the network did not
+  // confirm this — and stays false until a fetch actually fails, or the
+  // offline banner would flash on every launch.
+  const [data, setData] = useState<CatalogueResponse>(FALLBACK_CATALOGUE)
+  const [loaded, setLoaded] = useState(true)
   const [stale, setStale] = useState(false)
 
   const refresh = useCallback(async () => {
@@ -78,14 +88,14 @@ export function CatalogueProvider ({ children }: PropsWithChildren) {
   }, [refresh])
 
   const value = useMemo<CatalogueValue>(() => {
-    const products = data?.products ?? []
+    const products = data.products
 
     return {
-      categories: data?.categories ?? [],
+      categories: data.categories,
       products,
-      zones: data?.zones ?? [],
-      delivery: data?.delivery ?? null,
-      currency: data?.currency ?? 'AZN',
+      zones: data.zones,
+      delivery: data.delivery,
+      currency: data.currency,
       loaded,
       stale,
       refresh,

@@ -20,10 +20,15 @@ class CatalogueEndpointTest extends TestCase
 
     public function test_the_catalogue_is_public(): void
     {
+        // Counted from the seed rather than written here: the catalogue grows
+        // whenever the shop adds a listing, and a hard-coded number turns that
+        // into a failing test rather than a passing one.
+        $seed = json_decode((string) file_get_contents(base_path('../shared/catalogue.json')), true, 512, JSON_THROW_ON_ERROR);
+
         $this->getJson('/api/catalogue')
             ->assertOk()
-            ->assertJsonCount(54, 'products')
-            ->assertJsonCount(6, 'categories');
+            ->assertJsonCount(count($seed['products']), 'products')
+            ->assertJsonCount(count($seed['categories']), 'categories');
     }
 
     /**

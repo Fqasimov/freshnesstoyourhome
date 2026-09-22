@@ -23,7 +23,7 @@
  *     shared token ends up overridden everywhere it is used.
  * ------------------------------------------------------------------------
  */
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -34,6 +34,54 @@ export const shared = {
   brand: read('brand.json'),
   tokens: read('tokens.json'),
   delivery: read('delivery.json'),
+  catalogue: read('catalogue.json'),
+}
+
+/* Checks the data has to pass before a single file is written from it. Each
+   one is here because getting it wrong is silent: a duplicate id shadows a
+   listing, a sort that restarts per category drops a pantry item among the
+   smoked fish, a missing translation renders blank in one language only, and
+   a photograph nobody filed leaves a grey rectangle on two surfaces at once. */
+export function validate () {
+  const errors = []
+  const { products, categories, bundles } = shared.catalogue
+  const ids = new Set()
+  const catIds = new Set(categories.map(c => c.id))
+
+  let previous = 0
+  for (const p of products) {
+    if (ids.has(p.id)) errors.push(`two listings share the id "${p.id}"`)
+    ids.add(p.id)
+    if (!catIds.has(p.category_id)) errors.push(`"${p.id}" is in category "${p.category_id}", which does not exist`)
+    if (!(p.price_minor > 0)) errors.push(`"${p.id}" has no price`)
+    if (p.sort <= previous) errors.push(`"${p.id}" has sort ${p.sort}, which does not follow ${previous} — products are served ordered by sort alone, across every category`)
+    previous = p.sort
+    for (const l of ['az', 'ru', 'en']) {
+      if (!p.translations?.[l]?.name) errors.push(`"${p.id}" has no ${l} name`)
+      if (!p.translations?.[l]?.unit_label) errors.push(`"${p.id}" has no ${l} unit`)
+    }
+    if (!existsSync(join(ROOT, 'shared/products', p.id + '.jpg'))) {
+      errors.push(`"${p.id}" has no photograph in shared/products`)
+    }
+  }
+
+  for (const b of bundles ?? []) {
+    for (const item of b.items ?? []) {
+      if (!ids.has(item.product_id)) errors.push(`bundle "${b.id}" contains "${item.product_id}", which is not a listing`)
+    }
+  }
+
+  const zoneIds = new Set()
+  for (const z of shared.delivery.zones) {
+    if (zoneIds.has(z.id)) errors.push(`two delivery areas share the id "${z.id}"`)
+    zoneIds.add(z.id)
+    if (!(z.fee?.length === 2) || z.fee[0] > z.fee[1]) errors.push(`delivery area "${z.id}" has a fee that is not a [low, high] pair`)
+    for (const l of ['az', 'ru', 'en']) if (!z[l]) errors.push(`delivery area "${z.id}" has no ${l} name`)
+  }
+
+  if (errors.length) {
+    throw new Error('shared/ will not generate:\n\n  ' + errors.join('\n  ') + '\n')
+  }
 }
 
 const banner = (source, comment = '//') => {
@@ -199,6 +247,121 @@ export const feeText = (zone: SharedZone | null | undefined): string =>
 
 export const isRange = (zone: SharedZone | null | undefined): boolean =>
   Boolean(zone && zone.fee[0] !== zone.fee[1])
+`
+    },
+  },
+
+  {
+    path: 'web/src/data/catalogue.generated.js',
+    build: () => {
+      const { categories, products, bundles } = shared.catalogue
+      const count = id => products.filter(p => p.category_id === id).length
+      const pad = n => String(n).padStart(2, '0')
+      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
+
+      const cats = [
+        `  { id: 'all', en: 'Everything', az: 'Hamısı', ru: 'Всё', kicker: '${pad(products.length)}' },`,
+        ...categories.map(c =>
+          `  { id: ${q(c.id)}, en: ${q(c.names.en)}, az: ${q(c.names.az)}, ru: ${q(c.names.ru)}, kicker: '${pad(count(c.id))}' },`),
+      ]
+
+      const prods = products.map(p => {
+        const t = p.translations
+        const unit = `{ en: ${q(t.en.unit_label)}, az: ${q(t.az.unit_label)}, ru: ${q(t.ru.unit_label)}, kind: ${q(p.unit_kind)}, qty: ${p.unit_qty} }`
+        return `  { id: ${q(p.id)}, cat: ${q(p.category_id)}, price: ${p.price_minor / 100}, unit: ${unit},\n` +
+          `    en: ${q(t.en.name)}, az: ${q(t.az.name)}, ru: ${q(t.ru.name)}${p.is_popular ? ', popular: true' : ''},\n` +
+          `    den: ${q(t.en.description)},\n    daz: ${q(t.az.description)},\n    dru: ${q(t.ru.description)} },`
+      })
+
+      const sets = bundles.map(b => {
+        const t = b.translations
+        const items = b.items.map(i => q(i.product_id)).join(', ')
+        const qty = b.items.some(i => i.qty !== 1)
+          ? `, qty: { ${b.items.map(i => `${q(i.product_id)}: ${i.qty}`).join(', ')} }` : ''
+        return `  { id: ${q(b.id)}, off: ${b.discount_percent}, items: [${items}]${qty},\n` +
+          `    en: ${q(t.en.name)}, az: ${q(t.az.name)}, ru: ${q(t.ru.name)},\n` +
+          `    den: ${q(t.en.description)},\n    daz: ${q(t.az.description)},\n    dru: ${q(t.ru.description)} },`
+      })
+
+      return banner('shared/catalogue.json') + `
+/* The bundled catalogue: what renders on first paint and what a customer with
+   no signal sees. It is a FALLBACK — the database is the authority, and
+   loadCatalogue() in catalogue.js replaces all of this the moment
+   /api/catalogue answers. The same file seeds that database and feeds the
+   app's own offline copy, so a listing written once reaches all three. */
+
+export const CATEGORIES = [
+${cats.join('\n')}
+]
+
+export const PRODUCTS = [
+${prods.join('\n')}
+]
+
+/* Bundles sold at a discount to the sum of their parts. \`off\` is the
+   percentage taken off that sum. */
+export const SETS = [
+${sets.join('\n')}
+]
+`
+    },
+  },
+
+  {
+    path: 'app/lib/fallbackCatalogue.ts',
+    build: () => {
+      const { categories, products } = shared.catalogue
+      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
+      const map = (a, b, c) => `{ az: ${q(a)}, ru: ${q(b)}, en: ${q(c)} }`
+
+      const cats = categories.map(c =>
+        `  { id: ${q(c.id)}, name: ${map(c.names.az, c.names.ru, c.names.en)} },`)
+
+      const prods = products.map(p => {
+        const t = p.translations
+        return `  {\n    id: ${q(p.id)}, category_id: ${q(p.category_id)}, price_minor: ${p.price_minor}, currency: 'AZN',\n` +
+          `    unit_kind: ${q(p.unit_kind)}, unit_qty: ${p.unit_qty}, is_weight_based: ${p.unit_kind !== 'pc'}, is_popular: ${Boolean(p.is_popular)}, image: null,\n` +
+          `    name: ${map(t.az.name, t.ru.name, t.en.name)},\n` +
+          `    unit_label: ${map(t.az.unit_label, t.ru.unit_label, t.en.unit_label)},\n` +
+          `    description: ${map(t.az.description, t.ru.description, t.en.description)},\n  },`
+      })
+
+      const zones = shared.delivery.zones.map(z =>
+        `  { id: ${q(z.id)}, name: ${map(z.az, z.ru, z.en)}, fee_minor: ${z.fee[0] * 100}, min_order_minor: 0 },`)
+
+      return banner('shared/catalogue.json and shared/delivery.json') + `
+import type { CatalogueResponse } from './api'
+
+/* What the shop looks like before the network has ever answered.
+ *
+ * The app used to have nothing here: a first run with no signal — on a plane,
+ * in a lift, on a new phone in a shop with bad reception — showed an empty
+ * catalogue and no way to tell that it was empty for the wrong reason. This is
+ * the same bundled copy the website carries, generated from the same file.
+ *
+ * It is a FALLBACK. The moment /api/catalogue answers, every figure here is
+ * replaced and the result cached; an order is priced by the server regardless,
+ * so a stale line costs a corrected total rather than a wrong bill.
+ *
+ * The zone fees are the LOW end of each area's range — the app shows a range
+ * from lib/zones.ts where it can, and this field has room for one number only.
+ */
+export const FALLBACK_CATALOGUE: CatalogueResponse = {
+  currency: 'AZN',
+  delivery: { open: '10:00', close: '22:00', lead_days: 1, weight_tolerance_percent: 10, code_ttl_minutes: 10 },
+
+  categories: [
+${cats.join('\n')}
+  ],
+
+  products: [
+${prods.join('\n')}
+  ],
+
+  zones: [
+${zones.join('\n')}
+  ],
+}
 `
     },
   },

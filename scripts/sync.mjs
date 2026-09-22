@@ -8,8 +8,10 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { FILES, ROOT } from './shared-build.mjs'
+import { FILES, ROOT, validate } from './shared-build.mjs'
 import { syncPhotos } from './shared-photos.mjs'
+
+validate()
 
 let changed = 0
 

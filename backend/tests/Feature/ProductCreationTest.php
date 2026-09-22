@@ -71,12 +71,14 @@ class ProductCreationTest extends TestCase
     {
         Sanctum::actingAs($this->admin());
 
+        $before = Product::count();
+
         foreach (['Kefir 1L', 'kefir_1l', '../etc/passwd', 'kefir--1l', '-kefir', 'ke', 'KEFIR'] as $bad) {
             $this->postJson('/api/admin/products', $this->payload(['id' => $bad]))
                 ->assertStatus(422);
         }
 
-        $this->assertSame(54, Product::count());
+        $this->assertSame($before, Product::count());
     }
 
     public function test_it_refuses_an_id_that_is_already_taken(): void
@@ -130,8 +132,10 @@ class ProductCreationTest extends TestCase
     {
         Sanctum::actingAs(User::factory()->create());
 
+        $before = Product::count();
+
         $this->postJson('/api/admin/products', $this->payload())->assertNotFound();
-        $this->assertSame(54, Product::count());
+        $this->assertSame($before, Product::count());
     }
 
     public function test_creating_a_product_is_recorded(): void

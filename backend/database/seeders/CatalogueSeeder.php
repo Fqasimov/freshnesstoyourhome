@@ -10,11 +10,15 @@ use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 /**
- * The catalogue, from database/data/catalogue.json.
+ * The catalogue, from shared/catalogue.json.
  *
- * The JSON is the reviewable source — a price change is a one-line diff a
- * non-programmer can read. It was extracted once from the website's
- * catalogue.js, which is no longer authoritative: the database is.
+ * That file is the one written copy: it seeds this database, it is the
+ * website's bundled fallback and it is the app's offline copy, so a listing
+ * written once reaches all three. A price change there is a one-line diff a
+ * non-programmer can read.
+ *
+ * It is not authoritative once seeded. The database is — the admin panel edits
+ * rows, and /api/catalogue serves rows.
  *
  * Idempotent. Running it again updates prices and translations in place and
  * leaves order history untouched, so it is safe to re-run after editing the
@@ -24,10 +28,10 @@ class CatalogueSeeder extends Seeder
 {
     public function run(): void
     {
-        $path = database_path('data/catalogue.json');
+        $path = base_path('../shared/catalogue.json');
 
         if (! is_file($path)) {
-            throw new RuntimeException("Catalogue data missing at {$path}.");
+            throw new RuntimeException("Catalogue data missing at {$path}. Run `npm run sync` at the repository root.");
         }
 
         $data = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);

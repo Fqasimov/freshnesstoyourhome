@@ -9,8 +9,10 @@
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { FILES, ROOT } from './shared-build.mjs'
+import { FILES, ROOT, validate } from './shared-build.mjs'
 import { syncPhotos } from './shared-photos.mjs'
+
+validate()
 
 const stale = []
 
