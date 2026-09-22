@@ -35,3 +35,9 @@ google-services.json
 GoogleService-Info.plist
 
 .DS_Store
+
+# The product photo library lives in shared/products and is copied into both
+# bundles by `npm run sync`. The copies are build output; committing them would
+# put the same six megabytes in the repository three times over.
+/web/src/assets/products/*.jpg
+/app/assets/products/*.jpg

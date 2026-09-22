@@ -1,0 +1,33 @@
+/*
+ * Generated from shared/tokens.json — do not edit.
+ *
+ * Change the source and run `npm run sync` at the repository root. Editing
+ * this file directly makes the website and the app disagree, which is the
+ * one thing this arrangement exists to prevent; `npm run check` catches it.
+ */
+
+:root{
+  /* the ground the whole brand sits on */
+  --paper:       #F6F3EA;
+  --paper-2:     #EFEADC;
+  --paper-3:     #E5DFCC;
+  --white:       #FFFFFF;
+  --ink:         #1B2916;
+  --ink-2:       #3D4C35;
+  --ink-3:       #5F6955;
+  --forest:      #3A6A2C;
+  --forest-2:    #2C5121;
+  /* the ink of the logo artwork itself, sampled from the supplied file —
+     close to forest2 but not it, and the mark should match its own file */
+  --logo:        #245A2A;
+  --leaf:        #84AB58;
+  --leaf-d:      #52712F;
+  --leaf-l:      #A8C782;
+  --leaf-xl:     #C9E6A4;
+  --brick:       #90452E;
+  --brick-l:     #B15A3D;
+  --acid:        #EFE24E;
+  --line:        rgba(27,41,22,0.14);
+  --line-soft:   rgba(27,41,22,0.08);
+  --line-inv:    rgba(246,243,234,0.18);
+}

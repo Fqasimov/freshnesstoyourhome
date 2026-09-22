@@ -3,6 +3,7 @@ import BIcon from './BIcon.vue'
 import { computed } from 'vue'
 import { money } from '../data/catalogue'
 import { ZONES } from '../data/delivery'
+import { mapsUrl } from '../data/brand'
 import { useI18n } from '../composables/useI18n'
 import { useCart } from '../composables/useCart'
 
@@ -19,8 +20,11 @@ const countLabel = computed(() =>
    Google Maps key; this needs none, and the link a phone's Share button
    produces already resolves to an exact point. When a key exists, the picker
    slots in above the field and writes its pin into `mapLink` — see
-   VITE_GOOGLE_MAPS_KEY in .env.example. */
-const MAPS_URL = 'https://www.google.com/maps/@40.3777,49.8920,13z'
+   VITE_GOOGLE_MAPS_KEY in .env.example.
+
+   The centre it opens on is in shared/brand.json, so the app's checkout opens
+   the same map on the same city. */
+const MAPS_URL = mapsUrl()
 </script>
 
 <template>

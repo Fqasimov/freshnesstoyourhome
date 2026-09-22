@@ -1,36 +1,12 @@
 /* ---------- 1. Tokens ---------------------------------------------------- */
+/* The palette is generated from shared/tokens.json, which the app reads too —
+   change a colour there and both surfaces change. Everything below it is the
+   website's own: metrics and type scale that a phone held at arm's length and
+   a desktop page have no business sharing. See shared/README.md. */
+@import './tokens.css';
+
 :root{
-  /* ground */
-  --paper:        #F6F3EA;
-  --paper-2:      #EFEADC;
-  --paper-3:      #E5DFCC;
-  /* ink */
-  --ink:          #1B2916;
-  --ink-2:        #3D4C35;
-  --ink-3:        #5F6955;
-  /* brand */
-  --forest:       #3A6A2C;
-  --forest-2:     #2C5121;
-  /* the ink of the logo artwork itself, sampled from the supplied file —
-     close to --forest-2 but not it, and the mark should match its own file */
-  --logo:         #245A2A;
-  --leaf:         #84AB58;
-  --leaf-d:       #52712F;
-  --leaf-l:       #A8C782;
-  /* light green for SMALL text on the dark panels, where --leaf-l
-     only reaches 3.4:1 and large display type is the sole safe use */
-  --leaf-xl:      #C9E6A4;
-  --brick:        #90452E;
-  --brick-l:      #B15A3D;
-  --acid:         #EFE24E;
-
-  --line:         rgba(27,41,22,.14);
-  --line-soft:    rgba(27,41,22,.08);
-  --line-inv:     rgba(246,243,234,.18);
-
   /* type */
-  /* Cormorant and Onest both carry Cyrillic and Latin Extended, so the
-     Azerbaijani schwa and the Russian alphabet render in the real face. */
   /* Headings, and everything that gets translated with them. Vollkorn covers
      Latin, Latin Extended (ə Ə ğ ı İ ş) and Cyrillic, so an Azerbaijani
      heading and a Russian one are set in the same face as an English one. */

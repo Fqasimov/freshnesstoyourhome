@@ -1,36 +1,14 @@
 /**
- * Design tokens, shared with the website so the app and the site read as one
- * brand.
+ * The app's theme.
  *
- * Every colour here has been checked for WCAG AA contrast against the ground
- * it sits on. `ink3` and `leafDark` in particular are corrected values, not the
- * originals — do not lighten them without re-checking. `leafXl` exists because
- * `leafLight` only reaches 3.4:1 on the dark panels, which is fine for large
- * display type and not for anything a customer has to read.
+ * The palette comes from shared/tokens.json by way of palette.ts, which the
+ * website reads too — change a colour there, run `npm run sync` at the
+ * repository root, and both surfaces change together. Everything else in this
+ * file is the app's own: type sizes and tap targets that a phone wants and a
+ * desktop page does not. See shared/README.md.
  */
-export const color = {
-  paper: '#F6F3EA',
-  paper2: '#EFEADC',
-  paper3: '#E5DFCC',
-  white: '#FFFFFF',
-
-  ink: '#1B2916',
-  ink2: '#3D4C35',
-  ink3: '#5F6955',
-
-  forest: '#3A6A2C',
-  forest2: '#2C5121',
-  leaf: '#84AB58',
-  leafDark: '#52712F',
-  leafLight: '#A8C782',
-  leafXl: '#C9E6A4',
-
-  brick: '#90452E',
-  acid: '#EFE24E',
-
-  line: 'rgba(27,41,22,0.14)',
-  lineSoft: 'rgba(27,41,22,0.08)',
-} as const
+export { color } from './palette'
+export type { ColorName } from './palette'
 
 /**
  * Font families are referenced through these names, never as literal strings

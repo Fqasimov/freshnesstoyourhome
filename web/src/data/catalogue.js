@@ -16,13 +16,10 @@
 
 import { reactive, ref } from 'vue'
 
-export const CONTACT = {
-  phone: '+994503521919',
-  phoneDisplay: '+994 50 352 19 19',
-  whatsapp: '994503521919',
-  instagram: 'freshness_to_your_home',
-  city: { en: 'Baku, Azerbaijan', az: 'Bakı, Azərbaycan' }
-};
+/* The shop's own details live in shared/brand.json, where the app reads them
+   too. Re-exported from here so the many components that already import
+   CONTACT from the catalogue keep working. */
+export { CONTACT } from './brand'
 
 export const CATEGORIES = reactive([
   { id: 'all',      en: 'Everything',      az: 'Hamısı', ru: 'Всё',            kicker: '55' },

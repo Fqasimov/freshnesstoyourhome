@@ -1,0 +1,12 @@
+{
+  "name": "freshness-to-your-home",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Freshness To Your Home — the website, the app, the API and the one copy of everything they share",
+  "workspaces": [],
+  "scripts": {
+    "sync": "node scripts/sync.mjs",
+    "check": "node scripts/check.mjs"
+  }
+}

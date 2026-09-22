@@ -5,11 +5,17 @@
   "type": "module",
   "description": "Product catalogue and ordering site for Freshness To Your Home, Baku",
   "scripts": {
+    "sync": "node ../scripts/sync.mjs",
+    "predev": "npm run sync",
     "dev": "vite",
+    "prebuild": "npm run sync",
     "build": "vite build",
     "preview": "vite preview",
+    "prebuild:single": "npm run sync",
     "build:single": "vite build --mode single",
     "build:admin-demo": "VITE_ADMIN_DEMO=1 vite build --mode admin-demo",
+    "check": "node ../scripts/check.mjs",
+    "pretest:api": "npm run check",
     "test:api": "node tests/api-integration.mjs"
   },
   "dependencies": {

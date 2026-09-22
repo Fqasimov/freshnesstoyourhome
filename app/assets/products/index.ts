@@ -1,28 +1,39 @@
 /**
- * Product photographs, bundled with the app.
+ * Product photographs bundled with the app.
  *
- * Generated — do not edit by hand. Metro resolves require() at build time and
- * cannot take a computed path, so every image has to be named literally. The
- * key is the product id from the API, which is what keeps a photo from drifting
- * away from the row it belongs to.
+ * Generated from shared/products — do not edit. Metro resolves require() at
+ * build time and cannot take a computed path, so every image has to be named
+ * literally. The key is the product id from the API, which is what keeps a
+ * photo from drifting away from the row it belongs to.
  *
- * Regenerate with: npm run build:images
+ * Run `npm run sync` at the repository root after adding a photograph.
  */
 
 export const PRODUCT_IMAGES: Record<string, number> = {
+  'aged-gouda-333': require('./aged-gouda-333.jpg'),
+  'aged-gouda-444': require('./aged-gouda-444.jpg'),
+  'aged-gouda-555': require('./aged-gouda-555.jpg'),
   'anchovy-fillet': require('./anchovy-fillet.jpg'),
   'atlantic-lobster': require('./atlantic-lobster.jpg'),
   'baby-green-pesto': require('./baby-green-pesto.jpg'),
   'baby-octopus': require('./baby-octopus.jpg'),
   'baby-truffle': require('./baby-truffle.jpg'),
+  'barattolino-croccantino': require('./barattolino-croccantino.jpg'),
+  'barattolino-vaniglia-pistacchio': require('./barattolino-vaniglia-pistacchio.jpg'),
   'beluga-steaks': require('./beluga-steaks.jpg'),
+  'black-caviar': require('./black-caviar.jpg'),
   'black-mussels': require('./black-mussels.jpg'),
   'black-tiger-shrimp': require('./black-tiger-shrimp.jpg'),
   'brie': require('./brie.jpg'),
+  'burrata-plain': require('./burrata-plain.jpg'),
   'burrata-truffle': require('./burrata-truffle.jpg'),
   'butter': require('./butter.jpg'),
   'camembert': require('./camembert.jpg'),
+  'chili-gouda': require('./chili-gouda.jpg'),
+  'cono-caramello-salato': require('./cono-caramello-salato.jpg'),
   'crab-sticks': require('./crab-sticks.jpg'),
+  'danet-pilic-sucuk': require('./danet-pilic-sucuk.jpg'),
+  'dimartino-pasta': require('./dimartino-pasta.jpg'),
   'duck-fillet': require('./duck-fillet.jpg'),
   'duck-leg': require('./duck-leg.jpg'),
   'escolar': require('./escolar.jpg'),
@@ -30,40 +41,61 @@ export const PRODUCT_IMAGES: Record<string, number> = {
   'fresh-dorado': require('./fresh-dorado.jpg'),
   'fresh-forel': require('./fresh-forel.jpg'),
   'fresh-levrek': require('./fresh-levrek.jpg'),
+  'frozen-asparagus': require('./frozen-asparagus.jpg'),
   'frozen-bagels': require('./frozen-bagels.jpg'),
   'frozen-croissant': require('./frozen-croissant.jpg'),
+  'frozen-edamame': require('./frozen-edamame.jpg'),
+  'goat-cheese': require('./goat-cheese.jpg'),
   'gouda': require('./gouda.jpg'),
+  'gran-guardia': require('./gran-guardia.jpg'),
   'grana-padano': require('./grana-padano.jpg'),
   'green-mussels': require('./green-mussels.jpg'),
+  'gruvi-croccantino': require('./gruvi-croccantino.jpg'),
+  'gruvi-pistacchio': require('./gruvi-pistacchio.jpg'),
   'halloumi': require('./halloumi.jpg'),
   'kalmar': require('./kalmar.jpg'),
   'kend-colpa-700': require('./kend-colpa-700.jpg'),
   'kend-colpa-800': require('./kend-colpa-800.jpg'),
-  'kitkat-matcha': require('./kitkat-matcha.jpg'),
   'kitkat-matcha-latte': require('./kitkat-matcha-latte.jpg'),
+  'kitkat-matcha': require('./kitkat-matcha.jpg'),
   'kitkat-strawberry': require('./kitkat-strawberry.jpg'),
   'korolevskiy-shrimp': require('./korolevskiy-shrimp.jpg'),
+  'labne': require('./labne.jpg'),
   'langoustine': require('./langoustine.jpg'),
+  'mozzarella': require('./mozzarella.jpg'),
   'mussel-meat': require('./mussel-meat.jpg'),
   'octopus-salgado': require('./octopus-salgado.jpg'),
   'organic-feta': require('./organic-feta.jpg'),
   'parmigiano-reggiano': require('./parmigiano-reggiano.jpg'),
   'peeled-shrimp': require('./peeled-shrimp.jpg'),
   'peking-duck': require('./peking-duck.jpg'),
+  'pesto-sauce': require('./pesto-sauce.jpg'),
+  'philadelphia-herbs': require('./philadelphia-herbs.jpg'),
+  'philadelphia-light': require('./philadelphia-light.jpg'),
+  'philadelphia-original': require('./philadelphia-original.jpg'),
+  'philadelphia-protein': require('./philadelphia-protein.jpg'),
   'pizza-cheese': require('./pizza-cheese.jpg'),
+  'quadrotto-cioccolato': require('./quadrotto-cioccolato.jpg'),
+  'quadrotto-meringata': require('./quadrotto-meringata.jpg'),
+  'quadrotto-pistacchio': require('./quadrotto-pistacchio.jpg'),
   'red-caviar': require('./red-caviar.jpg'),
   'salmon-steaks': require('./salmon-steaks.jpg'),
+  'salmon-trout-fillet': require('./salmon-trout-fillet.jpg'),
   'seafood-mix': require('./seafood-mix.jpg'),
   'smoked-beluga': require('./smoked-beluga.jpg'),
   'smoked-dorado': require('./smoked-dorado.jpg'),
+  'smoked-herring': require('./smoked-herring.jpg'),
+  'smoked-mackerel-fillet': require('./smoked-mackerel-fillet.jpg'),
   'smoked-mackerel': require('./smoked-mackerel.jpg'),
   'smoked-salmon': require('./smoked-salmon.jpg'),
   'smoked-trout': require('./smoked-trout.jpg'),
   'sudak': require('./sudak.jpg'),
+  'sundried-tomatoes': require('./sundried-tomatoes.jpg'),
   'tortilla-lavash': require('./tortilla-lavash.jpg'),
   'tuna-frozen': require('./tuna-frozen.jpg'),
   'tuna-loin': require('./tuna-loin.jpg'),
   'unagi-frozen': require('./unagi-frozen.jpg'),
+  'vannamei-shrimp': require('./vannamei-shrimp.jpg'),
 }
 
 /** Falls back to undefined, which renders the card without a photo. */

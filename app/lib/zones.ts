@@ -4,8 +4,6 @@
 // this file directly makes the website and the app disagree, which is the
 // one thing this arrangement exists to prevent; `npm run check` catches it.
 
-import { reactive } from 'vue'
-
 /* A PAIR [low, high] in whole manats. Equal ends mean a flat fee. Half of
    these are ranges because the distance inside the area varies enough that
    the shop will not commit to one figure until it knows the address, which
@@ -15,14 +13,25 @@ import { reactive } from 'vue'
    The shop's own order: broadly cheapest first, city before the
    settlements around it.
 
-   Like the catalogue, this is the bundled copy rather than the last word: when
-   the Zonalar tab carries real numbers, the fee the API quotes for a zone_id
-   wins over anything written here.
+   The server is still the authority: /api/catalogue returns the real zones and
+   a single fee_minor each, and that is what an order is priced on. This list
+   is what the picker shows before the network answers, and the only place a
+   RANGE can be told to a customer honestly — the server's one integer cannot
+   say '20–25'.
 
    The Russian and English names are transliterations of the Azerbaijani,
    which is the form the shop itself uses. */
 
-export const ZONES = reactive([
+export type SharedZone = {
+  id: string
+  /** [low, high] in whole manats. Equal ends mean a flat fee. */
+  fee: readonly [number, number]
+  az: string
+  ru: string
+  en: string
+}
+
+export const ZONES: readonly SharedZone[] = [
   { id: 'merkez', fee: [5, 5], az: 'Mərkəz (Sahil, 28 May, İçərişəhər)', ru: 'Центр (Сахил, 28 Мая, Ичеришехер)', en: 'City centre (Sahil, 28 May, Icherisheher)' },
   { id: 'nerimanov', fee: [5, 5], az: 'Nərimanov', ru: 'Нариманов', en: 'Narimanov' },
   { id: 'nesimi', fee: [5, 5], az: 'Nəsimi', ru: 'Насими', en: 'Nasimi' },
@@ -74,11 +83,14 @@ export const ZONES = reactive([
   { id: 'goradil', fee: [20, 20], az: 'Goradil', ru: 'Горадиль', en: 'Goradil' },
   { id: 'suvelan', fee: [20, 25], az: 'Şüvəlan', ru: 'Шувелян', en: 'Shuvalan' },
   { id: 'zire', fee: [20, 25], az: 'Zirə', ru: 'Зира', en: 'Zira' },
-])
+] as const
 
-export const zoneById = id => ZONES.find(z => z.id === id) || null
+export const zoneById = (id: string | null | undefined): SharedZone | null =>
+  ZONES.find(z => z.id === id) ?? null
 
-/* '5' for a flat fee, '15–20' for a range. An en dash, not a hyphen: this is a
-   span of numbers, not a compound word. */
-export const feeText = zone =>
-  !zone ? '' : zone.fee[0] === zone.fee[1] ? `${zone.fee[0]}` : `${zone.fee[0]}–${zone.fee[1]}`
+/** '5' for a flat fee, '15–20' for a range. An en dash: a span, not a compound. */
+export const feeText = (zone: SharedZone | null | undefined): string =>
+  !zone ? '' : zone.fee[0] === zone.fee[1] ? String(zone.fee[0]) : `${zone.fee[0]}–${zone.fee[1]}`
+
+export const isRange = (zone: SharedZone | null | undefined): boolean =>
+  Boolean(zone && zone.fee[0] !== zone.fee[1])
