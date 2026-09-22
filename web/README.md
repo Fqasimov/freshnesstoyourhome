@@ -210,11 +210,13 @@ with nowhere to go is as incomplete as an empty one. Both are remembered in
 `localStorage` beside the basket, because somebody who orders every week
 should not retype their address every week.
 
-`src/data/delivery.js` carries the shop's price list for the nineteen
-districts it covers. `fee` is a **pair**, `[low, high]`: six of those zones are
-quoted as a range rather than a number — Qaradağ is 15–20, Biləcəri 7–8 —
-because distance inside them varies enough that the shop will not commit until
-it knows the address. The `delivery_zones` table holds one `fee_minor` per
+`src/data/delivery.js` carries the shop's price list for the **fifty-one**
+areas it covers, in the shop's own order — broadly cheapest first, city before
+the settlements around it. `fee` is a **pair**, `[low, high]`: around half of
+those zones are quoted as a range rather than a number — Şüvəlan is 20–25,
+Biləcəri 7–8 — because distance inside them varies enough that the shop will
+not commit until it knows the address. The Russian and English names are
+transliterations of the Azerbaijani, which is the form the shop itself uses. The `delivery_zones` table holds one `fee_minor` per
 zone and cannot express that, which is why the range lives in the bundled file
 and the courier settles it in the same reply that confirms the weights.
 
