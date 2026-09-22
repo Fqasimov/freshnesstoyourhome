@@ -73,6 +73,16 @@ delivery fee is a row update, visible on the next request, not a release.
   board. Probably a transcription error on the poster; worth checking with
   whoever sets prices.
 
+## Building from a clone
+
+`npm run build` in `web/` runs `npm run sync` first, which regenerates
+everything derived from `shared/` — including the product photographs, which
+are gitignored under `web/src/assets/products` because `shared/products` is the
+only copy in the repository. **Build from a full clone, not from `web/`
+alone**, or the sync has nothing to read and the build fails on the missing
+images. The app's `export:web` does the same. `npm run check` at the root says
+whether anything is out of step without writing.
+
 ## The admin panel
 
 `npm run build` in `web/` now produces two pages: `index.html` (the shop) and

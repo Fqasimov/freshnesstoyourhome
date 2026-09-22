@@ -8,8 +8,17 @@ apps, built in the cloud by EAS — no Mac required for the iOS build.
 ```bash
 npm install
 cp .env.example .env          # EXPO_PUBLIC_API_URL must reach your API
-npx expo start                # scan the QR with Expo Go
+npm start                     # scan the QR with Expo Go
 ```
+
+`npm start` runs `npm run sync` first, which is what fills `assets/products`
+and writes `theme/palette.ts`, `lib/zones.ts`, `lib/brand.ts`,
+`lib/sharedCopy.ts` and `lib/fallbackCatalogue.ts` from `shared/` at the
+repository root. **A fresh clone has no product photographs until it has run** —
+they are gitignored here, because `shared/products` is the only copy in the
+repository. Never edit a generated file: `npm run check` fails while one has
+been hand-edited or left stale, and it runs before the typecheck and the
+journey test. See `shared/README.md`.
 
 For Expo Go on a phone, `EXPO_PUBLIC_API_URL` must be your machine's **LAN
 address**, not `localhost` — on the phone, localhost is the phone. See

@@ -18,6 +18,13 @@ app uses. Changing a price is a row update, not a redeploy of this site.
 what the page falls back to when the API cannot be reached, so a customer never
 meets an empty shop. Treat any disagreement with the API as the API being right.
 
+The listings themselves are not written here. They are in `shared/catalogue.json`
+at the repository root, which seeds the database and generates the app's offline
+copy as well — write a listing once and it reaches all three.
+`src/data/catalogue.generated.js`, `delivery.js`, `brand.js`, `copy.generated.js`
+and `styles/tokens.css` are all generated from `shared/`; `npm run sync` rewrites
+them and `npm run check` fails while one is stale. See `shared/README.md`.
+
 `PRODUCTS` and `CATEGORIES` are reactive arrays mutated in place when the live
 catalogue lands, so every component that already imports them updates without
 knowing where the data came from.
@@ -227,13 +234,17 @@ never as one of its ends. There is a test for exactly that.
 The quote endpoint has always accepted `zone_id`; the site simply never sent
 one, so every basket was priced as though delivery were free. It does now. An
 id the table does not recognise resolves to no zone and no fee rather than an
-error, which is what makes it safe to send our own ids while the Zonalar tab
-still holds the two seeded placeholders.
+error, which is what made it safe to send our own ids before the table knew
+them. It knows them now: the zone seeder reads the same `shared/delivery.json`,
+so all fifty-one are rows, and the two original placeholders are switched off.
 
 **The map field** takes the share link a phone produces, which already
 resolves to an exact point and costs nothing. An embedded pin picker needs a
 billed Google Maps key; `VITE_GOOGLE_MAPS_KEY` is the hook for it and the
-picker slots in above the field, writing its pin into the same `mapLink`.
+picker slots in above the field, writing its pin into the same `mapLink`. The
+app's address form carries the same field, in the same words — they are in
+`shared/copy.json` — and stores it encrypted against the address, so a signed-in
+customer fills it in once.
 
 One structural note: the drawer's body and foot scroll **together**. The foot
 was a fixed block at the bottom of a flex column, which was fine while it held
@@ -372,12 +383,12 @@ card. Two facts there — hours and the day-ahead notice — are deliberately no
 repeated as icon cards, because the promise row right above the fold already
 carries them; saying them twice would read as filler. The zones/fee/minimum
 values in the terms card say "confirmed when you order" rather than a number,
-because every delivery zone still ships with a zero fee — a fabricated "5
-AZN" would be a lie the admin panel could not silently correct later.
+because the homepage says the fee is confirmed when the order is. The basket
+is where a customer picks their area and sees the number, which is the moment
+it matters; the fifty-one areas and their fees are in `shared/delivery.json`
+and seeded into the Zonalar tab.
 
 ## Still placeholder content
 
-- delivery areas and prices — the admin panel's **Zonalar** tab is where
-  real numbers go in; the website reads `dl.ask` until it does
 - the three bundles and their discounts, which were invented during design and
   ship switched **off** — the admin panel is what turns them on

@@ -6,20 +6,31 @@ Premium food delivery in Baku — website, customer app, and the API behind both
 web/       The public website (Vue 3 + Vite). Browsing and the catalogue.
 app/       The customer app (Expo + React Native) for iOS and Android.
 backend/   The API (Laravel 13 + Postgres). Auth, catalogue, orders.
+shared/    Everything the three must agree on, written once.
+scripts/   sync.mjs regenerates from shared/; check.mjs fails when it is stale.
 ```
 
-One repository, because the three share a catalogue. Keeping the app somewhere
-else would mean maintaining 54 products and their prices in two places, and
-they would drift — the only question is when.
+One repository, because the three share a catalogue — and one repository was
+not enough on its own. They drifted anyway: the app shipped thirty-two fewer
+product photographs than the website, nineteen listings existed on the website
+and nowhere else, and the app offered two placeholder delivery areas where the
+website offered fifty-one. `shared/` is the answer, and `shared/README.md` is
+the one page to read before changing anything that appears in more than one
+place.
 
-## The three things worth knowing before reading the code
+```bash
+npm run sync     # after editing anything in shared/
+npm run check    # run by the website's tests, the app's typecheck, every build
+```
+
+## The four things worth knowing before reading the code
 
 **Prices live in the database, not in the code.** The catalogue used to be a
 JavaScript file. With an app in the picture that would have meant three copies
 of every price — website bundle, app bundle, server — and changing the price of
 salmon would have needed an App Store review. Products, categories, zones and
-all three translations are rows now. `backend/database/data/catalogue.json` is
-the reviewable seed source; the database is the authority.
+all three translations are rows now. `shared/catalogue.json` is the reviewable
+seed source; the database is the authority.
 
 Both clients read it from the same public endpoint. The website keeps a bundled
 copy as an offline fallback and says so in `web/README.md`, but it is a
@@ -29,6 +40,14 @@ fallback — not a second source of truth.
 and how many. The server prices it from its own tables. Every app bundle is on
 a customer's own phone and can be modified, so any total that arrives from a
 client is a number somebody chose.
+
+**Anything true of the business rather than of a screen is written once.** The
+palette, the shop's phone number, the fifty-one delivery areas, the listings
+and the product photographs live in `shared/`, and a generator writes a file
+for each surface in the language that surface already speaks. Nothing imports
+across the boundary: Vite would manage it, Metro would not, and a shared layer
+that works on the website and not on the app is the drift it was meant to
+prevent. `npm run check` fails while a generated file is stale or hand-edited.
 
 **Most of this catalogue is sold by the kilo, and a kilo is never exactly a
 kilo.** An order carries a server-priced estimate and a stated tolerance; the

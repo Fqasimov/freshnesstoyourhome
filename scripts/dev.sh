@@ -107,6 +107,13 @@ fi
 
 [ -d vendor ] || { echo "   installing php dependencies…"; composer install --no-interaction --quiet; }
 
+# Everything both surfaces share — the palette, the delivery areas, the
+# listings, the product photographs — is generated from shared/. The seeders
+# below read it directly, and a fresh clone has no product photos until this
+# has run. Cheap and idempotent: it rewrites only what has actually changed.
+say "Shared files"
+( cd "$ROOT" && node scripts/sync.mjs )
+
 php artisan migrate --force --quiet
 php artisan db:seed --force --quiet 2>/dev/null || true
 php artisan config:clear --quiet

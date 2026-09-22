@@ -27,6 +27,21 @@ LAN_IP=192.168.1.14 ./scripts/dev.sh
 The rest of this file is what the script does, in case you want to run the
 steps yourself or something goes wrong.
 
+## 0. Everything shared
+
+```bash
+npm run sync        # from the repository root
+```
+
+Regenerates the files both surfaces build from — the palette, the delivery
+areas, the bundled catalogue, the shared copy, and the product photographs,
+which are gitignored in `web/src/assets` and `app/assets` because the only copy
+in the repository is `shared/products`. **A fresh clone has no product photos
+until this has run.** The website's and the app's build, start and test scripts
+all run it for you; you only need it by hand after editing something in
+`shared/`. `npm run check` says whether anything is out of step without
+writing.
+
 ## 1. The API
 
 ```bash
