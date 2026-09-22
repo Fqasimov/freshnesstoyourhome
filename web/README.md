@@ -202,6 +202,42 @@ curve is front-loaded enough to look finished in under a second; this one
 holds a steady climb so it reads as loading. The fill lands around 2.3s, the
 overlay leaves at 3.2s.
 
+## Where it is going
+
+The basket asks for a delivery area and an address before it will hand
+anything to WhatsApp, and withholds the send link until both exist — an order
+with nowhere to go is as incomplete as an empty one. Both are remembered in
+`localStorage` beside the basket, because somebody who orders every week
+should not retype their address every week.
+
+`src/data/delivery.js` carries the shop's price list for the nineteen
+districts it covers. `fee` is a **pair**, `[low, high]`: six of those zones are
+quoted as a range rather than a number — Qaradağ is 15–20, Biləcəri 7–8 —
+because distance inside them varies enough that the shop will not commit until
+it knows the address. The `delivery_zones` table holds one `fee_minor` per
+zone and cannot express that, which is why the range lives in the bundled file
+and the courier settles it in the same reply that confirms the weights.
+
+For that reason delivery is **not** folded into the total. It is its own line,
+and the message carries it as written — a range reaches the shop as a range,
+never as one of its ends. There is a test for exactly that.
+
+The quote endpoint has always accepted `zone_id`; the site simply never sent
+one, so every basket was priced as though delivery were free. It does now. An
+id the table does not recognise resolves to no zone and no fee rather than an
+error, which is what makes it safe to send our own ids while the Zonalar tab
+still holds the two seeded placeholders.
+
+**The map field** takes the share link a phone produces, which already
+resolves to an exact point and costs nothing. An embedded pin picker needs a
+billed Google Maps key; `VITE_GOOGLE_MAPS_KEY` is the hook for it and the
+picker slots in above the field, writing its pin into the same `mapLink`.
+
+One structural note: the drawer's body and foot scroll **together**. The foot
+was a fixed block at the bottom of a flex column, which was fine while it held
+a total and a button — with the delivery fields it is taller than a short
+phone, and anything past the bottom edge had nothing to scroll it into view.
+
 ## Goods sold by weight
 
 Most of this catalogue is sold by the kilo, and a kilo is never exactly a kilo.

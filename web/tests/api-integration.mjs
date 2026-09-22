@@ -102,13 +102,28 @@ await step('the drawer shows a total and the weight note', async () => {
   console.log('       ceiling shown: ' + (m ? m[1] + ' AZN' : '(none)'))
 })
 
-await step('the WhatsApp link carries the server figure', async () => {
+await step('the basket will not send without somewhere to send it', async () => {
+  // The link is withheld until a zone and an address exist, so an order can
+  // never reach WhatsApp with nowhere to deliver it.
+  if (await p.locator('.drawer a[href*="wa.me"]').count()) {
+    throw new Error('the send link exists before an address was given')
+  }
+})
+
+await step('the WhatsApp link carries the server figure and the address', async () => {
+  await p.selectOption('#cart-zone', 'qaradag')
+  await p.fill('#cart-addr', 'Test küçəsi 12')
+  await p.waitForTimeout(600)
+
   // Scoped to the drawer: the contact section carries a wa.me link too.
   const href = await p.locator('.drawer a[href*="wa.me"]').first().getAttribute('href')
   const text = decodeURIComponent(href.split('text=')[1] ?? '')
   if (!/Təxmini məbləğ/.test(text)) throw new Error('no total in the message')
   if (!/ən çox/.test(text)) throw new Error('no ceiling in the message')
-  console.log('       ' + (text.match(/Təxmini məbləğ.*/) ?? [''])[0].slice(0, 70))
+  if (!/Ünvan: Test küçəsi 12/.test(text)) throw new Error('no address in the message')
+  // A range zone must reach the shop as a range, not as one of its ends.
+  if (!/15–20/.test(text)) throw new Error('the zone fee range is not in the message')
+  console.log('       ' + (text.match(/Çatdırılma.*/) ?? [''])[0].slice(0, 70))
 })
 
 console.log('\n— it survives the API being down —')

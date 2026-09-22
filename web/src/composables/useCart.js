@@ -1,5 +1,6 @@
 import { ref, computed, watch } from 'vue'
 import { PRODUCTS, SETS, CONTACT, money, setPricing } from '../data/catalogue'
+import { zoneById, feeText } from '../data/delivery'
 import { useI18n } from './useI18n'
 
 const read = () => {
@@ -7,9 +8,26 @@ const read = () => {
   catch (e) { return [] }
 }
 
+const readDelivery = () => {
+  try { return JSON.parse(localStorage.getItem('fth.delivery') || '{}') || {} }
+  catch (e) { return {} }
+}
+
 /* Shared across the app: the basket itself, and whether the drawer is open. */
 const items = ref(read())
 const open  = ref(false)
+
+/* Where it is going. Kept beside the basket and remembered the same way — a
+   customer who orders every week should not retype their address every week. */
+const saved = readDelivery()
+const zoneId  = ref(saved.zoneId || '')
+const address = ref(saved.address || '')
+const mapLink = ref(saved.mapLink || '')
+
+watch([zoneId, address, mapLink], ([z, a, m]) => {
+  try { localStorage.setItem('fth.delivery', JSON.stringify({ zoneId: z, address: a, mapLink: m })) }
+  catch (e) {}
+})
 
 /* The server's pricing of the current basket. Null until it answers, and on a
    static build with no API it stays null for good. */
@@ -48,7 +66,16 @@ async function refreshQuote () {
     const response = await fetch(`${API}/api/orders/quote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ lines: basket, locale: document.documentElement.lang || 'az' }),
+      body: JSON.stringify({
+        lines: basket,
+        /* The endpoint has always taken this; the site simply never sent it,
+           so every basket was priced as though delivery were free. An id the
+           table does not know resolves to no zone and no fee, which is why
+           sending our own ids is safe while the Zonalar tab is still the two
+           seeded placeholders. */
+        zone_id: zoneId.value || null,
+        locale: document.documentElement.lang || 'az',
+      }),
     })
     if (!response.ok) return
 
@@ -63,8 +90,10 @@ async function refreshQuote () {
 }
 
 /* Re-price whenever the basket changes. Deep, because quantities are mutated
-   in place on the existing line objects. */
+   in place on the existing line objects. The zone is watched too: it moves the
+   total as surely as adding a line does. */
 watch(items, refreshQuote, { deep: true, immediate: true })
+watch(zoneId, refreshQuote)
 
 export function useCart () {
   const { t, nm, unitOf } = useI18n()
@@ -140,6 +169,17 @@ export function useCart () {
      and the figure the shop expects are the same one. Where the basket holds
      goods sold by weight the message says so, with the ceiling: a number
      presented as exact, that then is not, is an argument at the door. */
+  const zone = computed(() => zoneById(zoneId.value))
+
+  /* Delivery is quoted separately rather than folded into the total, because
+     for six of the nineteen zones it is a range and no single number is
+     truthful. The shop settles it in the same reply that confirms the
+     weights, which is a conversation it was always going to have. */
+  const deliveryText = computed(() => (zone.value ? `${feeText(zone.value)} AZN` : ''))
+
+  /* Nowhere to send it is as incomplete a basket as nothing in it. */
+  const canSend = computed(() => Boolean(zone.value && address.value.trim()))
+
   const whatsapp = computed(() => {
     let msg = t('ui.waIntro') + '\n\n'
     lines.value.forEach(l => {
@@ -150,6 +190,11 @@ export function useCart () {
     if (weighed.value && ceiling.value) {
       msg += ` (${t('ui.waWeighed')} ${money(ceiling.value)} AZN)`
     }
+
+    if (zone.value) msg += `\n${t('ui.waDeliv')}: ${nm(zone.value)} — ${deliveryText.value}`
+    if (address.value.trim()) msg += `\n${t('ui.waAddr')}: ${address.value.trim()}`
+    if (mapLink.value.trim()) msg += `\n${t('ui.waMap')}: ${mapLink.value.trim()}`
+
     msg += `\n\n${t('ui.waOutro')}`
 
     return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(msg)}`
@@ -159,5 +204,6 @@ export function useCart () {
     items, lines, count, total, localTotal, open,
     add, setQty, remove, whatsapp,
     quote, quoting, weighed, ceiling,
+    zoneId, address, mapLink, zone, deliveryText, canSend,
   }
 }
