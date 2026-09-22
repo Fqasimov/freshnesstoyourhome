@@ -1,5 +1,11 @@
-/* Interface copy — Azerbaijani, Russian, English. Values may contain inline HTML. */
-export const I18N = {
+import { SHARED_COPY } from './copy.generated'
+
+/* Interface copy — Azerbaijani, Russian, English. Values may contain inline HTML.
+
+   The `deliv.*` keys are not here: they are in shared/copy.json, because the
+   app says the same words and the two should not be able to drift apart.
+   They are merged in at the bottom of this file. */
+const OWN = {
   az: {
     'nav.shop':'Kataloq','nav.sets':'Xüsusi təkliflər','nav.week':'Ən çox sifariş olunan',
     'nav.story':'Haqqımızda','nav.how':'Necə sifariş etmək olar?','nav.delivery':'Çatdırılma',
@@ -72,13 +78,6 @@ export const I18N = {
     'cart.t':'Səbətiniz','cart.sub':'Təxmini məbləğ',
     'cart.note':'Onlayn heç bir ödəniş alınmır. Səbəti göndərdikdə WhatsApp siyahınızla açılır — dəqiq çəki və yekun məbləği çatdırılmadan əvvəl təsdiqləyirik.',
     'cart.send':'Səbəti WhatsApp-a göndər',
-    'cart.deliv':'Çatdırılma','cart.zone':'Ərazi','cart.zonePick':'Ərazini seçin','cart.addr':'Ünvan',
-    'cart.addrPh':'Küçə, bina, mənzil',
-    'cart.mapOpen':'Xəritəni aç',
-    'cart.map':'Google Maps linki','cart.mapPh':'Xəritə linkini yapışdırın',
-    'cart.mapHint':'İstəyə bağlı. Telefonunuzda Google Maps-də yerinizi seçib «Paylaş» ilə linki köçürün — kuryer dəqiq ünvanı tapır.',
-    'cart.feeRange':'Bu ərazidə haqq məsafədən asılıdır. Dəqiq məbləği sifarişi təsdiqləyərkən bildiririk.',
-    'cart.needAddr':'Göndərmək üçün ərazi və ünvan lazımdır.',
 
     'ui.set':'Dəst','ui.quick':'Ətraflı','ui.items':'məhsul','ui.item':'məhsul',
     'ui.added':'Səbətə əlavə edildi','ui.empty.t':'Uyğun nəticə tapılmadı',
@@ -186,13 +185,6 @@ export const I18N = {
     'cart.t':'Ваша корзина','cart.sub':'Примерная сумма',
     'cart.note':'Онлайн ничего не списывается. Отправка корзины откроет WhatsApp с готовым списком — точный вес и итоговую сумму подтверждаем до доставки.',
     'cart.send':'Отправить корзину в WhatsApp',
-    'cart.deliv':'Доставка','cart.zone':'Район','cart.zonePick':'Выберите район','cart.addr':'Адрес',
-    'cart.addrPh':'Улица, дом, квартира',
-    'cart.mapOpen':'Открыть карту',
-    'cart.map':'Ссылка Google Maps','cart.mapPh':'Вставьте ссылку на карту',
-    'cart.mapHint':'Необязательно. Откройте своё место в Google Maps, нажмите «Поделиться» и вставьте ссылку — курьер найдёт вас точно.',
-    'cart.feeRange':'В этом районе стоимость зависит от расстояния. Точную сумму сообщим при подтверждении заказа.',
-    'cart.needAddr':'Укажите район и адрес, чтобы отправить.',
 
     'ui.set':'Набор','ui.quick':'Подробнее','ui.items':'товаров','ui.item':'товар',
     'ui.added':'Добавлено в корзину','ui.empty.t':'Ничего не найдено',
@@ -300,13 +292,6 @@ export const I18N = {
     'cart.t':'Your basket','cart.sub':'Estimated total',
     'cart.note':'Nothing is charged online. Sending the basket opens WhatsApp with your list ready — we confirm exact weights and the final total before delivery.',
     'cart.send':'Send basket on WhatsApp',
-    'cart.deliv':'Delivery','cart.zone':'Area','cart.zonePick':'Choose your area','cart.addr':'Address',
-    'cart.addrPh':'Street, building, flat',
-    'cart.mapOpen':'Open map',
-    'cart.map':'Google Maps link','cart.mapPh':'Paste a map link',
-    'cart.mapHint':'Optional. Drop a pin in Google Maps, tap Share and paste the link — it puts the courier on the exact spot.',
-    'cart.feeRange':'In this area the fee depends on the distance. We confirm the exact amount when we confirm the order.',
-    'cart.needAddr':'Choose an area and address to send.',
 
     'ui.set':'Set','ui.quick':'Quick view','ui.items':'items','ui.item':'item',
     'ui.added':'Added to basket','ui.empty.t':'Nothing matches that',
@@ -342,4 +327,13 @@ export const I18N = {
         'ui.waDeliv':'Delivery','ui.waAddr':'Address','ui.waMap':'Map',
     'ui.waPlain':'Hello! I have a question about your products.'
   }
+}
+
+/* The shared words, merged over this page's own. A key defined in both would
+   mean the same string written twice, which is the thing shared/copy.json
+   exists to stop — so the shared copy wins and the duplicate is dead weight. */
+export const I18N = {
+  az: { ...OWN.az, ...SHARED_COPY.az },
+  ru: { ...OWN.ru, ...SHARED_COPY.ru },
+  en: { ...OWN.en, ...SHARED_COPY.en },
 }

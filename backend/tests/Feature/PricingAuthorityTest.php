@@ -54,7 +54,10 @@ class PricingAuthorityTest extends TestCase
         $salmon = Product::find('smoked-salmon');
 
         $this->assertSame($salmon->price_minor, $order->subtotal_minor);
-        $this->assertSame($salmon->price_minor, $order->total_minor);
+        // The total is the goods plus the area's delivery fee — spelled out
+        // rather than assumed equal to the subtotal, which only held while the
+        // seeded zones carried a fee of zero.
+        $this->assertSame($salmon->price_minor + $order->delivery_fee_minor, $order->total_minor);
         $this->assertSame(0, $order->discount_minor);
         $this->assertSame($salmon->price_minor, $order->items->first()->unit_price_minor);
     }
@@ -95,11 +98,12 @@ class PricingAuthorityTest extends TestCase
             ->assertCreated();
 
         $originalTotal = Order::first()->total_minor;
+        $originalLine = Order::first()->items->first()->line_total_minor;
 
         Product::find('smoked-salmon')->update(['price_minor' => 99_000]);
 
         $this->assertSame($originalTotal, Order::first()->fresh()->total_minor);
-        $this->assertSame($originalTotal, Order::first()->items->first()->line_total_minor);
+        $this->assertSame($originalLine, Order::first()->items->first()->line_total_minor);
     }
 
     public function test_fractional_quantities_are_refused_for_goods_sold_by_the_piece(): void
@@ -167,8 +171,11 @@ class PricingAuthorityTest extends TestCase
         // the shape App Store review rejects.
         $this->postJson('/api/orders/quote', [
             'lines' => [['product_id' => 'smoked-salmon', 'qty' => 0.5]],
-            'zone_id' => 'baku-city',
-        ])->assertOk()->assertJsonPath('total_minor', 3250);
+            'zone_id' => self::ZONE,
+        ])->assertOk()
+            ->assertJsonPath('subtotal_minor', 3250)      // half a kilo of salmon
+            ->assertJsonPath('delivery_fee_minor', 500)   // Mərkəz, flat five manats
+            ->assertJsonPath('total_minor', 3750);
     }
 
     public function test_a_quote_matches_what_the_order_is_actually_charged(): void
@@ -180,7 +187,7 @@ class PricingAuthorityTest extends TestCase
 
         $quoted = $this->postJson('/api/orders/quote', [
             'lines' => $lines,
-            'zone_id' => 'baku-city',
+            'zone_id' => self::ZONE,
         ])->assertOk()->json('total_minor');
 
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1.234]))

@@ -53,6 +53,7 @@ class OrderService
                 'contact_phone' => $user->phone,
                 'address_line' => $address->line,
                 'address_notes' => $address->notes,
+                'address_map_link' => $address->map_link,
                 'delivery_zone_id' => $address->delivery_zone_id,
 
                 'delivery_date' => $input['delivery_date'],

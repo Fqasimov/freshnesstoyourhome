@@ -199,12 +199,14 @@ class AdminPanelTest extends TestCase
     {
         Sanctum::actingAs($this->admin());
 
-        $this->patchJson('/api/admin/zones/baku-city', ['fee_minor' => 500])->assertOk();
+        // Deliberately not the seeded fee: a patch that sets a value to what
+        // it already was proves nothing.
+        $this->patchJson('/api/admin/zones/'.self::ZONE, ['fee_minor' => 850])->assertOk();
 
         $fee = collect($this->getJson('/api/catalogue')->json('zones'))
-            ->firstWhere('id', 'baku-city')['fee_minor'];
+            ->firstWhere('id', self::ZONE)['fee_minor'];
 
-        $this->assertSame(500, $fee);
+        $this->assertSame(850, $fee);
     }
 
     // --------------------------------------------------------- customers ---

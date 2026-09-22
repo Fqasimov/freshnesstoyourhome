@@ -89,37 +89,37 @@ const MAPS_URL = mapsUrl()
       <!-- Where it is going. Asked here rather than over WhatsApp, so the
            courier reads it off the order instead of a chat thread. -->
       <div class="deliv">
-        <p class="deliv__h">{{ t('cart.deliv') }}</p>
+        <p class="deliv__h">{{ t('deliv.h') }}</p>
 
-        <label class="deliv__l" for="cart-zone">{{ t('cart.zone') }}</label>
+        <label class="deliv__l" for="cart-zone">{{ t('deliv.zone') }}</label>
         <select id="cart-zone" class="deliv__in" v-model="zoneId">
-          <option value="">{{ t('cart.zonePick') }}</option>
+          <option value="">{{ t('deliv.zonePick') }}</option>
           <option v-for="z in ZONES" :key="z.id" :value="z.id">
             {{ nm(z) }} — {{ z.fee[0] === z.fee[1] ? z.fee[0] : z.fee[0] + '–' + z.fee[1] }} AZN
           </option>
         </select>
 
-        <label class="deliv__l" for="cart-addr">{{ t('cart.addr') }}</label>
+        <label class="deliv__l" for="cart-addr">{{ t('deliv.addr') }}</label>
         <textarea id="cart-addr" class="deliv__in" rows="2"
-                  :placeholder="t('cart.addrPh')" v-model="address"></textarea>
+                  :placeholder="t('deliv.addrPh')" v-model="address"></textarea>
 
         <!-- The embedded picker goes here once there is a Maps key. -->
         <label class="deliv__l" for="cart-map">
-          {{ t('cart.map') }}
+          {{ t('deliv.map') }}
           <a class="deliv__open" :href="MAPS_URL" target="_blank" rel="noopener">
-            <BIcon name="geo-alt" :size="11" /> {{ t('cart.mapOpen') }}
+            <BIcon name="geo-alt" :size="11" /> {{ t('deliv.mapOpen') }}
           </a>
         </label>
         <input id="cart-map" class="deliv__in" type="url" inputmode="url"
-               :placeholder="t('cart.mapPh')" v-model="mapLink">
-        <p class="deliv__hint">{{ t('cart.mapHint') }}</p>
+               :placeholder="t('deliv.mapPh')" v-model="mapLink">
+        <p class="deliv__hint">{{ t('deliv.mapHint') }}</p>
 
         <div v-if="zone" class="deliv__fee">
           <span>{{ t('ui.waDeliv') }} · {{ nm(zone) }}</span>
           <b>{{ deliveryText }}</b>
         </div>
         <p v-if="zone && zone.fee[0] !== zone.fee[1]" class="deliv__range">
-          {{ t('cart.feeRange') }}
+          {{ t('deliv.feeRange') }}
         </p>
       </div>
 
@@ -130,7 +130,7 @@ const MAPS_URL = mapsUrl()
         <span>{{ t('cart.send') }}</span>
         <BIcon name="arrow-right" :size="14" />
       </a>
-      <p v-if="!canSend" class="deliv__need">{{ t('cart.needAddr') }}</p>
+      <p v-if="!canSend" class="deliv__need">{{ t('deliv.needAddr') }}</p>
     </div>
     </div>
   </aside>

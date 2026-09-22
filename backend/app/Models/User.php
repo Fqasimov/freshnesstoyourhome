@@ -165,6 +165,7 @@ class User extends Authenticatable
                 'contact_phone' => null,
                 'address_line' => null,
                 'address_notes' => null,
+                'address_map_link' => null,
                 'customer_note' => null,
             ])->save();
         }

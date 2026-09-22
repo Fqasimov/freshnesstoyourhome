@@ -89,6 +89,15 @@ class AddressController extends Controller
             'label' => ['sometimes', 'nullable', 'string', 'max:40'],
             'line' => ['required', 'string', 'min:5', 'max:300'],
             'notes' => ['sometimes', 'nullable', 'string', 'max:200'],
+            /* A Google Maps link and nothing else. The stored value is shown
+               to staff in the admin panel as something clickable, so an
+               arbitrary URL here would be a phishing link delivered by the
+               customer — the host allow-list is the control, not the `url`
+               rule, which is happy with any scheme and any domain. */
+            'map_link' => [
+                'sometimes', 'nullable', 'string', 'max:500',
+                'regex:#^https://(maps\.app\.goo\.gl|goo\.gl/maps|(www\.|maps\.)?google\.(com|az)/)#i',
+            ],
             'lat' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
             'lng' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
             'delivery_zone_id' => [
@@ -113,6 +122,7 @@ class AddressController extends Controller
             'label' => $a->label,
             'line' => $a->line,
             'notes' => $a->notes,
+            'map_link' => $a->map_link,
             'lat' => $a->lat,
             'lng' => $a->lng,
             'delivery_zone_id' => $a->delivery_zone_id,

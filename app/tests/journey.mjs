@@ -233,10 +233,51 @@ await step('adding a delivery address', async () => {
   await page.waitForTimeout(1800)
   await tapText('Ünvan əlavə et')
   await page.waitForTimeout(1200)
+  // Ad, Küçə, Qeyd, Xəritə linki, Ərazi axtarışı — in that order.
   const inputs = page.locator('input:visible')
   await inputs.nth(1).fill('Nizami küçəsi 28, mənzil 14')
+  await inputs.nth(3).fill('https://maps.app.goo.gl/JourneyTestPin')
   await tapText('Yadda saxla')
   await page.waitForTimeout(2500)
+})
+
+/* The shop covers fifty-one areas and charges a range for two thirds of them.
+   Both facts come from shared/delivery.json, which the website reads too, so
+   this is the app's half of a promise made in one place. */
+await step('the area picker offers every area, with its fee', async () => {
+  await tapText('Ünvan əlavə et')
+  await page.waitForTimeout(1200)
+
+  const body = await page.evaluate(() => document.body.innerText)
+  const fees = body.match(/\d+(–\d+)? AZN/g) ?? []
+  if (fees.length < 40) throw new Error('only ' + fees.length + ' areas offered')
+  if (!fees.some(f => /–/.test(f))) throw new Error('no area shows a fee as a range')
+  console.log('       ' + fees.length + ' areas, e.g. ' + fees.slice(0, 3).join(', '))
+})
+
+await step('searching finds an area by any of its three names', async () => {
+  const search = page.locator('input:visible').nth(4)
+
+  await search.fill('shuval')            // the English spelling of Şüvəlan
+  await page.waitForTimeout(600)
+  const found = await page.evaluate(() => document.body.innerText)
+  if (!/Şüvəlan/.test(found)) throw new Error('typing "shuval" did not find Şüvəlan')
+  if (!/20–25 AZN/.test(found)) throw new Error('Şüvəlan is not shown as 20–25')
+  if (!/məsafədən asılıdır|zavisit|depends on the distance/i.test(found)) {
+    // Only after it is chosen; selecting it is what the note is attached to.
+    await page.getByText('Şüvəlan', { exact: false }).locator('visible=true').first().click()
+    await page.waitForTimeout(400)
+    const picked = await page.evaluate(() => document.body.innerText)
+    if (!/məsafədən asılıdır/.test(picked)) throw new Error('no range warning on a range area')
+  }
+
+  await search.fill('qqqq')
+  await page.waitForTimeout(500)
+  const none = await page.evaluate(() => document.body.innerText)
+  if (!/Belə ərazi tapılmadı/.test(none)) throw new Error('no "nothing found" note')
+
+  await tapText('İmtina')
+  await page.waitForTimeout(800)
 })
 
 await step('placing the order', async () => {

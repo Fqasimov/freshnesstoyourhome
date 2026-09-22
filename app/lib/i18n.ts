@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
+import { SHARED_COPY } from './sharedCopy'
+
 /**
  * Three languages, Azerbaijani first.
  *
@@ -62,7 +64,10 @@ export function pick (map: Partial<Record<Lang, string>> | undefined, fallback =
 
 type Table = Record<string, string>
 
-export const MESSAGES: Record<Lang, Table> = {
+/* The `deliv.*` keys are not written here: they are in shared/copy.json,
+   because the website says the same words and the two should not be able to
+   drift apart. They are merged over this table below. */
+const OWN: Record<Lang, Table> = {
   az: {
     "app.name": "Freshness To Your Home",
     "app.tagline": "Təzə. Təmiz. Təbii.",
@@ -372,6 +377,15 @@ export const MESSAGES: Record<Lang, Table> = {
     "push.off": "Order notifications are off",
     "push.blocked": "Notifications are switched off in your phone settings. Turn them on in Settings.",
   },
+}
+
+/* The shared words, merged over the app's own. A key defined in both would
+   mean the same string written twice, which is the thing shared/copy.json
+   exists to stop — so the shared copy wins and the duplicate is dead weight. */
+export const MESSAGES: Record<Lang, Table> = {
+  az: { ...OWN.az, ...SHARED_COPY.az },
+  ru: { ...OWN.ru, ...SHARED_COPY.ru },
+  en: { ...OWN.en, ...SHARED_COPY.en },
 }
 
 /** Translate, with {placeholder} substitution. */

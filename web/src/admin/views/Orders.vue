@@ -165,6 +165,13 @@ defineExpose({ load })
         <dt>Telefon</dt><dd><a :href="`tel:${open.contact_phone}`">{{ open.contact_phone }}</a></dd>
         <dt>Ünvan</dt><dd>{{ open.address_line }}</dd>
         <dt v-if="open.address_notes">Qeyd</dt><dd v-if="open.address_notes">{{ open.address_notes }}</dd>
+        <!-- The customer's own pin. Only Google's map hosts are accepted when
+             it is saved, so this is safe to make clickable; rel="noopener
+             noreferrer" keeps the panel out of the opened tab regardless. -->
+        <dt v-if="open.address_map_link">Xəritə</dt>
+        <dd v-if="open.address_map_link">
+          <a :href="open.address_map_link" target="_blank" rel="noopener noreferrer">Xəritədə aç</a>
+        </dd>
         <dt>Çatdırılma</dt><dd>{{ open.delivery_date }} · {{ open.delivery_slot }}</dd>
         <dt>Ödəniş</dt><dd>{{ open.payment_method }}</dd>
         <dt v-if="open.note">Müştəri qeydi</dt><dd v-if="open.note">{{ open.note }}</dd>

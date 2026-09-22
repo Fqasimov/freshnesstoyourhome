@@ -10,7 +10,7 @@ class Address extends Model
 {
     use HasUuids;
 
-    protected $fillable = ['label', 'line', 'notes', 'lat', 'lng', 'delivery_zone_id', 'is_default'];
+    protected $fillable = ['label', 'line', 'notes', 'map_link', 'lat', 'lng', 'delivery_zone_id', 'is_default'];
 
     protected function casts(): array
     {
@@ -20,6 +20,9 @@ class Address extends Model
             'label' => 'encrypted',
             'line' => 'encrypted',
             'notes' => 'encrypted',
+            // A link that resolves to a doorstep identifies a household as
+            // precisely as the street line does.
+            'map_link' => 'encrypted',
             'lat' => 'encrypted',
             'lng' => 'encrypted',
             'is_default' => 'boolean',

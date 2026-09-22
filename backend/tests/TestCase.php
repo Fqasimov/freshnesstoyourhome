@@ -11,6 +11,16 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 abstract class TestCase extends BaseTestCase
 {
     /**
+     * The zone tests deliver to.
+     *
+     * A real id out of shared/delivery.json rather than a fixture: the seeder
+     * takes its areas from that file, so a test naming an area the shop does
+     * not cover would fail on a foreign key rather than on what it set out to
+     * check. Mərkəz is the flat-fee city centre, five manats.
+     */
+    protected const ZONE = 'merkez';
+
+    /**
      * Seed the real catalogue, not a fixture.
      *
      * Tests that price baskets should price the goods the shop actually sells:
@@ -30,7 +40,7 @@ abstract class TestCase extends BaseTestCase
         $address = $user->addresses()->create([
             'line' => '28 May küçəsi 14, mənzil 7',
             'notes' => 'Second floor',
-            'delivery_zone_id' => 'baku-city',
+            'delivery_zone_id' => self::ZONE,
             'is_default' => true,
         ]);
 

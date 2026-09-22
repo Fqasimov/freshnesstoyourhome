@@ -61,15 +61,18 @@ class WeighedOrderTest extends TestCase
 
         $quote = $this->postJson('/api/orders/quote', [
             'lines' => [['product_id' => 'smoked-salmon', 'qty' => 1]],
-            'zone_id' => 'baku-city',
+            'zone_id' => self::ZONE,
         ])->assertOk()->json();
 
         $tolerance = (int) config('freshness.order.weight_tolerance_percent');
 
         $this->assertTrue($quote['requires_weighing']);
         $this->assertGreaterThan($quote['total_minor'], $quote['weighed_ceiling_minor']);
+        // The tolerance applies to the GOODS, not to the delivery fee: a
+        // heavier fish costs more, the drive does not. This read as
+        // total * tolerance only while the seeded zones charged nothing.
         $this->assertSame(
-            $quote['total_minor'] + (int) ceil($quote['total_minor'] * $tolerance / 100),
+            $quote['total_minor'] + (int) ceil($quote['subtotal_minor'] * $tolerance / 100),
             $quote['weighed_ceiling_minor'],
         );
     }

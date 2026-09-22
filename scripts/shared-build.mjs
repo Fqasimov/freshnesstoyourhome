@@ -35,6 +35,7 @@ export const shared = {
   tokens: read('tokens.json'),
   delivery: read('delivery.json'),
   catalogue: read('catalogue.json'),
+  copy: read('copy.json'),
 }
 
 /* Checks the data has to pass before a single file is written from it. Each
@@ -77,6 +78,11 @@ export function validate () {
     zoneIds.add(z.id)
     if (!(z.fee?.length === 2) || z.fee[0] > z.fee[1]) errors.push(`delivery area "${z.id}" has a fee that is not a [low, high] pair`)
     for (const l of ['az', 'ru', 'en']) if (!z[l]) errors.push(`delivery area "${z.id}" has no ${l} name`)
+  }
+
+  for (const [key, row] of Object.entries(shared.copy)) {
+    if (key.startsWith('_')) continue
+    for (const l of ['az', 'ru', 'en']) if (!row[l]) errors.push(`shared copy "${key}" has no ${l}`)
   }
 
   if (errors.length) {
@@ -361,6 +367,60 @@ ${prods.join('\n')}
   zones: [
 ${zones.join('\n')}
   ],
+}
+`
+    },
+  },
+
+  {
+    path: 'web/src/data/copy.generated.js',
+    build: () => {
+      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
+      const rows = Object.entries(shared.copy).filter(([k]) => !k.startsWith('_'))
+      const table = l => rows.map(([k, v]) => `  ${q(k)}: ${q(v[l])},`).join('\n')
+
+      return banner('shared/copy.json') + `
+/* Merged into I18N in messages.js. These are the words the app says too, so
+   they are written once and neither surface can quietly reword them. */
+
+export const SHARED_COPY = {
+  az: {
+${table('az')}
+  },
+  ru: {
+${table('ru')}
+  },
+  en: {
+${table('en')}
+  },
+}
+`
+    },
+  },
+
+  {
+    path: 'app/lib/sharedCopy.ts',
+    build: () => {
+      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
+      const rows = Object.entries(shared.copy).filter(([k]) => !k.startsWith('_'))
+      const table = l => rows.map(([k, v]) => `    ${q(k)}: ${q(v[l])},`).join('\n')
+
+      return banner('shared/copy.json') + `
+import type { Lang } from './i18n'
+
+/* Merged into MESSAGES in i18n.ts. These are the words the website says too,
+   so they are written once and neither surface can quietly reword them. */
+
+export const SHARED_COPY: Record<Lang, Record<string, string>> = {
+  az: {
+${table('az')}
+  },
+  ru: {
+${table('ru')}
+  },
+  en: {
+${table('en')}
+  },
 }
 `
     },

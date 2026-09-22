@@ -203,6 +203,8 @@ export type Address = {
   label: string | null
   line: string
   notes: string | null
+  /** A pasted Google Maps link. Only Google's own map hosts are accepted. */
+  map_link: string | null
   delivery_zone_id: string | null
   is_default: boolean
 }

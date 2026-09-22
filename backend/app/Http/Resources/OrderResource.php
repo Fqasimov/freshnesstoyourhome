@@ -41,6 +41,7 @@ class OrderResource extends JsonResource
 
             'address_line' => $this->address_line,
             'address_notes' => $this->address_notes,
+            'address_map_link' => $this->address_map_link,
             'contact_name' => $this->contact_name,
             'contact_phone' => $this->contact_phone,
             'note' => $this->customer_note,

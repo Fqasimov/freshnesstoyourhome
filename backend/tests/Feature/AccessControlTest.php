@@ -114,7 +114,7 @@ class AccessControlTest extends TestCase
 
         $this->putJson("/api/addresses/{$victimAddress->id}", [
             'line' => 'Somewhere else entirely',
-            'delivery_zone_id' => 'baku-city',
+            'delivery_zone_id' => self::ZONE,
         ])->assertStatus(404);
 
         $this->deleteJson("/api/addresses/{$victimAddress->id}")->assertStatus(404);
@@ -151,7 +151,7 @@ class AccessControlTest extends TestCase
         $user = User::factory()->incompleteProfile()->create();
         $address = $user->addresses()->create([
             'line' => 'Nizami küçəsi 1',
-            'delivery_zone_id' => 'baku-city',
+            'delivery_zone_id' => self::ZONE,
             'is_default' => true,
         ]);
 

@@ -1,0 +1,31 @@
+{
+  "_": "Words that appear on BOTH the website and the app, with the same meaning. Edit here, run `npm run sync` at the repository root, and the two stop being able to disagree. See shared/README.md.",
+  "_scope": "Only what genuinely shows on both. Copy that belongs to one surface stays in that surface's own table — the app says shop.add where the website says ui.add, and inventing a shared name for a string that exists once would be worse than two honest tables.",
+  "_keys": "A key is prefixed `deliv.` and read through the surface's usual t(). A missing language falls back to Azerbaijani, which is the form the shop itself writes in.",
+
+  "deliv.h":        { "az": "Çatdırılma", "ru": "Доставка", "en": "Delivery" },
+  "deliv.zone":     { "az": "Ərazi", "ru": "Район", "en": "Area" },
+  "deliv.zonePick": { "az": "Ərazini seçin", "ru": "Выберите район", "en": "Choose your area" },
+  "deliv.zoneFind": { "az": "Ərazi axtarın", "ru": "Найти район", "en": "Find your area" },
+  "deliv.zoneNone": { "az": "Belə ərazi tapılmadı.", "ru": "Такой район не найден.", "en": "No area by that name." },
+  "deliv.addr":     { "az": "Ünvan", "ru": "Адрес", "en": "Address" },
+  "deliv.addrPh":   { "az": "Küçə, bina, mənzil", "ru": "Улица, дом, квартира", "en": "Street, building, flat" },
+  "deliv.map":      { "az": "Google Maps linki", "ru": "Ссылка Google Maps", "en": "Google Maps link" },
+  "deliv.mapOpen":  { "az": "Xəritəni aç", "ru": "Открыть карту", "en": "Open map" },
+  "deliv.mapPh":    { "az": "Xəritə linkini yapışdırın", "ru": "Вставьте ссылку на карту", "en": "Paste a map link" },
+  "deliv.mapHint":  {
+    "az": "İstəyə bağlı. Telefonunuzda Google Maps-də yerinizi seçib «Paylaş» ilə linki köçürün — kuryer dəqiq ünvanı tapır.",
+    "ru": "Необязательно. Откройте своё место в Google Maps, нажмите «Поделиться» и вставьте ссылку — курьер найдёт вас точно.",
+    "en": "Optional. Drop a pin in Google Maps, tap Share and paste the link — it puts the courier on the exact spot."
+  },
+  "deliv.feeRange": {
+    "az": "Bu ərazidə haqq məsafədən asılıdır. Dəqiq məbləği sifarişi təsdiqləyərkən bildiririk.",
+    "ru": "В этом районе стоимость зависит от расстояния. Точную сумму сообщим при подтверждении заказа.",
+    "en": "In this area the fee depends on the distance. We confirm the exact amount when we confirm the order."
+  },
+  "deliv.needAddr": {
+    "az": "Göndərmək üçün ərazi və ünvan lazımdır.",
+    "ru": "Укажите район и адрес, чтобы отправить.",
+    "en": "Choose an area and address to send."
+  }
+}

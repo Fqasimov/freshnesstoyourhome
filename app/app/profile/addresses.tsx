@@ -1,17 +1,21 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 
 import { api, ApiError, type Address } from '@/lib/api'
 import { useCatalogue } from '@/lib/catalogue'
 import { pick, t, useLang } from '@/lib/i18n'
 import { AppBar, Body, Button, Empty, Field, Loading, Note, Small, inputStyle } from '@/components/ui'
 import { color, font, space } from '@/theme/tokens'
+import { mapsUrl } from '@/lib/brand'
+import { feeText, isRange, zoneById } from '@/lib/zones'
+import { money } from '@/lib/money'
 
 type Draft = {
   id: string | null
   label: string
   line: string
   notes: string
+  mapLink: string
   delivery_zone_id: string
 }
 
@@ -24,6 +28,21 @@ export default function Addresses () {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
+  /* Fifty-one areas is too many to scroll past looking for yours. */
+  const [zoneQuery, setZoneQuery] = useState('')
+
+  const zones = useMemo(() => {
+    const needle = zoneQuery.trim().toLowerCase()
+    if (!needle) return catalogue.zones
+    // Matched against all three names, not the displayed one: people type
+    // "Shuvalan" as often as "Şüvəlan", and an Azerbaijani keyboard is not
+    // always what is to hand.
+    return catalogue.zones.filter(z => {
+      const shared = zoneById(z.id)
+      const names = [z.name.az, z.name.ru, z.name.en, shared?.az, shared?.ru, shared?.en]
+      return names.some(n => n?.toLowerCase().includes(needle))
+    })
+  }, [catalogue.zones, zoneQuery])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -41,7 +60,7 @@ export default function Addresses () {
 
   function startNew () {
     setDraft({
-      id: null, label: '', line: '', notes: '',
+      id: null, label: '', line: '', notes: '', mapLink: '',
       delivery_zone_id: catalogue.zones[0]?.id ?? '',
     })
   }
@@ -52,6 +71,7 @@ export default function Addresses () {
       label: a.label ?? '',
       line: a.line,
       notes: a.notes ?? '',
+      mapLink: a.map_link ?? '',
       delivery_zone_id: a.delivery_zone_id ?? catalogue.zones[0]?.id ?? '',
     })
   }
@@ -64,6 +84,7 @@ export default function Addresses () {
       label: draft.label.trim() || null,
       line: draft.line.trim(),
       notes: draft.notes.trim() || null,
+      map_link: draft.mapLink.trim() || null,
       delivery_zone_id: draft.delivery_zone_id,
     }
 
@@ -96,7 +117,7 @@ export default function Addresses () {
               onChangeText={(v) => setDraft({ ...draft, label: v })} />
           </Field>
 
-          <Field label={t('address.line')}>
+          <Field label={t('deliv.addr')}>
             <TextInput style={inputStyle} value={draft.line} maxLength={300}
               autoComplete="street-address" textContentType="fullStreetAddress"
               onChangeText={(v) => setDraft({ ...draft, line: v })} />
@@ -107,21 +128,72 @@ export default function Addresses () {
               onChangeText={(v) => setDraft({ ...draft, notes: v })} />
           </Field>
 
-          <Field label={t('address.zone')} error={error}>
+          {/* The same slot the website's basket carries. A Baku street
+              address and a courier's idea of it are not always the same
+              place, and the link a phone's Share button produces already
+              resolves to an exact point — no Maps key needed. When there is
+              one, the embedded picker goes here and writes into this field. */}
+          <Field label={t('deliv.map')}>
+            <TextInput
+              style={inputStyle}
+              value={draft.mapLink}
+              maxLength={500}
+              placeholder={t('deliv.mapPh')}
+              placeholderTextColor={color.ink3}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              onChangeText={(v) => setDraft({ ...draft, mapLink: v })}
+            />
+            <Pressable onPress={() => Linking.openURL(mapsUrl())} style={{ marginTop: 8 }}>
+              <Text style={s.action}>{t('deliv.mapOpen')}</Text>
+            </Pressable>
+            <Small style={{ marginTop: 8 }}>{t('deliv.mapHint')}</Small>
+          </Field>
+
+          <Field label={t('deliv.zone')} error={error}>
+            <TextInput
+              style={[inputStyle, { marginBottom: 12 }]}
+              value={zoneQuery}
+              onChangeText={setZoneQuery}
+              placeholder={t('deliv.zoneFind')}
+              placeholderTextColor={color.ink3}
+              autoCorrect={false}
+            />
+
             <View style={{ gap: 10 }}>
-              {catalogue.zones.map(z => (
-                <Pressable
-                  key={z.id}
-                  onPress={() => setDraft({ ...draft, delivery_zone_id: z.id })}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: draft.delivery_zone_id === z.id }}
-                  style={[s.option, draft.delivery_zone_id === z.id && s.optionOn]}
-                >
-                  <View style={[s.dot, draft.delivery_zone_id === z.id && s.dotOn]} />
-                  <Body>{pick(z.name)}</Body>
-                </Pressable>
-              ))}
+              {zones.map(z => {
+                /* The fee shown is the shared file's, because the server holds
+                   one integer per area and half of these are quoted as a range
+                   — telling a customer "20" for an area that costs 20 to 25 is
+                   the failure worth writing code to avoid. Where the id is one
+                   the shared file does not know, the server's figure stands. */
+                const shared = zoneById(z.id)
+                const fee = shared
+                  ? `${feeText(shared)} ${catalogue.currency}`
+                  : money(z.fee_minor, catalogue.currency)
+
+                return (
+                  <Pressable
+                    key={z.id}
+                    onPress={() => setDraft({ ...draft, delivery_zone_id: z.id })}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: draft.delivery_zone_id === z.id }}
+                    style={[s.option, draft.delivery_zone_id === z.id && s.optionOn]}
+                  >
+                    <View style={[s.dot, draft.delivery_zone_id === z.id && s.dotOn]} />
+                    <Body style={{ flex: 1 }}>{pick(z.name)}</Body>
+                    <Text style={s.fee}>{fee}</Text>
+                  </Pressable>
+                )
+              })}
+
+              {zones.length === 0 ? <Small>{t('deliv.zoneNone')}</Small> : null}
             </View>
+
+            {isRange(zoneById(draft.delivery_zone_id))
+              ? <Small style={{ marginTop: 10 }}>{t('deliv.feeRange')}</Small>
+              : null}
           </Field>
 
           <Button title={t('address.save')} onPress={save} busy={saving} disabled={!draft.line.trim()} />
@@ -180,6 +252,7 @@ const s = StyleSheet.create({
     borderRadius: space.radius, padding: 14,
   },
   optionOn: { borderColor: color.forest, borderWidth: 2 },
+  fee: { fontFamily: font.semi, fontSize: 13, color: color.ink2 },
   dot: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: color.line },
   dotOn: { borderColor: color.forest, borderWidth: 6 },
 })

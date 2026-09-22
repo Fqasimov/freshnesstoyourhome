@@ -47,6 +47,7 @@ class Order extends Model
             'contact_phone' => 'encrypted',
             'address_line' => 'encrypted',
             'address_notes' => 'encrypted',
+            'address_map_link' => 'encrypted',
             'customer_note' => 'encrypted',
             'requires_weighing' => 'boolean',
             'subtotal_minor' => 'integer',
