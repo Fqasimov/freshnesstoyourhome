@@ -350,24 +350,24 @@
       "category_id": "seafood",
       "price_minor": 6000,
       "unit_kind": "g",
-      "unit_qty": 400,
+      "unit_qty": 350,
       "is_popular": false,
       "sort": 120,
       "translations": {
         "az": {
           "name": "Atlantik omar",
           "description": "Bütöv bişmiş Kanada omarı, qabığında dondurulmuş.",
-          "unit_label": "400 gr"
+          "unit_label": "350 gr"
         },
         "ru": {
           "name": "Атлантический лобстер",
           "description": "Канадский лобстер целиком, варёный, замороженный в панцире.",
-          "unit_label": "400 г"
+          "unit_label": "350 г"
         },
         "en": {
           "name": "Atlantic Lobster",
           "description": "Whole cooked Canadian lobster, frozen in the shell.",
-          "unit_label": "400 gr"
+          "unit_label": "350 gr"
         }
       }
     },
@@ -479,25 +479,25 @@
       "id": "green-mussels",
       "category_id": "seafood",
       "price_minor": 3900,
-      "unit_kind": "kg",
-      "unit_qty": 1,
+      "unit_kind": "g",
+      "unit_qty": 800,
       "is_popular": false,
       "sort": 170,
       "translations": {
         "az": {
           "name": "Yaşıl midyə",
           "description": "Yeni Zelandiya yarım qabıqlı midyəsi — ətli və şirin.",
-          "unit_label": "1 kg"
+          "unit_label": "800 gr"
         },
         "ru": {
           "name": "Зелёные мидии, Новая Зеландия",
           "description": "Новозеландские мидии на половинке раковины — крупные и сладкие.",
-          "unit_label": "1 кг"
+          "unit_label": "800 г"
         },
         "en": {
           "name": "NZ Greenshell Mussels",
           "description": "New Zealand half-shell mussels — plump, sweet, restaurant grade.",
-          "unit_label": "1 kg"
+          "unit_label": "800 g"
         }
       }
     },
@@ -1942,17 +1942,17 @@
       "translations": {
         "az": {
           "name": "Di Martino × D&G Pasta",
-          "description": "Pastificio G. Di Martino Dolce & Gabbana xüsusi nəşr — Pasta di Gragnano IGP, bürünc kalıpda. Fusilli, Tortiglioni, Gnocchi Sardi və Linguine növlərində.",
+          "description": "Pastificio G. Di Martino Dolce & Gabbana xüsusi nəşr — Pasta di Gragnano IGP, bürünc kalıpda. Fusilli, Tortiglioni, Spaghetti, Farfalle, Gnocchi Sardi və Linguine növlərində.",
           "unit_label": "500 gr"
         },
         "ru": {
           "name": "Паста Di Martino × D&G",
-          "description": "Лимитированная серия Pastificio G. Di Martino × Dolce & Gabbana — Pasta di Gragnano IGP, отлита в бронзовой матрице. Фузилли, Тортильони, Гnocchi Sardi и Лингвини.",
+          "description": "Лимитированная серия Pastificio G. Di Martino × Dolce & Gabbana — Pasta di Gragnano IGP, отлита в бронзовой матрице. Фузилли, Тортильони, Спагетти, Фарфалле, Ньокки Сарди и Лингвини.",
           "unit_label": "500 г"
         },
         "en": {
           "name": "Di Martino × D&G Pasta",
-          "description": "Pastificio G. Di Martino Dolce & Gabbana special edition — Pasta di Gragnano IGP, bronze-die cut. Available in Fusilli, Tortiglioni, Gnocchi Sardi and Linguine.",
+          "description": "Pastificio G. Di Martino Dolce & Gabbana special edition — Pasta di Gragnano IGP, bronze-die cut. Available in Fusilli, Tortiglioni, Spaghetti, Farfalle, Gnocchi Sardi and Linguine.",
           "unit_label": "500 gr"
         }
       }
