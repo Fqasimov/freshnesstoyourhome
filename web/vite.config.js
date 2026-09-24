@@ -5,7 +5,9 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
 
 /* Three builds from one source:
    `npm run build`            → hashed assets for static hosting: the shop at
-                                index.html and the admin panel at admin.html
+                                index.html and the admin panel at admin.html,
+                                which the postbuild step below moves to
+                                cms/index.html — see DEPLOY.md
    `npm run build:single`     → the shop as one self-contained .html, for previews
    `npm run build:admin-demo` → the panel as one self-contained .html, answering
                                 from src/admin/demo.js instead of the network,
@@ -16,7 +18,13 @@ export default defineConfig(({ mode }) => {
   const oneFile = single || adminDemo
 
   return {
-    base: './',
+    /* Relative paths work from any depth for the self-contained previews,
+       where everything is inlined and it does not matter either way. The
+       standard build is served from real depth — the shop at the domain
+       root, the panel moved a level down to cms/ — so its asset references
+       have to be root-absolute or the panel's own request for its bundle
+       resolves against /cms/ and 404s. */
+    base: oneFile ? './' : '/',
     plugins: [vue(), ...(oneFile ? [viteSingleFile()] : [])],
     build: {
       outDir: single ? 'dist-single' : adminDemo ? 'dist-admin-demo' : 'dist',

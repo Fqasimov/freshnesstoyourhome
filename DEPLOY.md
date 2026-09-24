@@ -85,9 +85,12 @@ whether anything is out of step without writing.
 
 ## The admin panel
 
-`npm run build` in `web/` now produces two pages: `index.html` (the shop) and
-`admin.html` (the panel). Both are static files with no server-side rendering,
-so the hosting story does not change — but two things are worth doing:
+`npm run build` in `web/` produces two pages: `index.html` (the shop) at the
+site root and `cms/index.html` (the panel) — a postbuild step moves it there
+from `admin.html`, which is what Vite actually names the entry it builds; see
+`web/scripts/place-cms.mjs`. Both are static files with no server-side
+rendering, so the hosting story does not change — but two things are worth
+doing:
 
 - **Do not link to it.** It carries `noindex, nofollow` and `referrer:
   no-referrer`, and the API refuses non-admins with a 404, but there is no

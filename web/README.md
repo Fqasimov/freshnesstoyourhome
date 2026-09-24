@@ -282,6 +282,12 @@ ships to a customer browsing the shop: not the screens, not the endpoint names,
 not the shape of the audit trail. `npm run build` produces both `index.html` and
 `admin.html`; the single-file preview build leaves the panel out entirely.
 
+`admin.html` is the name Vite gives it, not where it ends up. A postbuild step
+(`scripts/place-cms.mjs`) moves the built file to `dist/cms/index.html`, so the
+deployed panel is at `/cms` — never at the guessable `/admin.html` a crawler or
+a curious visitor might try first. In `npm run dev` it is still `/admin.html`,
+since nothing gets built there.
+
 Sign in with the same email code as everywhere else, then the server decides. A
 non-admin gets 404s from `/api/admin/*` — the role middleware's convention — and
 the panel shows the sign-in screen again. The token lives in `sessionStorage`

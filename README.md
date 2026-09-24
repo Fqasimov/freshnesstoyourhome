@@ -71,7 +71,9 @@ php artisan freshness:generate-keys      # prints BLIND_INDEX_KEY for .env
 php artisan migrate --seed
 php artisan serve
 
-# Website (and the admin panel, at /admin.html)
+# Website (and the admin panel — /admin.html in dev; a real build moves it
+# to /cms, so a crawler or a guess never finds it at the obvious name — see
+# DEPLOY.md)
 cd web && npm install && npm run dev
 
 # App
@@ -89,9 +91,9 @@ of `backend/storage/logs/laravel.log`.
 php artisan freshness:promote you@example.com admin
 ```
 
-Then open `/admin.html` and sign in with the same email code as a customer
-would. The account has to exist first — sign in once on the site or in the app,
-then promote it.
+Then open `/admin.html` in development, or `/cms` on a real build, and sign in
+with the same email code as a customer would. The account has to exist
+first — sign in once on the site or in the app, then promote it.
 
 `freshness:promote` is a console command rather than a button on purpose, and
 should stay one: it needs access to the server, so an admin session that leaks

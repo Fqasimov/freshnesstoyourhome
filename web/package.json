@@ -10,6 +10,7 @@
     "dev": "vite",
     "prebuild": "npm run sync",
     "build": "vite build",
+    "postbuild": "node scripts/place-cms.mjs",
     "preview": "vite preview",
     "prebuild:single": "npm run sync",
     "build:single": "vite build --mode single",
