@@ -19,10 +19,13 @@
 declare(strict_types=1);
 
 const DOMAIN = '__DOMAIN__';
+// Where the API answers — https://DOMAIN/server here, since the host would
+// not give it a subdomain of its own. Set by scripts/package-deploy.sh.
+const API_URL = '__API_URL__';
 const EXPIRES_AFTER = 48 * 3600;
 
 // Either the standard layout (this file in backend/public/) or the split one
-// this host needs (this file in public_html/api.DOMAIN/, the code in
+// this host needs (this file in a folder under public_html, the code in
 // ~/freshness/backend) — see deploy/split-index.php.
 $base = is_dir(dirname(__DIR__).'/vendor') ? dirname(__DIR__) : dirname(__DIR__, 2).'/freshness/backend';
 $envPath = $base.'/.env';
@@ -127,7 +130,7 @@ if ($action === 'install' && !is_file($envPath) && $allOk) {
             'APP_ENV=production',
             envLine('APP_KEY', $appKey),
             'APP_DEBUG=false',
-            envLine('APP_URL', 'https://api.'.DOMAIN),
+            envLine('APP_URL', API_URL),
             'APP_TIMEZONE=Asia/Baku',
             'APP_LOCALE=az',
             envLine('BLIND_INDEX_KEY', $blind),
@@ -242,7 +245,7 @@ $partial = is_file($envPath) && !$installed;
 <h1>Freshness To Your Home — installer</h1>
 
 <?php if (!$https): ?>
-<div class="box warn"><b>This page is not on HTTPS.</b> Passwords you type here would travel unencrypted. Open it as <code>https://api.<?= h(DOMAIN) ?>/…</code> once the SSL certificate is active, then continue.</div>
+<div class="box warn"><b>This page is not on HTTPS.</b> Passwords you type here would travel unencrypted. Open it as <code><?= h(API_URL) ?>/…</code> once the SSL certificate is active, then continue.</div>
 <?php endif; ?>
 
 <?php if ($error): ?><div class="box warn bad"><?= h($error) ?></div><?php endif; ?>

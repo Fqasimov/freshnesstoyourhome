@@ -7,9 +7,11 @@
  * public_html, but the backend must not live there: .env holds the database
  * password and the encryption keys, and anything under public_html can be
  * requested by URL. So the code sits in ~/freshness/backend, outside the web
- * root, and only this file (with .htaccess, favicon and robots.txt) sits in
- * public_html/api.DOMAIN. It is Laravel's own public/index.php with the paths
- * pointed two levels up and across.
+ * root, and only this file (with .htaccess, favicon and robots.txt) sits in a
+ * folder under public_html — public_html/server, answering at DOMAIN/server.
+ * It is Laravel's own public/index.php with the paths pointed two levels up
+ * and across. Laravel works out from the script's path that it lives under
+ * /server, so its /api/... routes answer at /server/api/... unchanged.
  *
  * Copied into place by scripts/package-deploy.sh.
  */

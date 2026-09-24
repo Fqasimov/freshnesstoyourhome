@@ -100,15 +100,21 @@ That builds two zips in `deploy-out/`:
 - **backend.zip** — extract it in the **home directory**. It holds two
   things: the API in `~/freshness/backend` (with `vendor/` installed and no
   `.env`) plus the seed data in `~/freshness/shared`; and the API's front door
-  in `~/public_html/api.DOMAIN/`, which is Laravel's `index.php` pointed back at
+  in `~/public_html/server/`, which is Laravel's `index.php` pointed back at
   `~/freshness/backend` (`deploy/split-index.php`) plus the one-time installer
-  under a random name. The subdomain `api.DOMAIN` gets document root
-  `public_html/api.DOMAIN`, cPanel's own suggestion.
+  under a random name. The API answers at `https://DOMAIN/server/api/...` —
+  no subdomain, no extra DNS, no second certificate, and the site and the API
+  share one origin. Laravel reads its base path from the script's location,
+  so the routes need no prefix. `API_MODE=subdomain` builds for `api.DOMAIN`
+  instead, if that is ever wanted.
 
   The split is there because this host only lets a domain point **inside**
   `public_html`, and the backend must not be there: `.env` holds the database
   password and the keys, and anything under `public_html` can be requested by
   URL. With the split, nothing under `public_html` is secret.
+
+  When extracting `website.zip`, never empty `public_html` first: `server/`
+  lives there too, and the API's front door would go with it.
 
 The installer (`deploy/installer.php`) does in a browser what `DEV.md` does
 in a terminal: checks PHP and extensions, tests the database (MySQL/MariaDB or
@@ -148,9 +154,16 @@ Laravel constraint in `composer.json`, then a `composer update`.
 
 To ship a change later: rebuild with the script, upload and extract the zip
 that changed over the old files. `.env`, `storage/` and the database are not
-in either zip, so they survive. Delete the new copy of the installer from
-`backend/public/` afterwards — it is harmless once installed, but it has no
-business being there.
+in either zip, so they survive. A new `backend.zip` brings a new copy of the
+installer into `public_html/server/`; delete it afterwards — it refuses to
+reinstall over an existing `.env`, but it has no business being there.
+
+**Sanctum runs stateless.** The panel and the app send a bearer token; nothing
+uses cookies. `bootstrap/app.php` therefore does not call
+`statefulApi()` at all — it once called `statefulApi(false)`, which Laravel
+reads as "on", and with the site and API on one origin every sign-in from
+`/cms` died with a 419. `StatelessApiTest` holds it, and it runs outside the
+`testing` environment on purpose, because Laravel skips the CSRF check there.
 
 ## The admin panel
 

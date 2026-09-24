@@ -6,7 +6,7 @@
 # Produces, in deploy-out/:
 #   website.zip   extract into public_html/        → https://DOMAIN and /cms
 #   backend.zip   extract into the home directory  → ~/freshness/backend + ~/freshness/shared,
-#                 and the API's front door in ~/public_html/api.DOMAIN
+#                 and the API's front door in ~/public_html/server (→ https://DOMAIN/server)
 #
 #   WEBSITE_ONLY=1 scripts/package-deploy.sh
 #
@@ -21,6 +21,13 @@
 set -euo pipefail
 
 DOMAIN="${DOMAIN:-freshnesstoyourhome.az}"
+# Where the API answers. A folder on the main domain by default — the host
+# would not create an api. subdomain — or API_MODE=subdomain for api.DOMAIN.
+if [ "${API_MODE:-folder}" = subdomain ]; then
+  API_URL="https://api.$DOMAIN"; API_FOLDER="api.$DOMAIN"
+else
+  API_URL="https://$DOMAIN/server"; API_FOLDER="server"
+fi
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/deploy-out"
 STAGE="$(mktemp -d)"
@@ -41,8 +48,8 @@ if [ "${WEBSITE_ONLY:-}" = 1 ]; then
   exit 0
 fi
 
-echo "==> website (API at https://api.$DOMAIN)"
-( cd "$ROOT/web" && VITE_API_URL="https://api.$DOMAIN" npm run build >/dev/null )
+echo "==> website (API at $API_URL)"
+( cd "$ROOT/web" && VITE_API_URL="$API_URL" npm run build >/dev/null )
 cp "$ROOT/deploy/website.htaccess" "$ROOT/web/dist/.htaccess"
 ( cd "$ROOT/web/dist" && zip -qr "$OUT/website.zip" . )
 
@@ -68,11 +75,11 @@ find "$STAGE/freshness/backend/vendor" -type d -name .git -prune -exec rm -rf {}
 # goes to ~/freshness/backend and only the front door goes to
 # public_html/api.DOMAIN — see deploy/split-index.php. Extracting the zip in
 # the home folder puts both in place at once.
-API_DIR="$STAGE/public_html/api.$DOMAIN"
+API_DIR="$STAGE/public_html/$API_FOLDER"
 mkdir -p "$API_DIR"
 cp "$ROOT/backend/public/.htaccess" "$ROOT/backend/public/favicon.ico" "$ROOT/backend/public/robots.txt" "$API_DIR/"
 cp "$ROOT/deploy/split-index.php" "$API_DIR/index.php"
-sed "s/__DOMAIN__/$DOMAIN/g" "$ROOT/deploy/installer.php" > "$API_DIR/install-$TOKEN.php"
+sed -e "s|__DOMAIN__|$DOMAIN|g" -e "s|__API_URL__|$API_URL|g" "$ROOT/deploy/installer.php" > "$API_DIR/install-$TOKEN.php"
 # Empty directories Laravel needs to exist; zip drops empty ones otherwise.
 for d in storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
   mkdir -p "$STAGE/freshness/backend/$d" && touch "$STAGE/freshness/backend/$d/.keep"
@@ -83,5 +90,5 @@ rm -rf "$STAGE"
 echo
 ls -lh "$OUT"
 echo
-echo "Installer: https://api.$DOMAIN/install-$TOKEN.php"
+echo "Installer: $API_URL/install-$TOKEN.php"
 echo "$TOKEN" > "$OUT/installer-token.txt"

@@ -25,7 +25,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // cookie, so there is no CSRF surface — and no cookie for a malicious
         // site to ride. Sanctum's stateful domain support is deliberately not
         // enabled: the mobile app and the website both use bearer tokens.
-        $middleware->statefulApi(false);
+        //
+        // Not enabled means not calling statefulApi() at all. This line used
+        // to read statefulApi(false), but the method takes no argument — the
+        // false was ignored and it switched stateful mode ON. That stayed
+        // invisible while the website and the API lived on different hosts;
+        // served from the same host (the shop at DOMAIN, the API at
+        // DOMAIN/server), every POST from the admin panel died with a 419
+        // CSRF token mismatch. StatelessApiTest holds this.
 
         // Behind a load balancer or CDN the client IP arrives in a header.
         // Without this, every rate limit counts the proxy as one client and

@@ -5,7 +5,7 @@ Premium food delivery in Baku — website, customer app, and the API behind both
 ```
 web/       The public website (Vue 3 + Vite). Browsing and the catalogue.
 app/       The customer app (Expo + React Native) for iOS and Android.
-backend/   The API (Laravel 13 + Postgres). Auth, catalogue, orders.
+backend/   The API (Laravel 12, PHP 8.2+; Postgres or MySQL). Auth, catalogue, orders.
 shared/    Everything the three must agree on, written once.
 scripts/   sync.mjs regenerates from shared/; check.mjs fails when it is stale.
 ```
