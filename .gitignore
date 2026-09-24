@@ -41,3 +41,7 @@ GoogleService-Info.plist
 # put the same six megabytes in the repository three times over.
 /web/src/assets/products/*.jpg
 /app/assets/products/*.jpg
+
+# Upload packages built by scripts/package-deploy.sh — build output, and the
+# backend one carries the installer's one-time URL.
+/deploy-out/

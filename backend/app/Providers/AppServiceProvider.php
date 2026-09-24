@@ -4,8 +4,8 @@ namespace App\Providers;
 
 use App\Support\CatalogueCache;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -54,9 +54,18 @@ class AppServiceProvider extends ServiceProvider
             );
         }
 
-        // A query that returns the whole orders table is a bug on a laptop and
-        // an outage in production.
-        DB::preventLazyLoading();
+        // A relation loaded one row at a time is a bug on a laptop and an
+        // outage in production — but throwing over it in production would turn
+        // a slow page into a broken one. Logged instead, loudly.
+        //
+        // This used to call DB::preventLazyLoading(), which does not exist; it
+        // is a Model method. It sat in this production-only branch, so no
+        // local run or test ever reached it, and the first request on a real
+        // server would have died on it.
+        Model::preventLazyLoading();
+        Model::handleLazyLoadingViolationUsing(function (Model $model, string $relation): void {
+            Log::warning('Lazy loading '.$relation.' on '.$model::class.' — eager-load it.');
+        });
     }
 
     /**

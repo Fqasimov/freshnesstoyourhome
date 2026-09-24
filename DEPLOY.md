@@ -83,6 +83,51 @@ alone**, or the sync has nothing to read and the build fails on the missing
 images. The app's `export:web` does the same. `npm run check` at the root says
 whether anything is out of step without writing.
 
+## Shared hosting with no shell (how freshnesstoyourhome.az is deployed)
+
+The live site is on a shared cPanel account where SSH logs in but the shell is
+switched off, so nothing can be run on the server — not `composer`, not
+`artisan`. Everything that normally happens there is done before upload:
+
+```bash
+DOMAIN=freshnesstoyourhome.az scripts/package-deploy.sh
+```
+
+That builds two zips in `deploy-out/`:
+
+- **website.zip** — the built site, with the API address baked in, the panel
+  at `cms/`, and a cache-headers `.htaccess`. Extract into `public_html/`.
+- **backend.zip** — the API with `vendor/` already installed, no `.env`, the
+  seed data it reads from `shared/`, and a one-time installer in `public/`
+  under a random name. Extract into the home directory, giving
+  `~/freshness/backend` and `~/freshness/shared`. The subdomain
+  `api.DOMAIN` gets document root `freshness/backend/public`.
+
+The installer (`deploy/installer.php`) does in a browser what `DEV.md` does
+in a terminal: checks PHP and extensions, tests the database, writes `.env`
+with fresh keys, migrates, seeds, links storage, and promotes the first admin.
+It will not overwrite an existing `.env`, stops working 48 hours after
+install, and deletes itself when told to.
+
+Choices that follow from having no shell, all written into that `.env`:
+
+- **`QUEUE_CONNECTION=sync`.** No long-running worker is possible, so sign-in
+  mail goes out inside the request. Half a second slower; nothing to babysit.
+- **Mail over the host's own SMTP** (a cPanel email account) rather than
+  Resend — one fewer signup, and cPanel publishes SPF/DKIM for its own domains.
+- **No `config:cache` / `route:cache`.** Cached config ignores later `.env`
+  edits, and with no shell there would be no way to clear it.
+
+**PHP 8.4.1 or newer.** `composer.json` says `^8.3`, but the locked Symfony 8
+components require 8.4.1, and Composer's platform check refuses to boot on
+anything older. Set it per domain in cPanel before running the installer.
+
+To ship a change later: rebuild with the script, upload and extract the zip
+that changed over the old files. `.env`, `storage/` and the database are not
+in either zip, so they survive. Delete the new copy of the installer from
+`backend/public/` afterwards — it is harmless once installed, but it has no
+business being there.
+
 ## The admin panel
 
 `npm run build` in `web/` produces two pages: `index.html` (the shop) at the
