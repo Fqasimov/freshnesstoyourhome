@@ -118,9 +118,12 @@ Choices that follow from having no shell, all written into that `.env`:
 - **No `config:cache` / `route:cache`.** Cached config ignores later `.env`
   edits, and with no shell there would be no way to clear it.
 
-**PHP 8.4.1 or newer.** `composer.json` says `^8.3`, but the locked Symfony 8
-components require 8.4.1, and Composer's platform check refuses to boot on
-anything older. Set it per domain in cPanel before running the installer.
+**PHP 8.3 or newer.** Laravel 13 will not run on less. The lock is pinned to
+the Symfony 7.4 components (long-term support) rather than Symfony 8, which
+would need 8.4.1: `composer.json` sets `config.platform.php` to 8.3.0, so a
+`composer update` cannot quietly drag the floor back up. The host this was
+first deployed to offered PHP 8.2 by default — check the version per domain in
+cPanel before running the installer, which checks it too.
 
 To ship a change later: rebuild with the script, upload and extract the zip
 that changed over the old files. `.env`, `storage/` and the database are not

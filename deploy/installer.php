@@ -66,7 +66,7 @@ if (is_file($lockPath) && time() - (int) filemtime($lockPath) > EXPIRES_AFTER) {
 
 // ── pre-flight ────────────────────────────────────────────────────────────
 $checks = [
-    'PHP 8.4.1 or newer (have '.PHP_VERSION.') — the Symfony 8 components need it' => version_compare(PHP_VERSION, '8.4.1', '>='),
+    'PHP 8.3 or newer (have '.PHP_VERSION.')' => version_compare(PHP_VERSION, '8.3.0', '>='),
 ];
 foreach (['pdo_pgsql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'fileinfo', 'curl'] as $ext) {
     $checks["PHP extension: $ext"] = extension_loaded($ext);
