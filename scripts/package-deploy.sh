@@ -7,6 +7,13 @@
 #   website.zip   extract into public_html/        → https://DOMAIN and /cms
 #   backend.zip   extract into the home directory  → ~/freshness/backend + ~/freshness/shared
 #
+#   WEBSITE_ONLY=1 scripts/package-deploy.sh
+#
+# builds just deploy-out/website-only.zip: the shop with no backend behind it.
+# The catalogue, prices and delivery fees are the bundled copies and orders go
+# out over WhatsApp, so it is a complete shop — only the admin panel is left
+# out, since it has nothing to talk to. Updating a price means rebuilding.
+#
 # Everything the server would normally do with composer and npm is done here,
 # so the host only has to unzip. Setup (keys, tables, first admin) is the
 # one-time web installer copied into backend/public/ under a random name.
@@ -19,6 +26,19 @@ STAGE="$(mktemp -d)"
 TOKEN="$(head -c 12 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 
 rm -rf "$OUT" && mkdir -p "$OUT"
+
+if [ "${WEBSITE_ONLY:-}" = 1 ]; then
+  echo "==> website only (no backend)"
+  # Explicitly blank: web/.env points at localhost for development, and a
+  # visitor's browser would otherwise go looking for an API on their own
+  # machine.
+  ( cd "$ROOT/web" && VITE_API_URL= npm run build >/dev/null )
+  rm -rf "$ROOT/web/dist/cms"
+  cp "$ROOT/deploy/website.htaccess" "$ROOT/web/dist/.htaccess"
+  ( cd "$ROOT/web/dist" && zip -qr "$OUT/website-only.zip" . )
+  ls -lh "$OUT"
+  exit 0
+fi
 
 echo "==> website (API at https://api.$DOMAIN)"
 ( cd "$ROOT/web" && VITE_API_URL="https://api.$DOMAIN" npm run build >/dev/null )
