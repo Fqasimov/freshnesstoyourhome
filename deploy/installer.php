@@ -66,7 +66,7 @@ if (is_file($lockPath) && time() - (int) filemtime($lockPath) > EXPIRES_AFTER) {
 
 // ── pre-flight ────────────────────────────────────────────────────────────
 $checks = [
-    'PHP 8.3 or newer (have '.PHP_VERSION.')' => version_compare(PHP_VERSION, '8.3.0', '>='),
+    'PHP 8.2 or newer (have '.PHP_VERSION.')' => version_compare(PHP_VERSION, '8.2.0', '>='),
 ];
 foreach (['pdo_pgsql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'fileinfo', 'curl'] as $ext) {
     $checks["PHP extension: $ext"] = extension_loaded($ext);

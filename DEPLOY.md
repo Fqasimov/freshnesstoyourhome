@@ -118,12 +118,21 @@ Choices that follow from having no shell, all written into that `.env`:
 - **No `config:cache` / `route:cache`.** Cached config ignores later `.env`
   edits, and with no shell there would be no way to clear it.
 
-**PHP 8.3 or newer.** Laravel 13 will not run on less. The lock is pinned to
-the Symfony 7.4 components (long-term support) rather than Symfony 8, which
-would need 8.4.1: `composer.json` sets `config.platform.php` to 8.3.0, so a
-`composer update` cannot quietly drag the floor back up. The host this was
-first deployed to offered PHP 8.2 by default — check the version per domain in
-cPanel before running the installer, which checks it too.
+**PHP 8.2 or newer.** The host offers only PHP 8.2, so the backend runs on
+Laravel 12 rather than 13 (13 needs 8.3), and `composer.json` sets
+`config.platform.php` to 8.2.0 so a later `composer update` cannot pull in a
+package that needs more. The one development-only package that required 8.3,
+`laravel/pao`, is gone; PHPUnit is on 11 for the same reason.
+
+Checked three ways: all 156 tests pass on Laravel 12; every file of our own
+code parses with PHP 8.2's own parser (which does reject 8.3 syntax); and the
+lock's platform check demands 8.2, so Composer vouches for everything in
+`vendor/`. The test suite itself could not be run on 8.2 here — the only 8.2
+available in the build sandbox is a WebAssembly build that crashes on start.
+
+**PHP 8.2 stops receiving security fixes on 31 December 2026.** Ask the host
+for 8.3 or newer before then. Moving back up is `config.platform.php` and the
+Laravel constraint in `composer.json`, then a `composer update`.
 
 To ship a change later: rebuild with the script, upload and extract the zip
 that changed over the old files. `.env`, `storage/` and the database are not
