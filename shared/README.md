@@ -87,15 +87,23 @@ once.
 (`quadrotto-pistacchio.jpg`), run `npm run sync`. It is now in both bundles and
 in the app's require map.
 
-*A delivery area* — add it to `delivery.json` in the shop's own order, with
-`fee` as a `[low, high]` pair. Equal ends mean a flat fee.
-
 *A listing* — add it to `catalogue.json` with a price in qəpik, the three
 translations and a photograph in `products/` under the same id. `npm run sync`
 puts it in the website's fallback and the app's; `php artisan db:seed
 --class=CatalogueSeeder` puts it in the database, which is what customers
 actually see. `sort` must keep increasing down the whole file — the catalogue
 endpoint orders by it alone, across every category.
+
+*A listing with no price yet* — the shop sometimes wants a product structured
+(photo filed, translations written, category and shape settled) before it has
+a number to put on it. Add it with `"is_active": false` and `"price_minor": 0`
+— the generator's usual "no price" check is the one thing that field turns
+off, on that one row. It seeds into the database and shows up in the admin
+panel for editing, but never on `/api/catalogue`, the website's bundled
+fallback or the app's: the sync scripts filter `is_active === false` out of
+both before they write a byte. When the price arrives, set `price_minor` and
+flip `is_active` to `true` (or drop the key — absent means true) and re-run
+the sync and the seeder; there is nothing else to wire up.
 
 *A delivery area* — add it to `delivery.json` in the shop's own order, with
 `fee` as a `[low, high]` pair, then re-run the zone seeder. Equal ends mean a

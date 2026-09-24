@@ -67,7 +67,7 @@ export const FALLBACK_CATALOGUE: CatalogueResponse = {
     unit_kind: 'kg', unit_qty: 1, is_weight_based: true, is_popular: true, image: null,
     name: { az: 'Qızıl balıq steyki', ru: 'Стейки лосося', en: 'Salmon Steaks' },
     unit_label: { az: '1 kg', ru: '1 кг', en: '1 kg' },
-    description: { az: 'Sifarişlə kəsilmiş qızıl balıq steyki, buz üzərində çatdırılır.', ru: 'Стейки лосося на кости, режем под заказ, привозим на льду.', en: 'Bone-in salmon steaks cut to order, delivered on ice.' },
+    description: { az: 'Sifarişlə kəsilmiş qızıl balıq steyki, buz üzərində çatdırılır. 1 kq-da təxminən 2–3 steyk olur, hər biri 300–500 qram.', ru: 'Стейки лосося на кости, режем под заказ, привозим на льду. В 1 кг обычно 2–3 стейка, каждый по 300–500 г.', en: 'Bone-in salmon steaks cut to order, delivered on ice. About 2–3 steaks per kilo, each 300–500 g.' },
   },
   {
     id: 'beluga-steaks', category_id: 'fresh', price_minor: 5500, currency: 'AZN',
@@ -93,9 +93,9 @@ export const FALLBACK_CATALOGUE: CatalogueResponse = {
   {
     id: 'fresh-forel', category_id: 'fresh', price_minor: 2000, currency: 'AZN',
     unit_kind: 'kg', unit_qty: 1, is_weight_based: true, is_popular: false, image: null,
-    name: { az: 'Təzə forel filesi', ru: 'Филе форели', en: 'Fresh Trout Fillet' },
+    name: { az: 'Təzə forel', ru: 'Свежая форель', en: 'Fresh Trout' },
     unit_label: { az: '1 kg', ru: '1 кг', en: '1 kg' },
-    description: { az: 'Dərili forel filesi, sümüksüz, bişirməyə hazır.', ru: 'Филе форели на коже, без костей, готово к приготовлению.', en: 'Skin-on trout fillets, pin-boned and ready to cook.' },
+    description: { az: '1 ədəd bütöv forel balığı (çəki: 2,5–3,5 kq). İstəyinizə uyğun olaraq file və ya steyk formasında doğranır — balığın bütün hissələri birlikdə göndərilir.', ru: 'Целая форель (вес: 2,5–3,5 кг). Нарезаем на филе или стейки по вашему желанию — отправляем со всеми частями рыбы.', en: 'One whole trout (weight: 2.5–3.5 kg). Cut into fillets or steaks to your preference — every part of the fish ships together.' },
   },
   {
     id: 'tuna-loin', category_id: 'seafood', price_minor: 5000, currency: 'AZN',

@@ -54,7 +54,11 @@ export function validate () {
     if (ids.has(p.id)) errors.push(`two listings share the id "${p.id}"`)
     ids.add(p.id)
     if (!catIds.has(p.category_id)) errors.push(`"${p.id}" is in category "${p.category_id}", which does not exist`)
-    if (!(p.price_minor > 0)) errors.push(`"${p.id}" has no price`)
+    // A price of 0 is only ever honest on a row the shop marked `is_active:
+    // false` — added with its photo, translations and shape in place, priced
+    // once the shop supplies a real figure. Anything meant to be on sale
+    // needs a real price now, not a placeholder that would ship as free.
+    if (!(p.price_minor > 0) && p.is_active !== false) errors.push(`"${p.id}" has no price`)
     if (p.sort <= previous) errors.push(`"${p.id}" has sort ${p.sort}, which does not follow ${previous} — products are served ordered by sort alone, across every category`)
     previous = p.sort
     for (const l of ['az', 'ru', 'en']) {
@@ -260,7 +264,11 @@ export const isRange = (zone: SharedZone | null | undefined): boolean =>
   {
     path: 'web/src/data/catalogue.generated.js',
     build: () => {
-      const { categories, products, bundles } = shared.catalogue
+      const { categories, bundles } = shared.catalogue
+      // A row marked `is_active: false` has its photo and shape ready but no
+      // real price yet — never shipped to a customer with no signal, so it
+      // never reaches this fallback. /api/catalogue applies the same rule.
+      const products = shared.catalogue.products.filter(p => p.is_active !== false)
       const count = id => products.filter(p => p.category_id === id).length
       const pad = n => String(n).padStart(2, '0')
       const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
@@ -316,7 +324,11 @@ ${sets.join('\n')}
   {
     path: 'app/lib/fallbackCatalogue.ts',
     build: () => {
-      const { categories, products } = shared.catalogue
+      const { categories } = shared.catalogue
+      // A row marked `is_active: false` has its photo and shape ready but no
+      // real price yet — never shipped to a customer with no signal, so it
+      // never reaches this fallback. /api/catalogue applies the same rule.
+      const products = shared.catalogue.products.filter(p => p.is_active !== false)
       const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
       const map = (a, b, c) => `{ az: ${q(a)}, ru: ${q(b)}, en: ${q(c)} }`
 

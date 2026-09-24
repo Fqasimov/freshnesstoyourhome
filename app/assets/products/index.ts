@@ -33,6 +33,7 @@ export const PRODUCT_IMAGES: Record<string, number> = {
   'cono-caramello-salato': require('./cono-caramello-salato.jpg'),
   'crab-sticks': require('./crab-sticks.jpg'),
   'danet-pilic-sucuk': require('./danet-pilic-sucuk.jpg'),
+  'dimartino-classic': require('./dimartino-classic.jpg'),
   'dimartino-pasta': require('./dimartino-pasta.jpg'),
   'duck-fillet': require('./duck-fillet.jpg'),
   'duck-leg': require('./duck-leg.jpg'),

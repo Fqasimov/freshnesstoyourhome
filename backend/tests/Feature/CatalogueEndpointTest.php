@@ -25,9 +25,13 @@ class CatalogueEndpointTest extends TestCase
         // into a failing test rather than a passing one.
         $seed = json_decode((string) file_get_contents(base_path('../shared/catalogue.json')), true, 512, JSON_THROW_ON_ERROR);
 
+        // A row marked is_active: false has its photo and shape in place but
+        // no real price yet — seeded, but never public. See shared/README.md.
+        $public = array_filter($seed['products'], fn ($p) => ($p['is_active'] ?? true) !== false);
+
         $this->getJson('/api/catalogue')
             ->assertOk()
-            ->assertJsonCount(count($seed['products']), 'products')
+            ->assertJsonCount(count($public), 'products')
             ->assertJsonCount(count($seed['categories']), 'categories');
     }
 

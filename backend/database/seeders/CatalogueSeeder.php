@@ -79,7 +79,15 @@ class CatalogueSeeder extends Seeder
                     'unit_kind' => $row['unit_kind'],
                     'unit_qty' => $row['unit_qty'],
                     'is_popular' => $row['is_popular'],
-                    'is_active' => true,
+                    // Absent means true: almost every row in the file is a
+                    // real listing. `false` is for a product added with its
+                    // photo, translations and shape already in place but no
+                    // real price yet — structured and ready, invisible to a
+                    // customer until the shop supplies one and this flips.
+                    // Like a price, this is the reviewable record: a re-seed
+                    // after editing the JSON overwrites whatever the admin
+                    // panel's own toggle last set, same as it does for a fee.
+                    'is_active' => $row['is_active'] ?? true,
                     // The photos ship inside the apps, keyed by product id, so
                     // the image a customer sees cannot drift from the row.
                     'image_path' => $row['id'].'.jpg',
