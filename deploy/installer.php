@@ -21,7 +21,10 @@ declare(strict_types=1);
 const DOMAIN = '__DOMAIN__';
 const EXPIRES_AFTER = 48 * 3600;
 
-$base = dirname(__DIR__);
+// Either the standard layout (this file in backend/public/) or the split one
+// this host needs (this file in public_html/api.DOMAIN/, the code in
+// ~/freshness/backend) — see deploy/split-index.php.
+$base = is_dir(dirname(__DIR__).'/vendor') ? dirname(__DIR__) : dirname(__DIR__, 2).'/freshness/backend';
 $envPath = $base.'/.env';
 $lockPath = $base.'/storage/installed.lock';
 
@@ -32,6 +35,8 @@ function kernel(string $base) {
     if ($kernel === null) {
         require $base.'/vendor/autoload.php';
         $app = require $base.'/bootstrap/app.php';
+        // The served folder is this one, so storage:link must create its link here.
+        $app->usePublicPath(__DIR__);
         $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
         $kernel->bootstrap();
     }
@@ -68,12 +73,14 @@ if (is_file($lockPath) && time() - (int) filemtime($lockPath) > EXPIRES_AFTER) {
 $checks = [
     'PHP 8.2 or newer (have '.PHP_VERSION.')' => version_compare(PHP_VERSION, '8.2.0', '>='),
 ];
-foreach (['pdo_pgsql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'fileinfo', 'curl'] as $ext) {
+$checks['PHP extension: pdo_mysql or pdo_pgsql'] = extension_loaded('pdo_mysql') || extension_loaded('pdo_pgsql');
+foreach (['mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'fileinfo', 'curl'] as $ext) {
     $checks["PHP extension: $ext"] = extension_loaded($ext);
 }
 $checks['storage/ is writable'] = is_writable($base.'/storage');
 $checks['bootstrap/cache/ is writable'] = is_writable($base.'/bootstrap/cache');
 $checks['backend folder is writable (for .env)'] = is_writable($base) || is_file($envPath);
+$checks['backend code found at '.$base] = is_file($base.'/vendor/autoload.php');
 $checks['../shared/catalogue.json is present'] = is_file(dirname($base).'/shared/catalogue.json');
 $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
@@ -86,15 +93,22 @@ $keysShown = null;
 
 // ── install ───────────────────────────────────────────────────────────────
 if ($action === 'install' && !is_file($envPath) && $allOk) {
+    $driver = ($_POST['db_driver'] ?? 'mysql') === 'pgsql' ? 'pgsql' : 'mysql';
     $db = [
         'host' => trim($_POST['db_host'] ?? 'localhost'),
-        'port' => trim($_POST['db_port'] ?? '5432'),
+        'port' => trim($_POST['db_port'] ?? '') ?: ($driver === 'pgsql' ? '5432' : '3306'),
         'name' => trim($_POST['db_name'] ?? ''),
         'user' => trim($_POST['db_user'] ?? ''),
         'pass' => (string) ($_POST['db_pass'] ?? ''),
     ];
     try {
-        new PDO("pgsql:host={$db['host']};port={$db['port']};dbname={$db['name']}", $db['user'], $db['pass'], [
+        if (!extension_loaded('pdo_'.$driver)) {
+            throw new RuntimeException("PHP extension pdo_$driver is not enabled — cPanel → Select PHP Version → Extensions, or choose the other database type.");
+        }
+        $dsn = $driver === 'pgsql'
+            ? "pgsql:host={$db['host']};port={$db['port']};dbname={$db['name']}"
+            : "mysql:host={$db['host']};port={$db['port']};dbname={$db['name']};charset=utf8mb4";
+        new PDO($dsn, $db['user'], $db['pass'], [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_TIMEOUT => 5,
         ]);
     } catch (Throwable $e) {
@@ -118,7 +132,7 @@ if ($action === 'install' && !is_file($envPath) && $allOk) {
             'APP_LOCALE=az',
             envLine('BLIND_INDEX_KEY', $blind),
             '',
-            'DB_CONNECTION=pgsql',
+            'DB_CONNECTION='.$driver,
             envLine('DB_HOST', $db['host']),
             envLine('DB_PORT', $db['port']),
             envLine('DB_DATABASE', $db['name']),
@@ -257,12 +271,17 @@ BLIND_INDEX_KEY=<?= h($keysShown['BLIND_INDEX_KEY']) ?></pre>
 <form method="post">
  <input type="hidden" name="action" value="install">
  <div class="box">
-  <b>PostgreSQL</b> <small>— from cPanel → PostgreSQL Databases. cPanel adds your username as a prefix, e.g. <code>freshdcg_shop</code>.</small>
+  <b>Database</b> <small>— from cPanel → MySQL® Databases (or PostgreSQL Databases). cPanel adds your username as a prefix, e.g. <code>freshdcg_shop</code>.</small>
+  <label>Type</label>
+  <select name="db_driver" style="width:100%;padding:9px;border:1px solid #bbb;border-radius:4px;font:inherit">
+   <option value="mysql">MySQL / MariaDB (cPanel → MySQL® Databases)</option>
+   <option value="pgsql">PostgreSQL (cPanel → PostgreSQL Databases)</option>
+  </select>
   <label>Database name</label><input name="db_name" required placeholder="freshdcg_shop">
   <label>Database user</label><input name="db_user" required placeholder="freshdcg_api">
   <label>Database password</label><input name="db_pass" type="password" required>
   <label>Host</label><input name="db_host" value="localhost">
-  <label>Port</label><input name="db_port" value="5432">
+  <label>Port</label><input name="db_port" value="" placeholder="leave empty — 3306 for MySQL, 5432 for PostgreSQL">
  </div>
  <div class="box">
   <b>Email for sign-in codes</b> <small>— an account from cPanel → Email Accounts, e.g. <code>hello@<?= h(DOMAIN) ?></code>. This is the only way anyone signs in, including you.</small>

@@ -97,14 +97,22 @@ That builds two zips in `deploy-out/`:
 
 - **website.zip** — the built site, with the API address baked in, the panel
   at `cms/`, and a cache-headers `.htaccess`. Extract into `public_html/`.
-- **backend.zip** — the API with `vendor/` already installed, no `.env`, the
-  seed data it reads from `shared/`, and a one-time installer in `public/`
-  under a random name. Extract into the home directory, giving
-  `~/freshness/backend` and `~/freshness/shared`. The subdomain
-  `api.DOMAIN` gets document root `freshness/backend/public`.
+- **backend.zip** — extract it in the **home directory**. It holds two
+  things: the API in `~/freshness/backend` (with `vendor/` installed and no
+  `.env`) plus the seed data in `~/freshness/shared`; and the API's front door
+  in `~/public_html/api.DOMAIN/`, which is Laravel's `index.php` pointed back at
+  `~/freshness/backend` (`deploy/split-index.php`) plus the one-time installer
+  under a random name. The subdomain `api.DOMAIN` gets document root
+  `public_html/api.DOMAIN`, cPanel's own suggestion.
+
+  The split is there because this host only lets a domain point **inside**
+  `public_html`, and the backend must not be there: `.env` holds the database
+  password and the keys, and anything under `public_html` can be requested by
+  URL. With the split, nothing under `public_html` is secret.
 
 The installer (`deploy/installer.php`) does in a browser what `DEV.md` does
-in a terminal: checks PHP and extensions, tests the database, writes `.env`
+in a terminal: checks PHP and extensions, tests the database (MySQL/MariaDB or
+PostgreSQL — whichever the cPanel account offers), writes `.env`
 with fresh keys, migrates, seeds, links storage, and promotes the first admin.
 It will not overwrite an existing `.env`, stops working 48 hours after
 install, and deletes itself when told to.
@@ -117,6 +125,10 @@ Choices that follow from having no shell, all written into that `.env`:
   Resend — one fewer signup, and cPanel publishes SPF/DKIM for its own domains.
 - **No `config:cache` / `route:cache`.** Cached config ignores later `.env`
   edits, and with no shell there would be no way to clear it.
+
+**MySQL works as well as PostgreSQL.** Nothing in the schema is
+Postgres-specific; the whole suite passes against MariaDB 10.11 with
+`DB_CONNECTION=mysql`.
 
 **PHP 8.2 or newer.** The host offers only PHP 8.2, so the backend runs on
 Laravel 12 rather than 13 (13 needs 8.3), and `composer.json` sets

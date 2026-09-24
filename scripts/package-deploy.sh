@@ -5,7 +5,8 @@
 #
 # Produces, in deploy-out/:
 #   website.zip   extract into public_html/        → https://DOMAIN and /cms
-#   backend.zip   extract into the home directory  → ~/freshness/backend + ~/freshness/shared
+#   backend.zip   extract into the home directory  → ~/freshness/backend + ~/freshness/shared,
+#                 and the API's front door in ~/public_html/api.DOMAIN
 #
 #   WEBSITE_ONLY=1 scripts/package-deploy.sh
 #
@@ -62,12 +63,21 @@ cp "$ROOT/shared/catalogue.json" "$ROOT/shared/delivery.json" "$STAGE/freshness/
 # a clone brings the package's whole history — Laravel's alone is 150 MB. The
 # server runs the code, not the history.
 find "$STAGE/freshness/backend/vendor" -type d -name .git -prune -exec rm -rf {} +
-sed "s/__DOMAIN__/$DOMAIN/g" "$ROOT/deploy/installer.php" > "$STAGE/freshness/backend/public/install-$TOKEN.php"
+# The host only lets a domain point inside public_html, and the backend must
+# not live there (.env holds the database password and the keys). So the code
+# goes to ~/freshness/backend and only the front door goes to
+# public_html/api.DOMAIN — see deploy/split-index.php. Extracting the zip in
+# the home folder puts both in place at once.
+API_DIR="$STAGE/public_html/api.$DOMAIN"
+mkdir -p "$API_DIR"
+cp "$ROOT/backend/public/.htaccess" "$ROOT/backend/public/favicon.ico" "$ROOT/backend/public/robots.txt" "$API_DIR/"
+cp "$ROOT/deploy/split-index.php" "$API_DIR/index.php"
+sed "s/__DOMAIN__/$DOMAIN/g" "$ROOT/deploy/installer.php" > "$API_DIR/install-$TOKEN.php"
 # Empty directories Laravel needs to exist; zip drops empty ones otherwise.
 for d in storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
   mkdir -p "$STAGE/freshness/backend/$d" && touch "$STAGE/freshness/backend/$d/.keep"
 done
-( cd "$STAGE" && zip -qr "$OUT/backend.zip" freshness )
+( cd "$STAGE" && zip -qr "$OUT/backend.zip" freshness public_html )
 rm -rf "$STAGE"
 
 echo
