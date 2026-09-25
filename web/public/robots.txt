@@ -1,0 +1,7 @@
+# Search engines: the shop is public; the admin panel and the API are not pages.
+User-agent: *
+Allow: /
+Disallow: /cms/
+Disallow: /server/api/
+
+Sitemap: https://freshnesstoyourhome.az/sitemap.xml
