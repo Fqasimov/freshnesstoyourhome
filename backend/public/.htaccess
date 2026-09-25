@@ -1,17 +1,27 @@
-<IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
+# The API's front door (public_html/server/ on cPanel; backend/public elsewhere).
 
+Options -Indexes -MultiViews
+
+<IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Dotfiles (.env, .git, .htaccess) are never served.
+    RewriteRule (^|/)\. - [F,L]
+
+    # Only Laravel's own index.php — and the one-time installer or upgrade
+    # script, whose names are 24 random hex characters — may run as PHP here.
+    # Anything else ending in .php is refused before PHP ever sees it.
+    RewriteCond %{REQUEST_URI} !/(index|install-[0-9a-f]{24}|upgrade-[0-9a-f]{24})\.php$
+    RewriteRule \.(php[0-9]?|phtml|phar|pht|phps)$ - [F,L,NC]
+
+    # storage/ is where uploaded photographs are served from. Photographs
+    # only: whatever else might ever land there is refused, not run.
+    RewriteCond %{REQUEST_URI} !\.(jpe?g|png|webp)$ [NC]
+    RewriteRule ^storage/ - [F,L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d

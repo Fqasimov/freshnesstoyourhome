@@ -90,20 +90,38 @@ export async function api (path, { method = 'GET', body, auth = true } = {}) {
   return payload
 }
 
-export async function signIn (email, code) {
+/**
+ * Step one: the emailed code. Returns a short-lived ticket for step two —
+ * never a token. `two_factor` is 'enroll' the first time (with the secret
+ * to put in the authenticator app) and 'challenge' after that.
+ */
+export async function verifyEmailCode (email, code) {
   // The panel's own sign-in: only addresses named in ADMIN_EMAILS on the
-  // server get a token here, and only its tokens open the admin routes.
-  const data = await api('/auth/panel/verify-code', {
+  // server get anywhere here, and only its tokens open the admin routes.
+  return api('/auth/panel/verify-code', {
     method: 'POST',
     auth: false,
-    body: { email, code, device_name: 'admin-panel' },
+    body: { email, code },
+  })
+}
+
+/**
+ * Step two: the authenticator code, or a recovery code. The only call that
+ * yields a token, so there is no half-signed-in state for the rest of the
+ * panel to get wrong — without it, every screen but this one is unreachable.
+ *
+ * The caller opens the panel with loadMe() afterwards. Not in here: loadMe()
+ * is what swaps the sign-in screen for the panel, and at enrolment the
+ * recovery codes have to be on screen before that happens.
+ */
+export async function completeTwoFactor (ticket, { code, recoveryCode } = {}) {
+  const data = await api('/auth/panel/two-factor', {
+    method: 'POST',
+    auth: false,
+    body: recoveryCode ? { ticket, recovery_code: recoveryCode } : { ticket, code },
   })
 
   setToken(data.token)
-
-  // The token is proof of the address, not of authority. This is the request
-  // that decides whether the panel opens at all.
-  await loadMe()
 
   return data
 }

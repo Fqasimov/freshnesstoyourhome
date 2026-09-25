@@ -103,10 +103,15 @@ class AppServiceProvider extends ServiceProvider
 
         // The admin panel's sign-in. One person uses it, a few times a day;
         // anything past this is somebody else.
-        RateLimiter::for('panel-auth', fn (Request $r) => [
-            Limit::perMinute(5)->by('panel:'.$r->ip()),
-            Limit::perHour(20)->by('panel:'.$r->ip()),
-        ]);
+        // Keyed on the address too, so spreading guesses over many IPs does
+        // not buy more tries against the admin's own inbox.
+        RateLimiter::for('panel-auth', fn (Request $r) => array_values(array_filter([
+            Limit::perMinutes(10, 10)->by('panel:'.$r->ip()),
+            Limit::perHour(30)->by('panel:'.$r->ip()),
+            $r->filled('email')
+                ? Limit::perMinutes(10, 10)->by('panel-email:'.sha1(strtolower(trim((string) $r->input('email')))))
+                : null,
+        ])));
 
         // Public and cached, so it can be generous — but not unbounded, or it
         // is a free way to make the server do work.

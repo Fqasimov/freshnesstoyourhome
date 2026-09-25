@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminAudit;
+use App\Support\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -37,11 +38,18 @@ class AuditController extends Controller
                 'actor_id' => $a->actor_id,
                 'actor_role' => $a->actor_role,
                 'ip' => $a->ip,
+                'user_agent' => $a->user_agent,
                 'created_at' => $a->created_at,
             ]),
             'total' => $audits->total(),
             'page' => $audits->currentPage(),
             'last_page' => $audits->lastPage(),
         ]);
+    }
+
+    /** Is the chain whole? Shown at the top of the journal. */
+    public function verify(): JsonResponse
+    {
+        return response()->json(Audit::verify() + ['total' => AdminAudit::count()]);
     }
 }

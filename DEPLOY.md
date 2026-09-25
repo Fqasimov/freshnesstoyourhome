@@ -152,11 +152,13 @@ available in the build sandbox is a WebAssembly build that crashes on start.
 for 8.3 or newer before then. Moving back up is `config.platform.php` and the
 Laravel constraint in `composer.json`, then a `composer update`.
 
-To ship a change later: rebuild with the script, upload and extract the zip
-that changed over the old files. `.env`, `storage/` and the database are not
-in either zip, so they survive. A new `backend.zip` brings a new copy of the
-installer into `public_html/server/`; delete it afterwards — it refuses to
-reinstall over an existing `.env`, but it has no business being there.
+To ship a change later: `DOMAIN=freshnesstoyourhome.az scripts/package-deploy.sh`
+(add `INSTALL=1` only for a brand-new server — that is the one package that
+carries the installer). Upload and extract `backend.zip` in the home folder,
+**then open the database-update page it prints**
+(`/server/upgrade-<random>.php`), press the button, and it runs any new
+migrations and deletes itself. Then `website.zip` into `public_html`.
+`.env`, `storage/` and the database are not in either zip, so they survive.
 
 **Sanctum runs stateless.** The panel and the app send a bearer token; nothing
 uses cookies. `bootstrap/app.php` therefore does not call
@@ -216,10 +218,148 @@ admin's phone, signed in to the shop, is not a way into the panel. A panel
 session lasts 12 hours (`ADMIN_TOKEN_TTL_HOURS`); a shop session 60 days.
 `AdminAccess` holds the rule and `PanelAuthTest` holds it in place.
 
-Because the only way in is a code sent to that inbox, **the inbox is the
-key**: give it a strong password of its own and two-factor sign-in.
+**And a second factor.** After the emailed code, the panel asks for the
+6-digit code from an authenticator app (Google Authenticator, Microsoft
+Authenticator, 1Password, Aegis — RFC 6238 TOTP). The first sign-in shows a
+QR code to scan (drawn in the browser; the secret never goes to a QR
+service) and hands out eight one-time recovery codes, shown once. The emailed
+code alone only earns a five-minute, five-try ticket for that step — no
+token exists until both are right. Each app code works once. Every panel
+sign-in is written to the journal with its IP and browser.
+
+Lost phone and recovery codes? That is a server-access job, on purpose:
+cPanel → phpMyAdmin → the shop database → SQL:
+
+```sql
+UPDATE users SET two_factor_secret = NULL, two_factor_confirmed_at = NULL,
+  two_factor_recovery_codes = NULL, two_factor_last_step = NULL
+WHERE role = 'admin';
+```
+
+The next sign-in enrols again. Do it straight away: until the app is
+enrolled, the inbox alone is the key.
 
 `freshness:promote` still appoints couriers, and refuses to make admins.
+
+## Security on hostinq.az — what is in place and how to check it
+
+**Layout.** The Laravel code, `.env` and `vendor/` live in `~/freshness`, outside
+`public_html`; only a four-line `index.php` sits in `public_html/server`. The
+host will not let a domain point outside `public_html`, which is why it is
+split rather than re-rooted. `~/freshness/.htaccess` denies everything in case
+that folder is ever moved somewhere reachable.
+
+**Web server rules**, tested against Apache 2.4 with `AllowOverride All` (what
+cPanel and LiteSpeed honour):
+
+- `public_html/.htaccess` (`deploy/website.htaccess`): HTTPS redirect (except
+  `/.well-known`, which AutoSSL needs), no directory listings, dotfiles and
+  code-checkout files refused, no PHP outside `/server`, and for the HTML a
+  Content-Security-Policy that allows scripts from our own origin only —
+  no inline script, no eval, no third party. That CSP is what stands between
+  an injected string and the panel's session token. Also X-Frame-Options,
+  nosniff, Referrer- and Permissions-Policy, COOP, and HSTS over HTTPS.
+- `public_html/server/.htaccess` (`backend/public/.htaccess`): the same deny
+  list, and **only `index.php` and the random-named installer/upgrade pages
+  may run as PHP**. Under `storage/` only `.jpg/.jpeg/.png/.webp` are served.
+- `storage/app/public/.htaccess`: the upload folder's own rule — anything but
+  an image is refused, images are served with `CSP: default-src 'none';
+  sandbox`. It holds even with the parent rules removed.
+
+Uploads are also re-encoded (`App\Support\StoredImage`): the bytes are
+decoded to pixels and written out as a fresh JPEG under a UUID name, so a
+payload appended to an image, a polyglot, EXIF (with its GPS) and SVG do not
+survive. The file type is read from the bytes, not the name or header.
+
+**Client IPs.** `TRUSTED_PROXIES` is empty by default: on shared hosting the
+server talks to the visitor directly, and trusting `X-Forwarded-For` from
+anyone let every visitor pick their own IP and walk past every per-IP rate
+limit (it used to default to `*` — **delete that line from an older `.env`**).
+Behind Cloudflare set `TRUSTED_PROXIES=cloudflare`: the header is then
+believed only from Cloudflare's own ranges (`App\Support\CloudflareIps`).
+`TrustedProxyTest` holds both.
+
+**Rate limits** (`AppServiceProvider`): the panel's door allows 10 requests
+per 10 minutes per IP *and* 10 per 10 minutes per address; codes are further
+limited per address, per IP and globally (`LoginCodeService`); a ticket for
+the app code dies after 5 wrong tries.
+
+**Audit journal.** Every admin write, and every panel sign-in, is a row with
+actor, role, action, before/after values, IP and browser. Rows are chained:
+each carries an HMAC of itself and the row before, keyed from `APP_KEY`, so a
+row edited or deleted in the middle — by anyone holding only the database —
+breaks the chain. The Journal page checks it on every visit and shows the
+count (the chain cannot show rows cut off the end; a count that goes down
+does). `AuditChainTest`.
+
+**Database.** cPanel → *Remote MySQL*: keep the list empty, so MySQL answers
+only on the server itself. One database user for the app, on the one
+database. It needs CREATE/ALTER/INDEX/DROP/REFERENCES for the upgrade page's
+migrations as well as SELECT/INSERT/UPDATE/DELETE; ALL PRIVILEGES on that one
+database amounts to the same. Back up the database from cPanel → Backup,
+together with `APP_KEY`/`BLIND_INDEX_KEY` kept elsewhere.
+
+### Checking it from any computer
+
+Every line should print the number shown:
+
+```bash
+D=https://freshnesstoyourhome.az
+curl -s -o /dev/null -w '%{http_code}  .env\n'               $D/.env                     # 403
+curl -s -o /dev/null -w '%{http_code}  .git\n'               $D/.git/config              # 403
+curl -s -o /dev/null -w '%{http_code}  api .env\n'           $D/server/.env              # 403
+curl -s -o /dev/null -w '%{http_code}  stray php\n'          $D/server/test.php          # 403
+curl -s -o /dev/null -w '%{http_code}  php in uploads\n'     $D/server/storage/x.php     # 403
+curl -s -o /dev/null -w '%{http_code}  upload listing\n'     $D/server/storage/          # 403
+curl -s -o /dev/null -w '%{http_code}  http redirect\n'      http://freshnesstoyourhome.az/  # 301
+curl -sI $D/cms/ | grep -i content-security-policy       # present, script-src 'self'
+curl -s -H 'X-Forwarded-For: 1.2.3.4' -o /dev/null -w '%{http_code}\n' -X POST \
+  -H 'Content-Type: application/json' -d '{"email":"x@example.com"}' \
+  $D/server/api/auth/panel/request-code   # run it 5 times: 429 by the 4th, whatever the header says
+```
+
+On Windows PowerShell use `curl.exe` instead of `curl`.
+
+### Cloudflare in front (free plan) — optional, recommended
+
+1. Cloudflare → *Add a site* → `freshnesstoyourhome.az` → Free. Let it import
+   the DNS records, then compare them with cPanel → *Zone Editor* before
+   switching: the `mail`, `webmail` and MX records, and the SPF/DKIM TXT
+   records, must all be there, with `mail`/`webmail` set to **DNS only**
+   (grey cloud) or email stops.
+2. At online.az, replace the hostinq.az nameservers with the two Cloudflare
+   gives you.
+3. Cloudflare → SSL/TLS → **Full (strict)** (the AutoSSL certificate is
+   valid, so strict works). Edge Certificates → Always Use HTTPS on.
+4. In `.env`: `TRUSTED_PROXIES=cloudflare`.
+5. **Access (Zero Trust, free up to 50 users)** → Applications → Add →
+   Self-hosted. Domain `freshnesstoyourhome.az`, and add three paths: `cms`,
+   `server/api/admin`, `server/api/auth/panel`. Policy: *Allow* → Emails →
+   the admin address. Login method: One-time PIN (or Google). Now a visitor
+   to /cms meets Cloudflare's sign-in before a byte reaches hostinq.az — and
+   the panel's API paths are behind it too, so it cannot be walked around by
+   calling the API directly.
+
+   It is a layer, not the lock: on shared hosting the server's own IP still
+   answers requests that skip Cloudflare, and the panel's own two factors are
+   what hold there.
+
+### Considered and left out, on purpose
+
+- **Cookie sessions (Sanctum SPA mode) instead of a bearer token.** The shop,
+  the panel and the mobile app share one token-based API. With the site and
+  API on one origin, switching on Sanctum's stateful mode puts CSRF checks on
+  the shop's own requests too — exactly the 419 outage recorded above. What a
+  cookie would buy is that injected script could not read the token; the CSP
+  above stops script from being injected, the panel token lives in
+  `sessionStorage` (gone with the tab), is admin-only and expires in 12 hours.
+- **Cloudflare Turnstile on the login.** Its job is keeping bots from making
+  a form send mail. The panel's form sends nothing to any address but the
+  admin's, is rate-limited per IP and per address, and Cloudflare Access (if
+  set up) sits in front of it. Easy to add later if the logs ever show a need.
+- **An observer that audits every model save.** Admin writes are audited in
+  the controllers, where the actor and the reason are known; seeders and
+  price syncs from `shared/` are deliberate code changes and belong in git.
 
 ## Infrastructure
 

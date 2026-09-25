@@ -14,7 +14,10 @@ class AdminAudit extends Model
 
     protected $fillable = [
         'actor_id', 'actor_role', 'action', 'subject_type', 'subject_id', 'changes', 'ip',
+        'user_agent', 'prev_hash', 'hash', 'created_at',
     ];
+
+    protected $hidden = ['prev_hash', 'hash'];
 
     protected function casts(): array
     {

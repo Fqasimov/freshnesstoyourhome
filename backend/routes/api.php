@@ -65,6 +65,8 @@ Route::prefix('auth')->group(function () {
         ->middleware(['throttle:otp-request', 'throttle:panel-auth']);
     Route::post('panel/verify-code', [PanelAuthController::class, 'verifyCode'])
         ->middleware(['throttle:otp-verify', 'throttle:panel-auth']);
+    Route::post('panel/two-factor', [PanelAuthController::class, 'twoFactor'])
+        ->middleware('throttle:panel-auth');
 });
 
 // ------------------------------------------------------------- signed in ---
@@ -159,4 +161,5 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::post('customers/{id}/block', [CustomerController::class, 'block']);
 
         Route::get('audits', [AuditController::class, 'index']);
+        Route::get('audits/verify', [AuditController::class, 'verify']);
     });

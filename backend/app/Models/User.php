@@ -40,6 +40,9 @@ class User extends Authenticatable
         'email_hash',
         'phone_hash',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_last_step',
     ];
 
     /**
@@ -67,6 +70,10 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'blocked_at' => 'datetime',
             'anonymised_at' => 'datetime',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_last_step' => 'integer',
         ];
     }
 
@@ -117,6 +124,11 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function hasTwoFactor(): bool
+    {
+        return $this->two_factor_confirmed_at !== null && $this->two_factor_secret !== null;
     }
 
     public function isCourier(): bool
@@ -180,6 +192,10 @@ class User extends Authenticatable
             'phone_hash' => null,
             'blocked_at' => now(),
             'anonymised_at' => now(),
+            'two_factor_secret' => null,
+            'two_factor_confirmed_at' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_last_step' => null,
         ])->save();
     }
 }

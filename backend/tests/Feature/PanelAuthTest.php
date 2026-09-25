@@ -7,7 +7,9 @@ use App\Models\AdminAudit;
 use App\Models\LoginCode;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
+use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
 /**
@@ -47,13 +49,36 @@ class PanelAuthTest extends TestCase
         return $code;
     }
 
-    private function panelToken(): string
+    /** The email step: returns the ticket and, when enrolling, the secret. */
+    private function emailStep(): array
     {
         $code = $this->codeFor(self::ADMIN);
 
         return $this->postJson('/api/auth/panel/verify-code', ['email' => self::ADMIN, 'code' => $code])
             ->assertOk()
-            ->json('token');
+            ->json();
+    }
+
+    /** The code an authenticator app would show, $offset 30-second steps from now. */
+    private function appCode(string $secret, int $offset = 0): string
+    {
+        return (new Google2FA)->oathTotp($secret, intdiv(time(), 30) + $offset);
+    }
+
+    private function secret(): string
+    {
+        return User::findByEmail(self::ADMIN)->two_factor_secret;
+    }
+
+    /** Both factors, enrolling on the way if needed. */
+    private function panelToken(int $offset = 0): string
+    {
+        $step = $this->emailStep();
+
+        return $this->postJson('/api/auth/panel/two-factor', [
+            'ticket' => $step['ticket'],
+            'code' => $this->appCode($this->secret(), $offset),
+        ])->assertOk()->json('token');
     }
 
     private function fresh(): void
@@ -92,6 +117,137 @@ class PanelAuthTest extends TestCase
         // Recorded, and marked as coming from the server's configuration.
         $audit = AdminAudit::where('action', 'user.promote')->first();
         $this->assertSame('ADMIN_EMAILS', $audit->changes['via']);
+        $this->assertSame(1, AdminAudit::where('action', 'admin.sign_in')->count());
+    }
+
+    // ------------------------------------------------------- two factor ---
+
+    public function test_the_email_code_alone_is_not_a_session(): void
+    {
+        $step = $this->emailStep();
+
+        $this->assertArrayNotHasKey('token', $step);
+        $this->assertSame(0, User::findByEmail(self::ADMIN)->tokens()->count());
+        $this->withToken($step['ticket'])->getJson('/api/admin/dashboard')->assertUnauthorized();
+    }
+
+    public function test_first_sign_in_enrols_the_app_and_hands_out_recovery_codes_once(): void
+    {
+        $step = $this->emailStep();
+
+        $this->assertSame('enroll', $step['two_factor']);
+        $this->assertMatchesRegularExpression('/^[A-Z2-7]{32}$/', $step['secret']);
+        $this->assertStringStartsWith('otpauth://totp/', $step['otpauth']);
+
+        $done = $this->postJson('/api/auth/panel/two-factor', [
+            'ticket' => $step['ticket'],
+            'code' => $this->appCode($step['secret']),
+        ])->assertOk()->json();
+
+        $this->assertCount(8, $done['recovery_codes']);
+        $this->assertTrue(User::findByEmail(self::ADMIN)->hasTwoFactor());
+
+        // Never readable again: stored hashed, and not in the next sign-in.
+        $this->assertNotContains($done['recovery_codes'][0], User::findByEmail(self::ADMIN)->two_factor_recovery_codes);
+        $this->fresh();
+        $again = $this->emailStep();
+        $this->assertSame('challenge', $again['two_factor']);
+        $this->assertArrayNotHasKey('secret', $again);
+    }
+
+    public function test_an_unfinished_enrolment_is_forgotten_by_the_next_sign_in(): void
+    {
+        $first = $this->emailStep()['secret'];
+        $this->fresh();
+        $second = $this->emailStep()['secret'];
+
+        $this->assertNotSame($first, $second);
+        $this->assertNull(User::findByEmail(self::ADMIN)->two_factor_confirmed_at);
+    }
+
+    public function test_a_wrong_app_code_is_refused_and_the_ticket_runs_out(): void
+    {
+        $this->panelToken();
+        $this->fresh();
+        // Start from a clean rate-limit budget: this test is about the
+        // ticket's own count, which must bite before the IP limit does.
+        Cache::flush();
+        $step = $this->emailStep();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/auth/panel/two-factor', ['ticket' => $step['ticket'], 'code' => '000000'])
+                ->assertStatus(422);
+        }
+
+        // Out of tries: even the right code no longer opens it.
+        $this->postJson('/api/auth/panel/two-factor', [
+            'ticket' => $step['ticket'],
+            'code' => $this->appCode($this->secret(), 1),
+        ])->assertStatus(422)->assertJsonMissingPath('token');
+    }
+
+    public function test_the_panel_door_rate_limits_per_ip(): void
+    {
+        for ($i = 0; $i < 10; $i++) {
+            $this->postJson('/api/auth/panel/request-code', ['email' => "x{$i}@example.com"]);
+        }
+
+        $this->postJson('/api/auth/panel/request-code', ['email' => self::ADMIN])->assertStatus(429);
+    }
+
+    public function test_an_app_code_works_once(): void
+    {
+        $this->panelToken();
+        $this->fresh();
+
+        $code = $this->appCode($this->secret(), 1);
+        $step = $this->emailStep();
+        $this->postJson('/api/auth/panel/two-factor', ['ticket' => $step['ticket'], 'code' => $code])->assertOk();
+
+        $this->fresh();
+        $replay = $this->emailStep();
+        $this->postJson('/api/auth/panel/two-factor', ['ticket' => $replay['ticket'], 'code' => $code])
+            ->assertStatus(422);
+    }
+
+    public function test_a_recovery_code_gets_in_once_when_the_phone_is_lost(): void
+    {
+        $step = $this->emailStep();
+        $codes = $this->postJson('/api/auth/panel/two-factor', [
+            'ticket' => $step['ticket'],
+            'code' => $this->appCode($step['secret']),
+        ])->json('recovery_codes');
+
+        $this->fresh();
+        $in = $this->emailStep();
+        $this->postJson('/api/auth/panel/two-factor', ['ticket' => $in['ticket'], 'recovery_code' => strtoupper($codes[3])])
+            ->assertOk()->assertJsonPath('token', fn ($t) => is_string($t));
+        $this->assertCount(7, User::findByEmail(self::ADMIN)->two_factor_recovery_codes);
+
+        $this->fresh();
+        $again = $this->emailStep();
+        $this->postJson('/api/auth/panel/two-factor', ['ticket' => $again['ticket'], 'recovery_code' => $codes[3]])
+            ->assertStatus(422);
+    }
+
+    public function test_a_recovery_code_cannot_stand_in_for_enrolment(): void
+    {
+        $step = $this->emailStep();
+
+        $this->postJson('/api/auth/panel/two-factor', ['ticket' => $step['ticket'], 'recovery_code' => 'abcde-fghij'])
+            ->assertStatus(422);
+        $this->assertFalse(User::findByEmail(self::ADMIN)->hasTwoFactor());
+    }
+
+    public function test_a_ticket_is_dead_once_the_address_leaves_admin_emails(): void
+    {
+        $step = $this->emailStep();
+        config(['freshness.admin.emails' => []]);
+
+        $this->postJson('/api/auth/panel/two-factor', [
+            'ticket' => $step['ticket'],
+            'code' => $this->appCode($step['secret']),
+        ])->assertStatus(422)->assertJsonMissingPath('token');
     }
 
     public function test_a_panel_session_lasts_a_working_day(): void

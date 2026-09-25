@@ -34,10 +34,20 @@ return Application::configure(basePath: dirname(__DIR__))
         // DOMAIN/server), every POST from the admin panel died with a 419
         // CSRF token mismatch. StatelessApiTest holds this.
 
-        // Behind a load balancer or CDN the client IP arrives in a header.
-        // Without this, every rate limit counts the proxy as one client and
-        // the whole system shares one budget.
-        $middleware->trustProxies(at: env('TRUSTED_PROXIES', '*'));
+        // Whose X-Forwarded-For to believe. Nobody's, unless told: on shared
+        // hosting the web server talks to the visitor directly, and trusting
+        // the header from anyone lets every visitor pick their own IP — which
+        // makes every per-IP rate limit a suggestion. This used to default to
+        // '*'. Behind Cloudflare, set TRUSTED_PROXIES=cloudflare; behind some
+        // other proxy, list its addresses. TrustedProxyTest holds it.
+        $proxies = match ($trusted = env('TRUSTED_PROXIES')) {
+            null, '' => null,
+            'cloudflare' => \App\Support\CloudflareIps::ALL,
+            default => $trusted,
+        };
+        if ($proxies !== null) {
+            $middleware->trustProxies(at: $proxies);
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

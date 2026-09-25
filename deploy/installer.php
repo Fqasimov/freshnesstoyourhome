@@ -169,7 +169,6 @@ if ($action === 'install' && !is_file($envPath) && $allOk) {
             'SESSION_SECURE_COOKIE=true',
             '',
             envLine('CORS_ALLOWED_ORIGINS', 'https://'.DOMAIN.',https://www.'.DOMAIN),
-            'TRUSTED_PROXIES=*',
             '',
             'ORDER_LEAD_DAYS=1',
             'DELIVERY_OPEN=10:00',

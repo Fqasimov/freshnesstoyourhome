@@ -65,6 +65,13 @@ tar -C "$ROOT/backend" \
   --exclude=./public/storage --exclude='./.phpunit*' --exclude='./database/*.sqlite' \
   -cf - . | tar -C "$STAGE/freshness/backend" -xf -
 cp "$ROOT/shared/catalogue.json" "$ROOT/shared/delivery.json" "$STAGE/freshness/shared/"
+# Uploaded photos are excluded above, but the rules that stop anything in that
+# folder from ever running as a script are not a photo.
+mkdir -p "$STAGE/freshness/backend/storage/app/public"
+cp "$ROOT/backend/storage/app/public/.htaccess" "$STAGE/freshness/backend/storage/app/public/.htaccess"
+# ~/freshness is outside public_html and no URL reaches it. If that ever stops
+# being true — a moved folder, a symlink — this refuses everything in it.
+printf '# Not a website. See DEPLOY.md.\nRequire all denied\n' > "$STAGE/freshness/.htaccess"
 ( cd "$STAGE/freshness/backend" && COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --no-interaction --quiet )
 # Composer falls back to git clones when it cannot download release zips, and
 # a clone brings the package's whole history — Laravel's alone is 150 MB. The
@@ -79,7 +86,12 @@ API_DIR="$STAGE/public_html/$API_FOLDER"
 mkdir -p "$API_DIR"
 cp "$ROOT/backend/public/.htaccess" "$ROOT/backend/public/favicon.ico" "$ROOT/backend/public/robots.txt" "$API_DIR/"
 cp "$ROOT/deploy/split-index.php" "$API_DIR/index.php"
-sed -e "s|__DOMAIN__|$DOMAIN|g" -e "s|__API_URL__|$API_URL|g" "$ROOT/deploy/installer.php" > "$API_DIR/install-$TOKEN.php"
+# The installer only in a first-install package (INSTALL=1); every package
+# carries the upgrade page, which runs new migrations and then deletes itself.
+if [ "${INSTALL:-0}" = "1" ]; then
+  sed -e "s|__DOMAIN__|$DOMAIN|g" -e "s|__API_URL__|$API_URL|g" "$ROOT/deploy/installer.php" > "$API_DIR/install-$TOKEN.php"
+fi
+cp "$ROOT/deploy/upgrade.php" "$API_DIR/upgrade-$TOKEN.php"
 # Empty directories Laravel needs to exist; zip drops empty ones otherwise.
 for d in storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
   mkdir -p "$STAGE/freshness/backend/$d" && touch "$STAGE/freshness/backend/$d/.keep"
@@ -90,5 +102,6 @@ rm -rf "$STAGE"
 echo
 ls -lh "$OUT"
 echo
-echo "Installer: $API_URL/install-$TOKEN.php"
+[ "${INSTALL:-0}" = "1" ] && echo "Installer: $API_URL/install-$TOKEN.php"
+echo "Database update: $API_URL/upgrade-$TOKEN.php"
 echo "$TOKEN" > "$OUT/installer-token.txt"

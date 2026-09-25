@@ -298,7 +298,8 @@ export async function respond (path, method, body) {
 
   /* auth */
   if (route === '/auth/panel/request-code') return { status: 'ok' }
-  if (route === '/auth/panel/verify-code') {
+  if (route === '/auth/panel/verify-code') return { two_factor: 'challenge', ticket: 'preview' }
+  if (route === '/auth/panel/two-factor') {
     return { token: 'preview', expires_at: iso(30), user: { data: ME } }
   }
   if (route === '/auth/logout') return { status: 'ok' }
@@ -306,6 +307,9 @@ export async function respond (path, method, body) {
 
   /* dashboard */
   if (route === '/admin/dashboard') return dashboard()
+  if (route === '/admin/audits/verify') {
+    return { intact: true, checked: db.audits.length, unchained: 0, broken_at: null, total: db.audits.length }
+  }
   if (route === '/admin/audits') {
     return { data: db.audits, total: db.audits.length, page: 1, last_page: 1 }
   }

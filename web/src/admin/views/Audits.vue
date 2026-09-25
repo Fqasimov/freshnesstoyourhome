@@ -6,13 +6,15 @@ import { complain } from '../toast'
 const rows = ref([])
 const busy = ref(true)
 const total = ref(0)
+const chain = ref(null)
 
 async function load () {
   busy.value = true
   try {
-    const body = await api('/admin/audits')
+    const [body, check] = await Promise.all([api('/admin/audits'), api('/admin/audits/verify')])
     rows.value = body.data
     total.value = body.total
+    chain.value = check
   } catch (e) {
     complain(e)
   } finally {
@@ -29,6 +31,19 @@ onMounted(load)
     Kim nəyi dəyişdi. Bu qeydlər nə redaktə olunur, nə də silinir — dəyişiklik
     tarixçəsinin dəyəri məhz bundadır.
   </p>
+
+  <!-- The count is part of the check: the chain shows an edited or removed
+       line, but not lines cut off the end — a total that goes down does. -->
+  <div v-if="chain" class="a-note" :class="chain.intact ? 'a-note--ok' : 'a-note--err'" data-chain>
+    <template v-if="chain.intact">
+      Jurnal toxunulmazdır · {{ chain.total }} qeyd yoxlanıldı.
+      <small>Journal intact — {{ chain.total }} entries checked.</small>
+    </template>
+    <template v-else>
+      <b>Diqqət: jurnal dəyişdirilib</b> (qeyd #{{ chain.broken_at }}).
+      <small>Warning: the journal was altered at entry #{{ chain.broken_at }}. Tell whoever manages the server.</small>
+    </template>
+  </div>
 
   <div v-if="busy" class="a-empty">Yüklənir…</div>
   <div v-else-if="!rows.length" class="a-empty">Hələ qeyd yoxdur.</div>

@@ -1,0 +1,16 @@
+# Uploaded photographs (served at /server/storage/). Nothing in here is ever
+# executed: every file is refused unless it is a JPEG, PNG or WebP, and those
+# are served as images, never interpreted.
+Options -Indexes
+
+<FilesMatch ".">
+    Require all denied
+</FilesMatch>
+<FilesMatch "\.(jpe?g|png|webp)$">
+    Require all granted
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Content-Security-Policy "default-src 'none'; sandbox"
+</IfModule>
