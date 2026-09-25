@@ -84,6 +84,10 @@ return [
         'token_ttl_hours' => env('ADMIN_TOKEN_TTL_HOURS', 12),
     ],
 
+    // Lets .github/workflows/deploy.yml run migrations after an FTP upload.
+    // Unset (or under 32 characters) means the endpoint does not exist.
+    'deploy_token' => env('DEPLOY_TOKEN'),
+
     'support' => [
         'phone' => env('SUPPORT_PHONE', '+994503521919'),
         'whatsapp' => env('SUPPORT_WHATSAPP', '994503521919'),

@@ -1,0 +1,113 @@
+# Test, build and upload freshnesstoyourhome.az on every push.
+#
+# The host (hostinq.az, shared cPanel) has no shell, so nothing can be built
+# there. This does on GitHub's machine what package-deploy.sh does on a
+# laptop, then syncs the result over FTPS and runs migrations through the
+# token-gated POST /api/deploy/migrate. Only changed files are sent: the
+# action keeps a record of what it uploaded (.ftp-deploy-sync-state.json) and
+# never touches anything it did not upload — .env, uploaded photos, logs.
+#
+# Off until the repository variable DEPLOY_ENABLED is "true" and these
+# secrets exist: FTP_SERVER, FTP_USERNAME, FTP_PASSWORD, DEPLOY_TOKEN.
+# See DEPLOY.md → "Automatic deploys".
+
+name: Deploy
+
+on:
+  push:
+    branches: [claude/photo-analysis-bgp25f]
+    paths-ignore: ['**.md', 'app/**']
+  workflow_dispatch:
+
+# One deploy at a time, in order: a second push waits for the first.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      DOMAIN: freshnesstoyourhome.az
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          # The host's version. composer.json pins the platform to it too.
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite, gd, intl, zip
+          tools: composer:v2
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # ---- Nothing goes up unless all of this passes ----------------------
+      - name: Backend tests
+        working-directory: backend
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          php artisan test
+
+      - name: Website build and drift check
+        working-directory: web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run check
+
+      # ---- Build exactly what the server gets -----------------------------
+      - name: Stage the home folder
+        run: STAGE_OUT="$RUNNER_TEMP/site" scripts/package-deploy.sh
+
+      # ---- Upload: backend first, so the site never calls code that is not
+      #      there yet -----------------------------------------------------
+      - name: Upload ~/freshness
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          security: loose
+          local-dir: ${{ runner.temp }}/site/freshness/
+          server-dir: freshness/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            backend/storage/logs/**
+            backend/storage/framework/**
+
+      - name: Run database migrations
+        run: |
+          curl -fsS --retry 3 --retry-delay 5 -X POST \
+            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
+            -H "Accept: application/json" \
+            "https://$DOMAIN/server/api/deploy/migrate"
+
+      - name: Upload ~/public_html
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          security: loose
+          local-dir: ${{ runner.temp }}/site/public_html/
+          server-dir: public_html/
+
+      # ---- Did it work? ----------------------------------------------------
+      - name: Smoke test the live site
+        run: |
+          curl -fsS "https://$DOMAIN/" | grep -q '<div id="app"'
+          curl -fsS "https://$DOMAIN/server/api/catalogue" | grep -q '"products"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' "https://$DOMAIN/.env")" = 403
+          echo "Live and healthy."

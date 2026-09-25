@@ -113,6 +113,9 @@ class AppServiceProvider extends ServiceProvider
                 : null,
         ])));
 
+        // A deploy calls this once. Anything more is someone guessing.
+        RateLimiter::for('deploy', fn (Request $r) => Limit::perMinute(3)->by('deploy:'.$r->ip()));
+
         // Public and cached, so it can be generous — but not unbounded, or it
         // is a free way to make the server do work.
         // Generous, because this is staff doing their job — and finite,

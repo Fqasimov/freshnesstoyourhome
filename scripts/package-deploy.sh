@@ -15,6 +15,13 @@
 # out over WhatsApp, so it is a complete shop — only the admin panel is left
 # out, since it has nothing to talk to. Updating a price means rebuilding.
 #
+#   STAGE_OUT=/some/dir scripts/package-deploy.sh
+#
+# lays the same files out unzipped in /some/dir/{freshness,public_html} — the
+# home folder as it should look — for .github/workflows/deploy.yml to sync to
+# the server over FTP. No installer or upgrade page: that deploy runs
+# migrations through POST /api/deploy/migrate instead.
+#
 # Everything the server would normally do with composer and npm is done here,
 # so the host only has to unzip. Setup (keys, tables, first admin) is the
 # one-time web installer copied into backend/public/ under a random name.
@@ -51,7 +58,7 @@ fi
 echo "==> website (API at $API_URL)"
 ( cd "$ROOT/web" && VITE_API_URL="$API_URL" npm run build >/dev/null )
 cp "$ROOT/deploy/website.htaccess" "$ROOT/web/dist/.htaccess"
-( cd "$ROOT/web/dist" && zip -qr "$OUT/website.zip" . )
+[ -z "${STAGE_OUT:-}" ] && ( cd "$ROOT/web/dist" && zip -qr "$OUT/website.zip" . )
 
 echo "==> backend (composer --no-dev)"
 mkdir -p "$STAGE/freshness/shared"
@@ -88,14 +95,23 @@ cp "$ROOT/backend/public/.htaccess" "$ROOT/backend/public/favicon.ico" "$ROOT/ba
 cp "$ROOT/deploy/split-index.php" "$API_DIR/index.php"
 # The installer only in a first-install package (INSTALL=1); every package
 # carries the upgrade page, which runs new migrations and then deletes itself.
-if [ "${INSTALL:-0}" = "1" ]; then
+if [ -n "${STAGE_OUT:-}" ]; then
+  : # deployed by CI: migrations run through the deploy hook, no pages needed
+elif [ "${INSTALL:-0}" = "1" ]; then
   sed -e "s|__DOMAIN__|$DOMAIN|g" -e "s|__API_URL__|$API_URL|g" "$ROOT/deploy/installer.php" > "$API_DIR/install-$TOKEN.php"
 fi
-cp "$ROOT/deploy/upgrade.php" "$API_DIR/upgrade-$TOKEN.php"
+[ -z "${STAGE_OUT:-}" ] && cp "$ROOT/deploy/upgrade.php" "$API_DIR/upgrade-$TOKEN.php"
 # Empty directories Laravel needs to exist; zip drops empty ones otherwise.
 for d in storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
   mkdir -p "$STAGE/freshness/backend/$d" && touch "$STAGE/freshness/backend/$d/.keep"
 done
+if [ -n "${STAGE_OUT:-}" ]; then
+  # The site's files go in beside the API's front door, as on the server.
+  cp -a "$ROOT/web/dist/." "$STAGE/public_html/"
+  rm -rf "$STAGE_OUT" && mkdir -p "$(dirname "$STAGE_OUT")" && mv "$STAGE" "$STAGE_OUT"
+  echo "Staged for upload in $STAGE_OUT"
+  exit 0
+fi
 ( cd "$STAGE" && zip -qr "$OUT/backend.zip" freshness public_html )
 rm -rf "$STAGE"
 

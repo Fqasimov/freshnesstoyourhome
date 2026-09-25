@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Admin\DeliveryZoneController;
 use App\Http\Controllers\Api\Admin\ProductController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DeployController;
 use App\Http\Controllers\Api\PanelAuthController;
 use App\Http\Controllers\Api\CatalogueController;
 use App\Http\Controllers\Api\OrderController;
@@ -45,6 +46,9 @@ Route::get('catalogue', [CatalogueController::class, 'index'])
 // arithmetic over them; it touches nothing that belongs to anybody.
 Route::post('orders/quote', [OrderController::class, 'quote'])
     ->middleware('throttle:catalogue');
+
+// Run migrations after an automated upload. Token-gated; see DeployController.
+Route::post('deploy/migrate', [DeployController::class, 'migrate'])->middleware('throttle:deploy');
 
 Route::prefix('auth')->group(function () {
     // Tightly limited: this endpoint sends mail on request, which makes it the

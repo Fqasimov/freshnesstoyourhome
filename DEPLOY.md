@@ -160,6 +160,36 @@ carries the installer). Upload and extract `backend.zip` in the home folder,
 migrations and deletes itself. Then `website.zip` into `public_html`.
 `.env`, `storage/` and the database are not in either zip, so they survive.
 
+### Automatic deploys (GitHub Actions → FTP)
+
+`.github/workflows/deploy.yml` runs on every push to the default branch:
+backend tests, website build and drift check, then `STAGE_OUT=… package-deploy.sh`
+lays out the home folder, FTP-Deploy-Action syncs `~/freshness` (only what
+changed), `POST /api/deploy/migrate` runs migrations, `~/public_html` is
+synced, and a smoke test checks the shop, the API and that `.env` is still
+403. A failing test stops it before anything is uploaded.
+
+It stays off until it is given the keys:
+
+1. cPanel → **FTP Accounts** → add `deploy@freshnesstoyourhome.az`, strong
+   password, **Directory: the home folder itself** (clear the suggested
+   `public_html/…` so the box ends at `/home/freshdcg/`). If cPanel will not
+   allow that, use the main cPanel FTP login instead.
+2. Generate a deploy token and put it in the server's `.env` as
+   `DEPLOY_TOKEN=…` (32+ characters; the endpoint does not exist otherwise).
+3. GitHub → the repository → Settings → Secrets and variables → Actions:
+   - Secrets: `FTP_SERVER` (the FTP host from cPanel → FTP Accounts →
+     Configure FTP Client), `FTP_USERNAME`, `FTP_PASSWORD`, `DEPLOY_TOKEN`
+     (the same value as in `.env`).
+   - Variables: `DEPLOY_ENABLED` = `true`.
+4. Actions → Deploy → **Run workflow** for the first run. It uploads
+   everything once (vendor/ is thousands of files — allow 15–30 minutes);
+   later runs send only what changed.
+
+Never deployed: `.env`, `storage/logs`, `storage/framework`, uploaded
+photos, the `public_html/server/storage` link — the action only removes
+files it uploaded itself. Revoking it is deleting the FTP account.
+
 **Sanctum runs stateless.** The panel and the app send a bearer token; nothing
 uses cookies. `bootstrap/app.php` therefore does not call
 `statefulApi()` at all — it once called `statefulApi(false)`, which Laravel
