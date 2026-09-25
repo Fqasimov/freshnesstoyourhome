@@ -1,5 +1,8 @@
 {
-  "cli": { "version": ">= 5.9.0", "appVersionSource": "remote" },
+  "cli": {
+    "version": ">= 5.9.0",
+    "appVersionSource": "remote"
+  },
   "build": {
     "development": {
       "developmentClient": true,
@@ -11,13 +14,13 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api-staging.freshnesstoyourhome.az"
+        "EXPO_PUBLIC_API_URL": "https://freshnesstoyourhome.az/server"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.freshnesstoyourhome.az"
+        "EXPO_PUBLIC_API_URL": "https://freshnesstoyourhome.az/server"
       }
     }
   },
