@@ -73,7 +73,14 @@ jobs:
 
       # ---- Build exactly what the server gets -----------------------------
       - name: Stage the home folder
-        run: STAGE_OUT="$RUNNER_TEMP/site" scripts/package-deploy.sh
+        run: |
+          STAGE_OUT="$RUNNER_TEMP/site" scripts/package-deploy.sh
+          # hostinq.az's FTPS server rejects zero-byte files ("tlsv1 alert
+          # decode error" on the data socket), which ends the whole upload.
+          # The empty files are placeholders and library test fixtures that
+          # nothing on the server reads, so they are left out.
+          echo "Leaving out $(find "$RUNNER_TEMP/site" -type f -empty | wc -l) empty file(s)"
+          find "$RUNNER_TEMP/site" -type f -empty -delete
 
       # ---- Upload: backend first, so the site never calls code that is not
       #      there yet -----------------------------------------------------

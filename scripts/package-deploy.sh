@@ -103,7 +103,9 @@ fi
 [ -z "${STAGE_OUT:-}" ] && cp "$ROOT/deploy/upgrade.php" "$API_DIR/upgrade-$TOKEN.php"
 # Empty directories Laravel needs to exist; zip drops empty ones otherwise.
 for d in storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
-  mkdir -p "$STAGE/freshness/backend/$d" && touch "$STAGE/freshness/backend/$d/.keep"
+  # Not empty: hostinq.az's FTPS server rejects a zero-byte upload with a TLS
+  # "decode error", which stopped the first automatic deploy.
+  mkdir -p "$STAGE/freshness/backend/$d" && printf 'keep\n' > "$STAGE/freshness/backend/$d/.keep"
 done
 if [ -n "${STAGE_OUT:-}" ]; then
   # The site's files go in beside the API's front door, as on the server.
