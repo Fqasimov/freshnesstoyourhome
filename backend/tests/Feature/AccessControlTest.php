@@ -28,7 +28,7 @@ class AccessControlTest extends TestCase
     public function test_a_customer_cannot_make_themselves_an_admin(): void
     {
         $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         foreach (['admin', 'courier'] as $role) {
             $this->patchJson('/api/me', ['name' => 'Ali', 'role' => $role])->assertOk();
@@ -49,7 +49,7 @@ class AccessControlTest extends TestCase
     public function test_a_customer_cannot_overwrite_their_own_lookup_hash(): void
     {
         $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $victim = User::factory()->create(['email' => 'victim@example.com']);
         $victimHash = $victim->fresh()->email_hash;
@@ -66,12 +66,12 @@ class AccessControlTest extends TestCase
     public function test_a_customer_cannot_read_another_customers_order(): void
     {
         [$owner, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($owner);
+        $this->signInAs($owner);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
         $orderId = Order::first()->id;
 
         $stranger = User::factory()->create();
-        Sanctum::actingAs($stranger);
+        $this->signInAs($stranger);
 
         // 404, not 403 — a 403 would confirm the order exists.
         $this->getJson("/api/orders/{$orderId}")->assertStatus(404);
@@ -81,11 +81,11 @@ class AccessControlTest extends TestCase
     public function test_a_customer_only_sees_their_own_orders_in_the_list(): void
     {
         [$owner, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($owner);
+        $this->signInAs($owner);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         $stranger = User::factory()->create();
-        Sanctum::actingAs($stranger);
+        $this->signInAs($stranger);
 
         $this->getJson('/api/orders')->assertOk()->assertJsonCount(0, 'data');
     }
@@ -95,7 +95,7 @@ class AccessControlTest extends TestCase
         [$victim, $victimAddress] = $this->customerWithAddress();
 
         $attacker = User::factory()->create();
-        Sanctum::actingAs($attacker);
+        $this->signInAs($attacker);
 
         // Ordering to an address that is not theirs would deliver a stranger's
         // goods to a stranger's door, and expose that address in the response.
@@ -110,7 +110,7 @@ class AccessControlTest extends TestCase
         [$victim, $victimAddress] = $this->customerWithAddress();
 
         $attacker = User::factory()->create();
-        Sanctum::actingAs($attacker);
+        $this->signInAs($attacker);
 
         $this->putJson("/api/addresses/{$victimAddress->id}", [
             'line' => 'Somewhere else entirely',
@@ -125,7 +125,7 @@ class AccessControlTest extends TestCase
     public function test_staff_routes_are_invisible_to_a_customer(): void
     {
         [$owner, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($owner);
+        $this->signInAs($owner);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
         $orderId = Order::first()->id;
 
@@ -137,11 +137,11 @@ class AccessControlTest extends TestCase
     public function test_staff_routes_work_for_a_courier(): void
     {
         [$owner, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($owner);
+        $this->signInAs($owner);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         $this->getJson('/api/staff/orders')->assertOk()->assertJsonCount(1, 'data');
     }
@@ -155,7 +155,7 @@ class AccessControlTest extends TestCase
             'is_default' => true,
         ]);
 
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))
             ->assertStatus(422)

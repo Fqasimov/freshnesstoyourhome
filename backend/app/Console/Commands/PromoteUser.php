@@ -7,7 +7,12 @@ use App\Support\Audit;
 use Illuminate\Console\Command;
 
 /**
- * Appoint staff.
+ * Appoint couriers.
+ *
+ * Not admins: those are named in ADMIN_EMAILS in the server's .env, and the
+ * role follows the address the first time it signs in to the panel. An admin
+ * role handed out here would open nothing, so this refuses rather than
+ * leaving somebody puzzling over why the panel still says no.
  *
  * The only way a role changes, and deliberately a console command rather than
  * a button: it requires access to the server, so an admin session that leaks
@@ -19,13 +24,19 @@ class PromoteUser extends Command
 {
     protected $signature = 'freshness:promote
                             {email : The address of an existing account}
-                            {role=admin : customer, courier or admin}';
+                            {role=courier : customer or courier (admins are set by ADMIN_EMAILS)}';
 
-    protected $description = 'Give an existing account the courier or admin role';
+    protected $description = 'Give an existing account the courier role, or take it back';
 
     public function handle(): int
     {
         $role = $this->argument('role');
+
+        if ($role === User::ROLE_ADMIN) {
+            $this->error('Admins are not appointed here. Add the address to ADMIN_EMAILS in the server\'s .env, then sign in at /cms.');
+
+            return self::FAILURE;
+        }
 
         if (! in_array($role, [User::ROLE_CUSTOMER, User::ROLE_COURIER, User::ROLE_ADMIN], true)) {
             $this->error("Unknown role [{$role}]. Use customer, courier or admin.");

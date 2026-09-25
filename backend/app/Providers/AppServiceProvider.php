@@ -101,6 +101,13 @@ class AppServiceProvider extends ServiceProvider
             Limit::perDay(40)->by($r->user()?->id ?: $r->ip()),
         ]);
 
+        // The admin panel's sign-in. One person uses it, a few times a day;
+        // anything past this is somebody else.
+        RateLimiter::for('panel-auth', fn (Request $r) => [
+            Limit::perMinute(5)->by('panel:'.$r->ip()),
+            Limit::perHour(20)->by('panel:'.$r->ip()),
+        ]);
+
         // Public and cached, so it can be generous — but not unbounded, or it
         // is a free way to make the server do work.
         // Generous, because this is staff doing their job — and finite,

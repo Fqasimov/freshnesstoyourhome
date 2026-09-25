@@ -91,7 +91,9 @@ export async function api (path, { method = 'GET', body, auth = true } = {}) {
 }
 
 export async function signIn (email, code) {
-  const data = await api('/auth/verify-code', {
+  // The panel's own sign-in: only addresses named in ADMIN_EMAILS on the
+  // server get a token here, and only its tokens open the admin routes.
+  const data = await api('/auth/panel/verify-code', {
     method: 'POST',
     auth: false,
     body: { email, code, device_name: 'admin-panel' },

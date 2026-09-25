@@ -6,7 +6,7 @@
  * cPanel account where shell access is switched off, this page does the same
  * work from a browser: it writes .env, generates the two keys, creates the
  * tables, seeds the catalogue and delivery areas, links the photo storage, and
- * promotes the first admin. Then it deletes itself.
+ * names the one admin address. Then it deletes itself.
  *
  * It is copied into backend/public/ under a random name by
  * scripts/package-deploy.sh, so its address is not guessable. It refuses to
@@ -118,10 +118,15 @@ if ($action === 'install' && !is_file($envPath) && $allOk) {
         $error = 'Could not connect to the database: '.$e->getMessage();
     }
 
+    if ($error === null && !filter_var(strtolower(trim($_POST['admin_email'] ?? '')), FILTER_VALIDATE_EMAIL)) {
+        $error = 'Enter the admin email — the one address allowed into /cms.';
+    }
+
     if ($error === null) {
         $appKey = 'base64:'.base64_encode(random_bytes(32));
         $blind = base64_encode(random_bytes(32));
         $mailUser = trim($_POST['mail_user'] ?? '');
+        $adminEmail = strtolower(trim($_POST['admin_email'] ?? ''));
 
         $env = [
             '# Written by the one-time installer. Back up APP_KEY and BLIND_INDEX_KEY',
@@ -150,6 +155,10 @@ if ($action === 'install' && !is_file($envPath) && $allOk) {
             envLine('MAIL_PASSWORD', (string) ($_POST['mail_pass'] ?? '')),
             envLine('MAIL_FROM_ADDRESS', $mailUser),
             'MAIL_FROM_NAME="Freshness To Your Home"',
+            '',
+            '# The only address allowed into /cms. Any other address typed there',
+            '# gets no code and no account. Comma-separate to add a second person.',
+            envLine('ADMIN_EMAILS', $adminEmail),
             '',
             '# No shell, so no long-running worker: mail and pushes go out inside',
             '# the request. Fine at this volume; switch to database + a cron worker',
@@ -211,16 +220,10 @@ if ($action === 'retry' && is_file($envPath) && !is_file($lockPath)) {
     }
 }
 
-// ── test mail / promote / finish ──────────────────────────────────────────
+// ── test mail / finish ────────────────────────────────────────────────────
 if ($action === 'testmail' && is_file($lockPath)) {
     [$code, $out] = artisan($base, 'freshness:mail-test', ['email' => trim($_POST['email'] ?? '')]);
     $log[] = ['cmd' => 'mail test', 'ok' => $code === 0, 'out' => $out];
-}
-$promoted = false;
-if ($action === 'promote' && is_file($lockPath)) {
-    [$code, $out] = artisan($base, 'freshness:promote', ['email' => trim($_POST['email'] ?? ''), 'role' => 'admin']);
-    $log[] = ['cmd' => 'make admin', 'ok' => $code === 0, 'out' => $out];
-    $promoted = $code === 0;
 }
 if ($action === 'finish' && is_file($lockPath)) {
     @unlink(__FILE__);
@@ -288,10 +291,14 @@ BLIND_INDEX_KEY=<?= h($keysShown['BLIND_INDEX_KEY']) ?></pre>
  </div>
  <div class="box">
   <b>Email for sign-in codes</b> <small>— an account from cPanel → Email Accounts, e.g. <code>hello@<?= h(DOMAIN) ?></code>. This is the only way anyone signs in, including you.</small>
-  <label>Email address</label><input name="mail_user" required value="hello@<?= h(DOMAIN) ?>">
+  <label>Email address</label><input name="mail_user" required value="info@<?= h(DOMAIN) ?>">
   <label>Email password</label><input name="mail_pass" type="password" required>
   <label>SMTP host</label><input name="mail_host" value="mail.<?= h(DOMAIN) ?>">
   <label>SMTP port</label><input name="mail_port" value="465">
+ </div>
+ <div class="box">
+  <b>Admin</b> <small>— the one address allowed into /cms. Anyone else who finds the page gets no code and no account. Use an inbox only you can read.</small>
+  <label>Admin email</label><input name="admin_email" type="email" required>
  </div>
  <button>Install</button> <small>Takes up to a minute — creates the tables and loads 74 products and 51 delivery areas.</small>
 </form>
@@ -305,15 +312,13 @@ BLIND_INDEX_KEY=<?= h($keysShown['BLIND_INDEX_KEY']) ?></pre>
 <?php else: ?>
 <h2>Installed ✓</h2>
 <div class="box">
- <b>Next — make yourself the admin:</b>
+ <b>Next — sign in to the panel:</b>
  <ol>
   <li>Open <a href="https://<?= h(DOMAIN) ?>/cms" target="_blank">https://<?= h(DOMAIN) ?>/cms</a> in a new tab.</li>
-  <li>Enter your email, get the code by email, sign in. It will say you are not an admin — that is expected, the account now exists.</li>
-  <li>Come back to this tab and enter the same email below.</li>
+  <li>Enter the admin email you gave above, get the code by email, sign in. No other address can.</li>
+  <li>Once you are in, come back here and remove this installer.</li>
  </ol>
- <form method="post"><input type="hidden" name="action" value="promote">
-  <label>Your email</label><input name="email" type="email" required>
-  <button>Make admin</button></form>
+ <form method="post"><input type="hidden" name="action" value="finish"><button>Finish and delete installer</button></form>
 </div>
 <div class="box">
  <b>No code arriving?</b> Send a test email first:
@@ -321,9 +326,5 @@ BLIND_INDEX_KEY=<?= h($keysShown['BLIND_INDEX_KEY']) ?></pre>
   <label>Send a test to</label><input name="email" type="email" required>
   <button>Send test</button></form>
 </div>
-<?php if ($promoted): ?>
-<div class="box"><b class="ok">You are admin.</b> Sign in again at <a href="https://<?= h(DOMAIN) ?>/cms">/cms</a>. Then remove this installer:
- <form method="post"><input type="hidden" name="action" value="finish"><button>Finish and delete installer</button></form></div>
-<?php endif; ?>
 <?php endif; ?>
 </body></html>

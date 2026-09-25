@@ -48,7 +48,7 @@ class AdminPanelTest extends TestCase
      */
     public function test_a_customer_cannot_reach_the_admin_api(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        $this->signInAs(User::factory()->create());
 
         $this->getJson('/api/admin/dashboard')->assertNotFound();
         $this->getJson('/api/admin/products')->assertNotFound();
@@ -63,7 +63,7 @@ class AdminPanelTest extends TestCase
     {
         $courier = User::factory()->create();
         $courier->promote(User::ROLE_COURIER);
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         $this->getJson('/api/staff/orders')->assertOk();
         $this->getJson('/api/admin/products')->assertNotFound();
@@ -79,7 +79,7 @@ class AdminPanelTest extends TestCase
     {
         $admin = $this->admin();
         $admin->forceFill(['blocked_at' => now()])->save();
-        Sanctum::actingAs($admin->fresh());
+        $this->signInAs($admin->fresh());
 
         // 401 from the `blocked` middleware, which runs before the role check
         // and also destroys whatever tokens the account still holds.
@@ -94,7 +94,7 @@ class AdminPanelTest extends TestCase
         // the second read, when a stale payload is served from it.
         $this->getJson('/api/catalogue')->assertOk();
 
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->patchJson('/api/admin/products/smoked-salmon', ['price_minor' => 6_150])
             ->assertOk()
@@ -108,7 +108,7 @@ class AdminPanelTest extends TestCase
 
     public function test_taking_a_product_out_of_stock_removes_it_from_the_catalogue(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->patchJson('/api/admin/products/smoked-salmon', ['in_stock' => false])->assertOk();
 
@@ -123,7 +123,7 @@ class AdminPanelTest extends TestCase
 
     public function test_a_nonsense_price_is_refused(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->patchJson('/api/admin/products/smoked-salmon', ['price_minor' => 0])
             ->assertStatus(422);
@@ -135,7 +135,7 @@ class AdminPanelTest extends TestCase
 
     public function test_a_whole_shelf_can_be_taken_out_at_once(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $ids = Product::query()->limit(3)->pluck('id')->all();
 
@@ -150,7 +150,7 @@ class AdminPanelTest extends TestCase
 
     public function test_switching_a_bundle_on_puts_it_on_the_website(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $bundle = Bundle::first();
         $this->assertFalse($bundle->is_active, 'Bundles must ship switched off.');
@@ -168,7 +168,7 @@ class AdminPanelTest extends TestCase
 
     public function test_a_bundle_discount_cannot_be_set_to_give_the_goods_away(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $bundle = Bundle::first();
 
@@ -178,7 +178,7 @@ class AdminPanelTest extends TestCase
 
     public function test_the_panel_prices_a_bundle_rather_than_trusting_the_client(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $bundle = Bundle::with('items.product')->first();
         $expected = (int) $bundle->items->sum(fn ($i) => $i->product->price_minor * $i->qty);
@@ -197,7 +197,7 @@ class AdminPanelTest extends TestCase
 
     public function test_a_delivery_fee_set_here_is_charged_on_the_next_basket(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         // Deliberately not the seeded fee: a patch that sets a value to what
         // it already was proves nothing.
@@ -214,7 +214,7 @@ class AdminPanelTest extends TestCase
     public function test_the_customer_list_does_not_hand_over_every_address(): void
     {
         $customer = User::factory()->create(['email' => 'someone@example.com']);
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $row = collect($this->getJson('/api/admin/customers')->json('data'))
             ->firstWhere('id', $customer->id);
@@ -227,7 +227,7 @@ class AdminPanelTest extends TestCase
     public function test_looking_at_one_customer_in_full_is_recorded(): void
     {
         $customer = User::factory()->create(['email' => 'someone@example.com']);
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->getJson("/api/admin/customers/{$customer->id}")
             ->assertOk()
@@ -248,7 +248,9 @@ class AdminPanelTest extends TestCase
         // acting-as helper replaces the guard for the rest of the test, so the
         // revoked token would keep "working" and this test would pass without
         // testing anything.
-        $adminToken = $this->admin()->createToken('panel')->plainTextToken;
+        $admin = $this->admin();
+        config(['freshness.admin.emails' => [$admin->email]]);
+        $adminToken = $admin->createToken('panel', ['admin'])->plainTextToken;
 
         $this->withHeader('Authorization', "Bearer {$adminToken}")
             ->postJson("/api/admin/customers/{$customer->id}/block", ['blocked' => true])
@@ -274,7 +276,7 @@ class AdminPanelTest extends TestCase
         $other = User::factory()->create();
         $other->promote(User::ROLE_COURIER);
 
-        Sanctum::actingAs($admin);
+        $this->signInAs($admin);
 
         $this->postJson("/api/admin/customers/{$admin->id}/block", ['blocked' => true])->assertStatus(422);
         $this->postJson("/api/admin/customers/{$other->id}/block", ['blocked' => true])->assertStatus(422);
@@ -289,7 +291,7 @@ class AdminPanelTest extends TestCase
     {
         $admin = $this->admin();
         $customer = User::factory()->create();
-        Sanctum::actingAs($admin);
+        $this->signInAs($admin);
 
         foreach ([
             ["/api/admin/customers/{$customer->id}/block", ['blocked' => false, 'role' => 'admin']],
@@ -314,7 +316,7 @@ class AdminPanelTest extends TestCase
     public function test_every_edit_records_who_made_it_and_what_moved(): void
     {
         $admin = $this->admin();
-        Sanctum::actingAs($admin);
+        $this->signInAs($admin);
 
         $before = Product::find('smoked-salmon')->price_minor;
         $this->patchJson('/api/admin/products/smoked-salmon', ['price_minor' => 4_242])->assertOk();
@@ -330,7 +332,7 @@ class AdminPanelTest extends TestCase
 
     public function test_an_edit_that_changes_nothing_writes_no_audit_line(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $price = Product::find('smoked-salmon')->price_minor;
         $this->patchJson('/api/admin/products/smoked-salmon', ['price_minor' => $price])->assertOk();
@@ -340,7 +342,7 @@ class AdminPanelTest extends TestCase
 
     public function test_the_audit_trail_is_read_only(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
         $this->patchJson('/api/admin/products/smoked-salmon', ['price_minor' => 4_242])->assertOk();
 
         $id = AdminAudit::latest('id')->first()->id;
@@ -362,7 +364,7 @@ class AdminPanelTest extends TestCase
 
     public function test_the_dashboard_counts_what_the_shop_asks_in_the_morning(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         Product::query()->limit(2)->update(['in_stock' => false]);
 

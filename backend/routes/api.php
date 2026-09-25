@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Admin\DeliveryZoneController;
 use App\Http\Controllers\Api\Admin\ProductController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PanelAuthController;
 use App\Http\Controllers\Api\CatalogueController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProfileController;
@@ -56,6 +57,14 @@ Route::prefix('auth')->group(function () {
     // different attacks with different shapes.
     Route::post('verify-code', [AuthController::class, 'verifyCode'])
         ->middleware('throttle:otp-verify');
+
+    // The admin panel's own door. Only addresses in ADMIN_EMAILS get a code
+    // or a token here, and the token it issues is the only kind the admin
+    // routes accept. Tighter limits than the shop's: one person uses this.
+    Route::post('panel/request-code', [PanelAuthController::class, 'requestCode'])
+        ->middleware(['throttle:otp-request', 'throttle:panel-auth']);
+    Route::post('panel/verify-code', [PanelAuthController::class, 'verifyCode'])
+        ->middleware(['throttle:otp-verify', 'throttle:panel-auth']);
 });
 
 // ------------------------------------------------------------- signed in ---
@@ -106,9 +115,12 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:courier,admin'])
 | and records weights, and has no business editing the price list.
 |
 | Two things are deliberately missing and should stay missing. There is no
-| route that changes a user's role — staff are appointed by a console command
-| on the server, so a stolen admin session cannot mint a second admin that
-| outlives it. And there is no route that deletes an audit row.
+| route that changes a user's role — admins are named in ADMIN_EMAILS and
+| couriers appointed by a console command, both on the server, so a stolen
+| admin session cannot mint a second admin that outlives it. And there is no
+| route that deletes an audit row.
+|
+| `role:admin` also wants a token from auth/panel/verify-code; see AdminAccess.
 |
 | Writes are rate limited as a blast radius control rather than as abuse
 | prevention: these callers are trusted, and a loop that empties the shelves

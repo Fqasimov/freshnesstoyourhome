@@ -297,8 +297,8 @@ export async function respond (path, method, body) {
   const seg = route.split('/').filter(Boolean)
 
   /* auth */
-  if (route === '/auth/request-code') return { status: 'ok' }
-  if (route === '/auth/verify-code') {
+  if (route === '/auth/panel/request-code') return { status: 'ok' }
+  if (route === '/auth/panel/verify-code') {
     return { token: 'preview', expires_at: iso(30), user: { data: ME } }
   }
   if (route === '/auth/logout') return { status: 'ok' }

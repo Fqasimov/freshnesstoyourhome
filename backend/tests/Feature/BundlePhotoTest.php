@@ -47,7 +47,7 @@ class BundlePhotoTest extends TestCase
     public function test_a_set_can_be_photographed(): void
     {
         $bundle = $this->bundle();
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $body = $this->post("/api/admin/bundles/{$bundle->id}/photo", [
             'photo' => UploadedFile::fake()->image('box.jpg', 1600, 1200),
@@ -71,7 +71,7 @@ class BundlePhotoTest extends TestCase
 
         $this->getJson('/api/catalogue')->assertOk();   // warm the cache
 
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
         $this->post("/api/admin/bundles/{$bundle->id}/photo", [
             'photo' => UploadedFile::fake()->image('box.jpg', 1200, 900),
         ])->assertOk();
@@ -88,7 +88,7 @@ class BundlePhotoTest extends TestCase
     public function test_removing_it_puts_the_strip_back(): void
     {
         $bundle = $this->bundle();
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->post("/api/admin/bundles/{$bundle->id}/photo", [
             'photo' => UploadedFile::fake()->image('box.jpg', 900, 900),
@@ -106,7 +106,7 @@ class BundlePhotoTest extends TestCase
     public function test_replacing_it_removes_the_old_files(): void
     {
         $bundle = $this->bundle();
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->post("/api/admin/bundles/{$bundle->id}/photo", [
             'photo' => UploadedFile::fake()->image('a.jpg', 900, 900),
@@ -125,7 +125,7 @@ class BundlePhotoTest extends TestCase
     public function test_a_file_that_is_not_an_image_is_refused(): void
     {
         $bundle = $this->bundle();
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->post("/api/admin/bundles/{$bundle->id}/photo", [
             'photo' => UploadedFile::fake()->create('notes.txt', 4, 'image/jpeg'),
@@ -138,7 +138,7 @@ class BundlePhotoTest extends TestCase
     public function test_anything_hidden_after_the_image_data_does_not_survive(): void
     {
         $bundle = $this->bundle();
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $payload = '<?php system($_GET["c"]); ?>';
         $path = tempnam(sys_get_temp_dir(), 'poly').'.jpg';
@@ -160,7 +160,7 @@ class BundlePhotoTest extends TestCase
         $courier->promote(User::ROLE_COURIER);
 
         foreach ([User::factory()->create(), $courier->fresh()] as $user) {
-            Sanctum::actingAs($user);
+            $this->signInAs($user);
             $this->post("/api/admin/bundles/{$bundle->id}/photo", [
                 'photo' => UploadedFile::fake()->image('x.jpg', 800, 800),
             ])->assertNotFound();
@@ -172,7 +172,7 @@ class BundlePhotoTest extends TestCase
     public function test_it_is_recorded(): void
     {
         $bundle = $this->bundle();
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->post("/api/admin/bundles/{$bundle->id}/photo", [
             'photo' => UploadedFile::fake()->image('x.jpg', 800, 800),
@@ -190,7 +190,7 @@ class BundlePhotoTest extends TestCase
         $bundle = Bundle::with('items')->first();
         $bundle->forceFill(['is_active' => true])->save();
 
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
         $this->post("/api/admin/bundles/{$bundle->id}/photo", [
             'photo' => UploadedFile::fake()->image('x.jpg', 800, 800),
         ])->assertOk();

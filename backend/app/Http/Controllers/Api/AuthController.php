@@ -61,9 +61,11 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // 'customer', never '*': a wildcard token would satisfy the admin
+        // check too. Admin tokens come only from PanelAuthController.
         $token = $user->createToken(
             $request->string('device_name', 'app')->toString(),
-            ['*'],
+            ['customer'],
             now()->addDays((int) config('freshness.auth.token_ttl_days')),
         );
 

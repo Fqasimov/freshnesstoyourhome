@@ -7,6 +7,7 @@ use App\Models\User;
 use Database\Seeders\CatalogueSeeder;
 use Database\Seeders\DeliveryZoneSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Laravel\Sanctum\Sanctum;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -31,6 +32,25 @@ abstract class TestCase extends BaseTestCase
     {
         $this->seed(CatalogueSeeder::class);
         $this->seed(DeliveryZoneSeeder::class);
+    }
+
+    /**
+     * Act as $user holding the token the real sign-in would have given them.
+     *
+     * An admin gets what the panel's sign-in issues — an `admin` token, with
+     * the address named in ADMIN_EMAILS. Everyone else gets what the shop's
+     * sign-in issues. Tests that need a mismatch (an admin holding a shop
+     * token, say) call Sanctum::actingAs directly.
+     */
+    protected function signInAs(User $user): User
+    {
+        if ($user->isAdmin()) {
+            config(['freshness.admin.emails' => [...config('freshness.admin.emails', []), $user->email]]);
+
+            return Sanctum::actingAs($user, ['admin']);
+        }
+
+        return Sanctum::actingAs($user, ['customer']);
     }
 
     protected function customerWithAddress(array $attributes = []): array

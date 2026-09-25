@@ -28,7 +28,7 @@ class PricingAuthorityTest extends TestCase
     public function test_prices_sent_by_the_client_are_ignored(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $payload = $this->orderPayload($address, ['smoked-salmon' => 1]);
 
@@ -65,7 +65,7 @@ class PricingAuthorityTest extends TestCase
     public function test_an_inactive_product_cannot_be_ordered(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         Product::find('smoked-salmon')->update(['is_active' => false]);
 
@@ -79,7 +79,7 @@ class PricingAuthorityTest extends TestCase
     public function test_an_out_of_stock_product_cannot_be_ordered(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         Product::find('smoked-salmon')->update(['in_stock' => false]);
 
@@ -92,7 +92,7 @@ class PricingAuthorityTest extends TestCase
     public function test_a_later_price_change_does_not_rewrite_a_past_order(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))
             ->assertCreated();
@@ -109,7 +109,7 @@ class PricingAuthorityTest extends TestCase
     public function test_fractional_quantities_are_refused_for_goods_sold_by_the_piece(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $piece = Product::where('unit_kind', '!=', 'kg')->firstOrFail();
 
@@ -121,7 +121,7 @@ class PricingAuthorityTest extends TestCase
     public function test_the_same_product_cannot_be_sent_as_two_lines(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $payload = $this->orderPayload($address, ['smoked-salmon' => 1]);
         $payload['lines'][] = ['product_id' => 'smoked-salmon', 'qty' => 1];
@@ -181,7 +181,7 @@ class PricingAuthorityTest extends TestCase
     public function test_a_quote_matches_what_the_order_is_actually_charged(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $lines = [['product_id' => 'smoked-salmon', 'qty' => 1.234]];
 

@@ -78,6 +78,9 @@ class DevUser extends Command
         $this->line('  email   '.$email);
         $this->line('  code    <options=bold>'.$code.'</>');
         $this->line('  role    '.$user->fresh()->role);
+        if ($role === User::ROLE_ADMIN && ! \App\Support\AdminAccess::isNamed($email)) {
+            $this->warn('  The panel will still refuse this address until it is in ADMIN_EMAILS in .env.');
+        }
         $this->line('  name    '.$user->name);
         $this->line('  phone   '.$user->phone);
         $this->newLine();

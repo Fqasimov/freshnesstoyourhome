@@ -38,7 +38,7 @@ class PushNotificationTest extends TestCase
     public function test_a_device_can_register_for_updates(): void
     {
         $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $this->postJson('/api/push-tokens', [
             'token' => self::TOKEN,
@@ -52,7 +52,7 @@ class PushNotificationTest extends TestCase
     public function test_registering_twice_does_not_duplicate_the_device(): void
     {
         $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         // The app calls this on every launch, because the OS can reissue a
         // token at any time.
@@ -64,7 +64,7 @@ class PushNotificationTest extends TestCase
 
     public function test_a_malformed_token_is_refused(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        $this->signInAs(User::factory()->create());
 
         foreach (['not-a-token', 'ExponentPushToken[]', '<script>alert(1)</script>', ''] as $bad) {
             $this->postJson('/api/push-tokens', ['token' => $bad])
@@ -82,11 +82,11 @@ class PushNotificationTest extends TestCase
     public function test_signing_in_on_a_used_device_moves_the_token(): void
     {
         $first = User::factory()->create();
-        Sanctum::actingAs($first);
+        $this->signInAs($first);
         $this->postJson('/api/push-tokens', ['token' => self::TOKEN])->assertCreated();
 
         $second = User::factory()->create();
-        Sanctum::actingAs($second);
+        $this->signInAs($second);
         $this->postJson('/api/push-tokens', ['token' => self::TOKEN])->assertCreated();
 
         $this->assertSame(0, $first->pushTokens()->count());
@@ -99,7 +99,7 @@ class PushNotificationTest extends TestCase
         $victim = User::factory()->create();
         $victim->pushTokens()->create(['token' => self::TOKEN]);
 
-        Sanctum::actingAs(User::factory()->create());
+        $this->signInAs(User::factory()->create());
         $this->deleteJson('/api/push-tokens', ['token' => self::TOKEN])->assertOk();
 
         $this->assertSame(1, $victim->pushTokens()->count());
@@ -127,12 +127,12 @@ class PushNotificationTest extends TestCase
         Queue::fake();
 
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         $order = Order::latest('id')->first();
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => 'confirmed'])->assertOk();
 
@@ -145,12 +145,12 @@ class PushNotificationTest extends TestCase
         Queue::fake();
 
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         $order = Order::with('items')->latest('id')->first();
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         $this->postJson("/api/staff/orders/{$order->id}/weights", [
             'weights' => [(string) $order->items->first()->id => 1.2],
@@ -171,7 +171,7 @@ class PushNotificationTest extends TestCase
         $this->expoOk();
 
         [$user, $address] = $this->customerWithAddress(['name' => 'Leyla Əliyeva']);
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         $order = Order::latest('id')->first();
@@ -196,7 +196,7 @@ class PushNotificationTest extends TestCase
         Http::fake();
 
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         $order = Order::latest('id')->first();
@@ -221,7 +221,7 @@ class PushNotificationTest extends TestCase
             $this->expoOk();
 
             [$user, $address] = $this->customerWithAddress(['locale' => $locale]);
-            Sanctum::actingAs($user);
+            $this->signInAs($user);
             $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
             $order = Order::latest('id')->first();
@@ -238,7 +238,7 @@ class PushNotificationTest extends TestCase
         $this->expoOk();
 
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         $order = Order::with('items')->latest('id')->first();
@@ -271,7 +271,7 @@ class PushNotificationTest extends TestCase
         ]);
 
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         $order = Order::latest('id')->first();
@@ -289,14 +289,14 @@ class PushNotificationTest extends TestCase
         Http::fake(['exp.host/*' => Http::response('gateway timeout', 504)]);
 
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         $order = Order::latest('id')->first();
         $user->pushTokens()->create(['token' => self::TOKEN]);
 
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => 'confirmed'])->assertOk();
 
@@ -311,7 +311,7 @@ class PushNotificationTest extends TestCase
         Http::fake();
 
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         (new SendOrderPush(Order::latest('id')->first()->id, 'confirmed'))

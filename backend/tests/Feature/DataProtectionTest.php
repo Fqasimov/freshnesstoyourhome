@@ -63,7 +63,7 @@ class DataProtectionTest extends TestCase
     public function test_a_map_link_has_to_be_a_google_maps_link(): void
     {
         [$user] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $body = [
             'line' => 'Nizami küçəsi 22, mənzil 3',
@@ -98,7 +98,7 @@ class DataProtectionTest extends TestCase
     public function test_a_map_link_is_unreadable_in_the_database(): void
     {
         [$user] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $link = 'https://maps.app.goo.gl/SecretDoorstep';
 
@@ -118,7 +118,7 @@ class DataProtectionTest extends TestCase
     public function test_the_map_link_reaches_the_order_and_is_encrypted_there(): void
     {
         [$user] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $link = 'https://maps.app.goo.gl/CourierNeedsThis';
 
@@ -145,7 +145,7 @@ class DataProtectionTest extends TestCase
     public function test_the_address_snapshot_on_an_order_is_also_encrypted(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
@@ -158,7 +158,7 @@ class DataProtectionTest extends TestCase
     public function test_the_api_never_returns_a_lookup_hash_or_a_role(): void
     {
         $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $body = $this->getJson('/api/me')->assertOk()->json('data');
 
@@ -171,7 +171,7 @@ class DataProtectionTest extends TestCase
     public function test_deleting_an_account_destroys_the_personal_data(): void
     {
         [$user, $address] = $this->customerWithAddress(['name' => 'Rəşad', 'email' => 'rashad@example.com']);
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
@@ -196,7 +196,7 @@ class DataProtectionTest extends TestCase
     public function test_deleting_an_account_keeps_the_financial_record(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
         $total = Order::first()->total_minor;
@@ -213,7 +213,7 @@ class DataProtectionTest extends TestCase
     public function test_an_account_with_an_order_in_flight_cannot_be_deleted(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
@@ -226,7 +226,7 @@ class DataProtectionTest extends TestCase
     public function test_a_deleted_account_cannot_sign_back_in_with_its_old_token(): void
     {
         $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $user->anonymise();
 
         $this->getJson('/api/me')->assertStatus(401);

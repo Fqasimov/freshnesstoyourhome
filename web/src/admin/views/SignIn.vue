@@ -16,7 +16,7 @@ async function requestCode () {
   busy.value = true
   error.value = ''
   try {
-    await api('/auth/request-code', {
+    await api('/auth/panel/request-code', {
       method: 'POST',
       auth: false,
       body: { email: email.value.trim(), locale: 'az' },
@@ -25,9 +25,9 @@ async function requestCode () {
     await nextTick()
     codeBox.value?.focus()
   } catch (e) {
-    // The endpoint answers the same way whether or not the address exists, so
-    // there is nothing here to translate into "no such account" — and nothing
-    // an attacker can learn by watching this screen.
+    // The endpoint answers the same way for the admin's address and for any
+    // other, so there is nothing here to translate into "not an admin" — and
+    // nothing an attacker can learn by watching this screen.
     error.value = e.message
   } finally {
     busy.value = false
@@ -79,7 +79,8 @@ async function verify () {
 
       <form v-else @submit.prevent="verify">
         <div class="a-note a-note--ok">
-          Kod {{ email }} ünvanına göndərildi.
+          {{ email }} bu panelə icazəli ünvandırsa, kod ora göndərildi.
+          <br><small>If this address may use the panel, a code is on its way.</small>
         </div>
         <div class="a-field">
           <label for="cd">Təsdiq kodu</label>

@@ -44,7 +44,7 @@ class ProductPhotoTest extends TestCase
 
     public function test_an_upload_is_stored_with_a_thumbnail(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $body = $this->post('/api/admin/products/smoked-salmon/photo', [
             'photo' => UploadedFile::fake()->image('fish.jpg', 1800, 1200),
@@ -62,7 +62,7 @@ class ProductPhotoTest extends TestCase
     /** The name the client chose is never the name on disk. */
     public function test_the_uploaded_filename_is_not_used(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->post('/api/admin/products/smoked-salmon/photo', [
             'photo' => UploadedFile::fake()->image('../../../etc/passwd.jpg', 900, 900),
@@ -85,7 +85,7 @@ class ProductPhotoTest extends TestCase
      */
     public function test_anything_hidden_after_the_image_data_does_not_survive(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $payload = '<?php system($_GET["c"]); ?>';
         $path = tempnam(sys_get_temp_dir(), 'poly').'.jpg';
@@ -106,7 +106,7 @@ class ProductPhotoTest extends TestCase
 
     public function test_a_file_that_is_not_an_image_is_refused(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         foreach ([
             UploadedFile::fake()->create('invoice.pdf', 40, 'application/pdf'),
@@ -122,7 +122,7 @@ class ProductPhotoTest extends TestCase
 
     public function test_an_oversized_file_is_refused(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->post('/api/admin/products/smoked-salmon/photo', [
             'photo' => UploadedFile::fake()->create('huge.jpg', 9_000, 'image/jpeg'),
@@ -132,7 +132,7 @@ class ProductPhotoTest extends TestCase
     /** The photograph is resized rather than served at whatever size it arrived. */
     public function test_a_large_photograph_is_scaled_down(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->post('/api/admin/products/smoked-salmon/photo', [
             'photo' => UploadedFile::fake()->image('big.jpg', 4000, 3000),
@@ -155,7 +155,7 @@ class ProductPhotoTest extends TestCase
 
     public function test_replacing_a_photograph_removes_the_old_files(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->post('/api/admin/products/smoked-salmon/photo', [
             'photo' => UploadedFile::fake()->image('one.jpg', 900, 900),
@@ -175,7 +175,7 @@ class ProductPhotoTest extends TestCase
 
     public function test_removing_a_photograph_falls_back_to_the_bundled_one(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->post('/api/admin/products/smoked-salmon/photo', [
             'photo' => UploadedFile::fake()->image('x.jpg', 900, 900),
@@ -197,7 +197,7 @@ class ProductPhotoTest extends TestCase
     {
         $this->getJson('/api/catalogue')->assertOk();   // warm the cache first
 
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
         $this->post('/api/admin/products/smoked-salmon/photo', [
             'photo' => UploadedFile::fake()->image('x.jpg', 900, 900),
         ])->assertOk();
@@ -219,7 +219,7 @@ class ProductPhotoTest extends TestCase
         $courier->promote(User::ROLE_COURIER);
 
         foreach ([User::factory()->create(), $courier->fresh()] as $user) {
-            Sanctum::actingAs($user);
+            $this->signInAs($user);
             $this->post('/api/admin/products/smoked-salmon/photo', [
                 'photo' => UploadedFile::fake()->image('x.jpg', 900, 900),
             ])->assertNotFound();
@@ -230,7 +230,7 @@ class ProductPhotoTest extends TestCase
 
     public function test_an_upload_is_recorded(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->post('/api/admin/products/smoked-salmon/photo', [
             'photo' => UploadedFile::fake()->image('x.jpg', 900, 900),
@@ -245,7 +245,7 @@ class ProductPhotoTest extends TestCase
     /** A path cannot be pointed somewhere by hand. */
     public function test_the_stored_path_cannot_be_set_through_the_edit_endpoint(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->patchJson('/api/admin/products/smoked-salmon', [
             'image_file' => 'products/../../../.env',

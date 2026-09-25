@@ -30,7 +30,7 @@ class WeighedOrderTest extends TestCase
     private function placeOrder(array $lines): Order
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $this->postJson('/api/orders', $this->orderPayload($address, $lines))->assertCreated();
 
@@ -57,7 +57,7 @@ class WeighedOrderTest extends TestCase
     public function test_the_customer_is_shown_a_ceiling_as_well_as_an_estimate(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $quote = $this->postJson('/api/orders/quote', [
             'lines' => [['product_id' => 'smoked-salmon', 'qty' => 1]],
@@ -84,7 +84,7 @@ class WeighedOrderTest extends TestCase
         $unit = $item->unit_price_minor;
 
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         // The scales said 1.180 kg, not the 1.000 kg estimated.
         $this->postJson("/api/staff/orders/{$order->id}/weights", [
@@ -112,7 +112,7 @@ class WeighedOrderTest extends TestCase
         Product::find('smoked-salmon')->update(['price_minor' => 99_000]);
 
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         $this->postJson("/api/staff/orders/{$order->id}/weights", [
             'weights' => [(string) $item->id => 1.0],
@@ -131,7 +131,7 @@ class WeighedOrderTest extends TestCase
         $pieceItem = $order->items->firstWhere('product_id', $piece->id);
 
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         // The courier reports only the weighed line.
         $this->postJson("/api/staff/orders/{$order->id}/weights", [
@@ -163,7 +163,7 @@ class WeighedOrderTest extends TestCase
         $item = $order->items->first();
 
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         $this->postJson("/api/staff/orders/{$order->id}/weights", [
             'weights' => [(string) $item->id => 0],
@@ -180,7 +180,7 @@ class WeighedOrderTest extends TestCase
         $item = $order->items->first();
 
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         foreach (['confirmed', 'preparing', 'out_for_delivery', 'delivered'] as $status) {
             $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => $status])->assertOk();

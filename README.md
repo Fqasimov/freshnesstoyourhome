@@ -87,18 +87,11 @@ of `backend/storage/logs/laravel.log`.
 
 ### The admin panel
 
-```bash
-php artisan freshness:promote you@example.com admin
-```
-
-Then open `/admin.html` in development, or `/cms` on a real build, and sign in
-with the same email code as a customer would. The account has to exist
-first — sign in once on the site or in the app, then promote it.
-
-`freshness:promote` is a console command rather than a button on purpose, and
-should stay one: it needs access to the server, so an admin session that leaks
-cannot mint a second admin that outlives revoking the first. There is no HTTP
-route anywhere that changes a role, and a test asserts that none has appeared.
+Add your address to `ADMIN_EMAILS` in `backend/.env`, then open `/admin.html`
+in development, or `/cms` on a real build, and sign in with an emailed code.
+No other address can: the panel's sign-in sends nothing to an address that is
+not on that line, and only its tokens open the admin routes. There is no HTTP
+route that changes who is on it. See DEPLOY.md.
 
 ## Tests
 

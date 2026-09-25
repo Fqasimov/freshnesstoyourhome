@@ -198,7 +198,7 @@ class AuthSecurityTest extends TestCase
     public function test_a_blocked_account_cannot_use_a_token_issued_earlier(): void
     {
         $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $this->getJson('/api/me')->assertOk();
 

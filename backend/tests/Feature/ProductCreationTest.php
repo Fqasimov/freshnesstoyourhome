@@ -55,7 +55,7 @@ class ProductCreationTest extends TestCase
 
     public function test_it_creates_a_product_and_puts_it_on_sale(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->postJson('/api/admin/products', $this->payload())
             ->assertCreated()
@@ -69,7 +69,7 @@ class ProductCreationTest extends TestCase
 
     public function test_the_id_has_to_be_a_slug(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $before = Product::count();
 
@@ -83,7 +83,7 @@ class ProductCreationTest extends TestCase
 
     public function test_it_refuses_an_id_that_is_already_taken(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->postJson('/api/admin/products', $this->payload(['id' => 'smoked-salmon']))
             ->assertStatus(422);
@@ -91,7 +91,7 @@ class ProductCreationTest extends TestCase
 
     public function test_a_product_needs_a_name_in_azerbaijani(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $body = $this->payload();
         unset($body['translations']['az']);
@@ -101,7 +101,7 @@ class ProductCreationTest extends TestCase
 
     public function test_it_refuses_a_category_that_does_not_exist(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->postJson('/api/admin/products', $this->payload(['category_id' => 'sweets']))
             ->assertStatus(422);
@@ -110,7 +110,7 @@ class ProductCreationTest extends TestCase
     /** A new product has no picture in anybody's bundle, so it needs the upload. */
     public function test_a_new_product_carries_no_bundled_picture_and_can_be_photographed(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
 
         $this->postJson('/api/admin/products', $this->payload())
             ->assertCreated()
@@ -130,7 +130,7 @@ class ProductCreationTest extends TestCase
 
     public function test_a_customer_cannot_add_a_product(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        $this->signInAs(User::factory()->create());
 
         $before = Product::count();
 
@@ -140,7 +140,7 @@ class ProductCreationTest extends TestCase
 
     public function test_creating_a_product_is_recorded(): void
     {
-        Sanctum::actingAs($this->admin());
+        $this->signInAs($this->admin());
         $this->postJson('/api/admin/products', $this->payload())->assertCreated();
 
         $this->assertDatabaseHas('admin_audits', [

@@ -119,7 +119,7 @@ That builds two zips in `deploy-out/`:
 The installer (`deploy/installer.php`) does in a browser what `DEV.md` does
 in a terminal: checks PHP and extensions, tests the database (MySQL/MariaDB or
 PostgreSQL — whichever the cPanel account offers), writes `.env`
-with fresh keys, migrates, seeds, links storage, and promotes the first admin.
+with fresh keys and the one admin address, migrates, seeds and links storage.
 It will not overwrite an existing `.env`, stops working 48 hours after
 install, and deletes itself when told to.
 
@@ -197,14 +197,29 @@ to be on **persistent** storage — a container filesystem that resets on deploy
 takes the shop's product photography with it — and it belongs in the backup
 alongside the database, because the database only holds the filenames.
 
-Appointing the first admin is a console command on the server:
+**Who gets in is one line in the server's `.env`:**
 
-```bash
-php artisan freshness:promote you@example.com admin
+```
+ADMIN_EMAILS=info@freshnesstoyourhome.az
 ```
 
-The account has to exist first — sign in once as a customer, then promote. This
-is deliberately not a button anywhere.
+The installer asks for it. Only an address on that line gets a code at
+`/cms`; any other address typed there gets the same polite answer and nothing
+else — no mail, no account, no row. Changing the line needs the server's
+files, so a leaked panel session cannot add a second admin. Comma-separate to
+add a person; delete an address and that person is out on their next click.
+
+Getting in takes all three of: the address on that line, a code from its
+inbox, and a token from the panel's own sign-in (`/api/auth/panel/*`). The
+shop's sign-in hands out tokens that open the shop and nothing else, so the
+admin's phone, signed in to the shop, is not a way into the panel. A panel
+session lasts 12 hours (`ADMIN_TOKEN_TTL_HOURS`); a shop session 60 days.
+`AdminAccess` holds the rule and `PanelAuthTest` holds it in place.
+
+Because the only way in is a code sent to that inbox, **the inbox is the
+key**: give it a strong password of its own and two-factor sign-in.
+
+`freshness:promote` still appoints couriers, and refuses to make admins.
 
 ## Infrastructure
 

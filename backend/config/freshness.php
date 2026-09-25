@@ -61,6 +61,29 @@ return [
         ],
     ],
 
+    /**
+     * Who may open the admin panel.
+     *
+     * Named here, in the server's .env, and nowhere else. Signing in to /cms
+     * with any other address sends nothing and creates nothing, so the panel
+     * is not a second way to register. Changing this list needs access to
+     * the server's files — the same bar as appointing staff always had, so a
+     * leaked panel session still cannot make anybody else an admin.
+     *
+     * Empty means nobody: the panel fails closed.
+     */
+    'admin' => [
+        'emails' => array_values(array_filter(array_map(
+            fn (string $e) => strtolower(trim($e)),
+            explode(',', (string) env('ADMIN_EMAILS', '')),
+        ))),
+
+        // A panel session lasts a working day, not the sixty days a customer's
+        // phone keeps its token. A forgotten tab on a shared computer closes
+        // itself overnight.
+        'token_ttl_hours' => env('ADMIN_TOKEN_TTL_HOURS', 12),
+    ],
+
     'support' => [
         'phone' => env('SUPPORT_PHONE', '+994503521919'),
         'whatsapp' => env('SUPPORT_WHATSAPP', '994503521919'),

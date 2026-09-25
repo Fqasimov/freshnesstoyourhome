@@ -22,7 +22,7 @@ class OrderLifecycleTest extends TestCase
     private function placeOrder(): array
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $this->postJson('/api/orders', $this->orderPayload($address, ['smoked-salmon' => 1]))->assertCreated();
 
         // latest(), not first(): this helper is called repeatedly and each
@@ -35,7 +35,7 @@ class OrderLifecycleTest extends TestCase
         [$user, $order] = $this->placeOrder();
 
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         foreach (['confirmed', 'preparing', 'out_for_delivery', 'delivered'] as $status) {
             $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => $status])->assertOk();
@@ -49,7 +49,7 @@ class OrderLifecycleTest extends TestCase
     {
         [$user, $order] = $this->placeOrder();
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         foreach (['confirmed', 'preparing', 'out_for_delivery', 'delivered'] as $status) {
             $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => $status])->assertOk();
@@ -67,7 +67,7 @@ class OrderLifecycleTest extends TestCase
     {
         [$user, $order] = $this->placeOrder();
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
 
         // placed -> delivered would mean nobody prepared or carried it.
         $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => 'delivered'])
@@ -91,12 +91,12 @@ class OrderLifecycleTest extends TestCase
         [$user, $order] = $this->placeOrder();
 
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
         foreach (['confirmed', 'preparing', 'out_for_delivery'] as $status) {
             $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => $status])->assertOk();
         }
 
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
         $this->postJson("/api/orders/{$order->id}/cancel")->assertStatus(422);
 
         $this->assertSame('out_for_delivery', $order->fresh()->status);
@@ -107,7 +107,7 @@ class OrderLifecycleTest extends TestCase
         [$user, $order] = $this->placeOrder();
 
         $courier = User::factory()->courier()->create();
-        Sanctum::actingAs($courier->fresh());
+        $this->signInAs($courier->fresh());
         $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => 'confirmed'])->assertOk();
 
         $events = OrderEvent::where('order_id', $order->id)->orderBy('id')->get();
@@ -134,7 +134,7 @@ class OrderLifecycleTest extends TestCase
     public function test_delivery_must_be_at_least_a_day_ahead(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $payload = $this->orderPayload($address, ['smoked-salmon' => 1]);
         $payload['delivery_date'] = now()->toDateString();
@@ -147,7 +147,7 @@ class OrderLifecycleTest extends TestCase
     public function test_delivery_cannot_be_scheduled_absurdly_far_ahead(): void
     {
         [$user, $address] = $this->customerWithAddress();
-        Sanctum::actingAs($user);
+        $this->signInAs($user);
 
         $payload = $this->orderPayload($address, ['smoked-salmon' => 1]);
         $payload['delivery_date'] = now()->addYear()->toDateString();
