@@ -8,7 +8,8 @@ apps, built in the cloud by EAS — no Mac required for the iOS build.
 ```bash
 npm install
 cp .env.example .env          # EXPO_PUBLIC_API_URL must reach your API
-npm start                     # scan the QR with Expo Go
+npm start                     # scan the QR with Expo Go (local API)
+npm run start:live            # the same, against freshnesstoyourhome.az
 ```
 
 `npm start` runs `npm run sync` first, which is what fills `assets/products`

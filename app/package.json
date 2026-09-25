@@ -41,6 +41,8 @@
     "sync": "node ../scripts/sync.mjs",
     "prestart": "npm run sync",
     "start": "expo start",
+    "prestart:live": "npm run sync",
+    "start:live": "node ../scripts/start-live.mjs",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
