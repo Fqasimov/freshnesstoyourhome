@@ -45,7 +45,12 @@ return [
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            // Sign-in mail is sent inside the request on shared hosting
+            // (QUEUE_CONNECTION=sync). With no timeout a mail server that
+            // never answers holds the request for PHP's 60-second socket
+            // default, the host kills it first, and the browser reports a
+            // bare "Failed to fetch" instead of an error it can show.
+            'timeout' => env('MAIL_TIMEOUT', 15),
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
