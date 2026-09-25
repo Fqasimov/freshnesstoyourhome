@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Admin\CustomerController;
 use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Admin\DeliveryZoneController;
 use App\Http\Controllers\Api\Admin\ProductController;
+use App\Http\Controllers\Api\AccountAuthController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeployController;
@@ -61,6 +62,22 @@ Route::prefix('auth')->group(function () {
     // different attacks with different shapes.
     Route::post('verify-code', [AuthController::class, 'verifyCode'])
         ->middleware('throttle:otp-verify');
+
+    // The app's accounts. Sign-up and a forgotten password both send a code;
+    // the mail itself is budgeted inside LoginCodeService, so this limiter can
+    // leave room for someone correcting a form. The account is created by
+    // `confirm`, and only once the code is right.
+    Route::post('register', [AccountAuthController::class, 'register'])
+        ->middleware('throttle:register');
+    Route::post('password/forgot', [AccountAuthController::class, 'forgotPassword'])
+        ->middleware('throttle:register');
+    Route::post('confirm', [AccountAuthController::class, 'confirm'])
+        ->middleware('throttle:otp-verify');
+    Route::post('login', [AccountAuthController::class, 'login'])
+        ->middleware('throttle:password-login');
+    Route::post('social/{provider}', [AccountAuthController::class, 'social'])
+        ->whereIn('provider', ['google', 'apple'])
+        ->middleware('throttle:password-login');
 
     // The admin panel's own door. Only addresses in ADMIN_EMAILS get a code
     // or a token here, and the token it issues is the only kind the admin

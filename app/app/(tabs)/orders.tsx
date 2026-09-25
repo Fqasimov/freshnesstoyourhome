@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth'
 import { t, useLang } from '@/lib/i18n'
 import { AppBar, Button, Empty, Loading, Note, Small } from '@/components/ui'
 import { color, font, space } from '@/theme/tokens'
+import { leaveApp } from '@/lib/nav'
 
 const LIVE = ['placed', 'confirmed', 'preparing', 'out_for_delivery']
 
@@ -42,7 +43,7 @@ export default function Orders () {
       <View style={{ flex: 1 }}>
         <AppBar title={t('orders.title')} />
         <Empty title={t('auth.title')}>
-          <Button title={t('auth.verify')} onPress={() => router.push('/sign-in')} style={{ marginTop: 16 }} />
+          <Button title={t('auth.verify')} onPress={() => leaveApp(router)} style={{ marginTop: 16 }} />
         </Empty>
       </View>
     )

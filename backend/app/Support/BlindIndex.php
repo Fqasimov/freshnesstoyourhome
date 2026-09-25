@@ -35,6 +35,12 @@ final class BlindIndex
         return self::hash('phone:'.self::normalisePhone($phone));
     }
 
+    /** A Google or Apple account id ("sub"), looked up without being stored. */
+    public static function ofProvider(string $provider, string $subject): string
+    {
+        return self::hash('provider:'.$provider.':'.$subject);
+    }
+
     public static function normaliseEmail(string $email): string
     {
         // Lowercase the whole address. The local part is technically

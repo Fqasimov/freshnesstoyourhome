@@ -23,6 +23,10 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'phone' => $this->phone,
             'locale' => $this->locale,
+            'date_of_birth' => $this->date_of_birth,
+            // Lets the app offer "set a password" to someone who has only ever
+            // signed in with a code or with Google.
+            'has_password' => $this->resource->hasPassword(),
             // Drives the "finish your profile" screen. A courier needs a name
             // and a number to deliver anything, so checkout refuses without.
             'profile_complete' => filled($this->name) && filled($this->phone),

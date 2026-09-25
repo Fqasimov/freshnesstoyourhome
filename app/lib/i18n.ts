@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { SHARED_COPY } from './sharedCopy'
+import { APP_COPY } from './copyApp'
 
 /**
  * Three languages, Azerbaijani first.
@@ -386,9 +387,9 @@ const OWN: Record<Lang, Table> = {
    mean the same string written twice, which is the thing shared/copy.json
    exists to stop — so the shared copy wins and the duplicate is dead weight. */
 export const MESSAGES: Record<Lang, Table> = {
-  az: { ...OWN.az, ...SHARED_COPY.az },
-  ru: { ...OWN.ru, ...SHARED_COPY.ru },
-  en: { ...OWN.en, ...SHARED_COPY.en },
+  az: { ...OWN.az, ...APP_COPY.az, ...SHARED_COPY.az },
+  ru: { ...OWN.ru, ...APP_COPY.ru, ...SHARED_COPY.ru },
+  en: { ...OWN.en, ...APP_COPY.en, ...SHARED_COPY.en },
 }
 
 /** Translate, with {placeholder} substitution. */

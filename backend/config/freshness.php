@@ -37,6 +37,20 @@ return [
         'weight_tolerance_percent' => env('WEIGHT_TOLERANCE_PERCENT', 10),
     ],
 
+    /*
+     * "Sign in with Google / Apple" in the app. Each is a comma-separated
+     * list of the client ids a token may be issued for — ours, and nobody
+     * else's. Left empty, that button is refused by the server.
+     *
+     *  GOOGLE_CLIENT_IDS  the Web, Android and iOS OAuth client ids from
+     *                     Google Cloud → APIs & Services → Credentials
+     *  APPLE_CLIENT_IDS   the iOS bundle id: az.freshnesstoyourhome.app
+     */
+    'social' => [
+        'google' => array_values(array_filter(array_map('trim', explode(',', (string) env('GOOGLE_CLIENT_IDS', ''))))),
+        'apple' => array_values(array_filter(array_map('trim', explode(',', (string) env('APPLE_CLIENT_IDS', ''))))),
+    ],
+
     'auth' => [
         // Six digits is what customers will tolerate typing. The security
         // comes from the short life and the attempt cap, not the length.

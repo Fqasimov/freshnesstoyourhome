@@ -3,7 +3,8 @@ import {
   type PropsWithChildren,
 } from 'react'
 import { Platform } from 'react-native'
-import { api, getToken, setToken, handleSessionExpiry, type User } from './api'
+import { api, getToken, setToken, handleSessionExpiry, type Session, type SignUpForm, type User } from './api'
+import { forget, getRemembered, remember, type Remembered } from './remember'
 import { setLang, type Lang } from './i18n'
 import { disablePush } from './push'
 
@@ -13,9 +14,18 @@ type AuthValue = {
   signedIn: boolean
   /** A courier needs a name and a number to deliver anything. */
   profileComplete: boolean
+  /** The last person signed in on this phone, kept through sign-out. */
+  remembered: Remembered | null
+  forgetRemembered: () => Promise<void>
   requestCode: (email: string, locale: Lang) => Promise<void>
   verifyCode: (email: string, code: string) => Promise<User>
-  updateProfile: (data: Partial<Pick<User, 'name' | 'phone' | 'locale'>>) => Promise<User>
+  /** Sign-up and reset both answer with a ticket; `confirm` finishes either. */
+  register: (form: SignUpForm) => Promise<string>
+  forgotPassword: (email: string, password: string) => Promise<string>
+  confirm: (ticket: string, email: string, code: string) => Promise<User>
+  login: (email: string, password: string) => Promise<User>
+  social: (provider: 'google' | 'apple', idToken: string, name?: string | null) => Promise<User>
+  updateProfile: (data: Partial<Pick<User, 'name' | 'phone' | 'locale' | 'date_of_birth'>>) => Promise<User>
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
 }
@@ -25,6 +35,9 @@ const AuthContext = createContext<AuthValue | undefined>(undefined)
 export function AuthProvider ({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null)
   const [ready, setReady] = useState(false)
+  const [remembered, setRemembered] = useState<Remembered | null>(null)
+
+  useEffect(() => { getRemembered().then(setRemembered) }, [])
 
   /**
    * Restore the session at launch.
@@ -68,16 +81,55 @@ export function AuthProvider ({ children }: PropsWithChildren) {
     await api.requestCode(email, locale)
   }, [])
 
-  const verifyCode = useCallback(async (email: string, code: string) => {
-    const res = await api.verifyCode(email, code, deviceName())
+  /** Every way in ends here: keep the token, remember who it was. */
+  const begin = useCallback(async (res: Session) => {
     await setToken(res.token)
     setUser(res.user)
+    if (res.user.email) {
+      const who = { name: res.user.name, email: res.user.email }
+      setRemembered(who)
+      await remember(who)
+    }
     return res.user
   }, [])
 
-  const updateProfile = useCallback(async (data: Partial<Pick<User, 'name' | 'phone' | 'locale'>>) => {
+  const verifyCode = useCallback(async (email: string, code: string) => {
+    return begin(await api.verifyCode(email, code, deviceName()))
+  }, [begin])
+
+  const register = useCallback(async (form: SignUpForm) => {
+    return (await api.register(form)).ticket
+  }, [])
+
+  const forgotPassword = useCallback(async (email: string, password: string) => {
+    return (await api.forgotPassword({ email, password, password_confirmation: password })).ticket
+  }, [])
+
+  const confirm = useCallback(async (ticket: string, email: string, code: string) => {
+    return begin(await api.confirm({ ticket, email, code, device_name: deviceName() }))
+  }, [begin])
+
+  const login = useCallback(async (email: string, password: string) => {
+    return begin(await api.login({ email, password, device_name: deviceName() }))
+  }, [begin])
+
+  const social = useCallback(async (provider: 'google' | 'apple', idToken: string, name?: string | null) => {
+    return begin(await api.social(provider, { id_token: idToken, name, device_name: deviceName() }))
+  }, [begin])
+
+  const forgetRemembered = useCallback(async () => {
+    setRemembered(null)
+    await forget()
+  }, [])
+
+  const updateProfile = useCallback(async (data: Partial<Pick<User, 'name' | 'phone' | 'locale' | 'date_of_birth'>>) => {
     const { data: updated } = await api.updateMe(data)
     setUser(updated)
+    if (updated.email) {
+      const who = { name: updated.name, email: updated.email }
+      setRemembered(who)
+      await remember(who)
+    }
     return updated
   }, [])
 
@@ -99,6 +151,9 @@ export function AuthProvider ({ children }: PropsWithChildren) {
     await api.deleteAccount()
     await setToken(null)
     setUser(null)
+    // A deleted account is not someone to welcome back.
+    setRemembered(null)
+    await forget()
   }, [])
 
   const value = useMemo<AuthValue>(() => ({
@@ -106,8 +161,11 @@ export function AuthProvider ({ children }: PropsWithChildren) {
     ready,
     signedIn: user !== null,
     profileComplete: Boolean(user?.profile_complete),
-    requestCode, verifyCode, updateProfile, signOut, deleteAccount,
-  }), [user, ready, requestCode, verifyCode, updateProfile, signOut, deleteAccount])
+    remembered, forgetRemembered,
+    requestCode, verifyCode, register, forgotPassword, confirm, login, social,
+    updateProfile, signOut, deleteAccount,
+  }), [user, ready, remembered, forgetRemembered, requestCode, verifyCode, register, forgotPassword,
+    confirm, login, social, updateProfile, signOut, deleteAccount])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

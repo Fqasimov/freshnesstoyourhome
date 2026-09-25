@@ -124,7 +124,18 @@ class AuthController extends Controller
             ], 409);
         }
 
-        $user->anonymise();
+        // Nothing sold to them and no admin history: the row itself goes.
+        // Otherwise the person is erased and the accounting stays.
+        $erasable = ! $user->orders()->exists()
+            && ! $user->isAdmin()
+            && ! \App\Models\AdminAudit::where('actor_id', $user->id)->exists();
+
+        if ($erasable) {
+            $user->tokens()->delete();
+            $user->delete();
+        } else {
+            $user->anonymise();
+        }
 
         return response()->json(['status' => 'deleted']);
     }

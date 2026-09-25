@@ -209,6 +209,39 @@ The app's product photographs are generated from `shared/products` like the
 website's, so `app/package.json` runs the sync in `eas-build-post-install` —
 without it a cloud build fails on the missing images.
 
+### Google and Apple sign-in in the app
+
+The buttons are built and the server checks every token it is handed
+(`SocialTokenVerifier`: signature, issuer, and that it was made for *this*
+app). Until the ids below exist, the server answers "not available yet" and
+the Google button says so; email + password + code works regardless.
+
+**Google** — Google Cloud console → APIs & Services → Credentials:
+1. OAuth consent screen: app name, support email, the privacy URL.
+2. Create an OAuth client of type **Web application** (its id is what the
+   phone's token is issued for).
+3. Create one of type **Android**: package `az.freshnesstoyourhome.app` and
+   the SHA-1 of the signing key (`npx eas credentials` shows it; Play Console
+   → App integrity shows Google's app-signing SHA-1 too — add both).
+4. For iPhone later: one of type **iOS**, bundle `az.freshnesstoyourhome.app`.
+
+Then:
+- EAS build variables (expo.dev → project → Environment variables):
+  `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, and for iOS
+  `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` and `GOOGLE_IOS_URL_SCHEME`
+  (the "iOS URL scheme" Google shows, `com.googleusercontent.apps.…`).
+- Server `.env`: `GOOGLE_CLIENT_IDS=` the web, Android and iOS client ids,
+  comma-separated.
+
+**Apple** — iPhone only (Apple does not offer it inside Android apps). In the
+Apple Developer account, enable "Sign in with Apple" on the app id
+`az.freshnesstoyourhome.app`; EAS picks the capability up from
+`usesAppleSignIn`. Server `.env`: `APPLE_CLIENT_IDS=az.freshnesstoyourhome.app`.
+The App Store requires Apple sign-in whenever Google sign-in is offered.
+
+The Google and Apple libraries are native, so they arrive with the first
+store build, not over the air.
+
 **Sanctum runs stateless.** The panel and the app send a bearer token; nothing
 uses cookies. `bootstrap/app.php` therefore does not call
 `statefulApi()` at all — it once called `statefulApi(false)`, which Laravel

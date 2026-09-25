@@ -20,6 +20,9 @@ export type { ColorName } from './palette'
  * before adopting it.
  */
 export const font = {
+  // The brand's name and nothing else, as on the website. Latin only, like
+  // the name itself.
+  wordmark: 'Fraunces-SemiBold',
   displaySemi: 'Cormorant-SemiBold',
   displayBold: 'Cormorant-Bold',
   body: 'Onest-Regular',
@@ -29,8 +32,11 @@ export const font = {
 } as const
 
 export const space = {
-  gutter: 18,
-  radius: 4,
+  gutter: 16,
+  // Soft corners: the catalogue is tiles and photographs, and rounded ones
+  // read as things to pick up. radiusLg is for tiles and sheets.
+  radius: 14,
+  radiusLg: 22,
   // 48 is the smallest target reliably hit with a thumb.
   tap: 48,
 } as const
@@ -50,3 +56,10 @@ export const type = {
     textTransform: 'uppercase' as const,
   },
 } as const
+
+/**
+ * The browser's own focus ring, removed from fields that draw their own
+ * (the web preview only — phones have none). The field's border already
+ * shows focus, so the ring would be a second, clashing outline.
+ */
+export const WEB_NO_OUTLINE = { outlineWidth: 0 } as object

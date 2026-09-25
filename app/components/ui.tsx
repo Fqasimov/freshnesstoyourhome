@@ -4,7 +4,8 @@ import {
   type StyleProp, type TextStyle, type ViewStyle,
 } from 'react-native'
 import { useRouter } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
+import { Icon } from './Icon'
+import { PressableScale } from './PressableScale'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { color, font, space, type as ty } from '@/theme/tokens'
 
@@ -58,19 +59,16 @@ export function Button ({ title, onPress, variant = 'primary', disabled, busy, s
   const inert = disabled || busy
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       disabled={inert}
       accessibilityRole="button"
-      accessibilityState={{ disabled: Boolean(inert) }}
-      style={({ pressed }) => [
+      accessibilityState={{ disabled: Boolean(inert), busy: Boolean(busy) }}
+      style={[
         s.btn,
         variant === 'primary' && { backgroundColor: color.forest },
         variant === 'ghost' && { backgroundColor: color.paper2 },
         variant === 'danger' && { borderWidth: 1, borderColor: color.brick },
-        // String transform: the legacy [{ scale }] array crashes React Native
-        // Web 0.21 the moment a button is pressed.
-        pressed && !inert && { opacity: 0.85, transform: 'scale(0.985)' },
         inert && { opacity: 0.5 },
         style,
       ]}
@@ -88,7 +86,7 @@ export function Button ({ title, onPress, variant = 'primary', disabled, busy, s
       ]}>
         {title}
       </Text>
-    </Pressable>
+    </PressableScale>
   )
 }
 
@@ -130,7 +128,7 @@ export function AppBar ({ title, back, right }: {
             hitSlop={10}
             style={{ marginLeft: -6, marginRight: 4 }}
           >
-            <Ionicons name="chevron-back" size={26} color={color.ink} />
+            <Icon name="chevron-left" size={22} color={color.ink} />
           </Pressable>
         ) : null}
         <Text numberOfLines={1} style={s.barTitle}>{title}</Text>
@@ -173,7 +171,7 @@ export function Row ({ label, value, strong }: { label: string; value: string; s
 
 const s = StyleSheet.create({
   btn: {
-    minHeight: space.tap,
+    minHeight: 54,
     borderRadius: space.radius,
     paddingHorizontal: 20,
     flexDirection: 'row',

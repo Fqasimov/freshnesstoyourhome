@@ -40,6 +40,10 @@ class User extends Authenticatable
         'email_hash',
         'phone_hash',
         'remember_token',
+        'password',
+        'date_of_birth',
+        'google_id_hash',
+        'apple_id_hash',
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_last_step',
@@ -66,6 +70,8 @@ class User extends Authenticatable
             'email' => 'encrypted',
             'name' => 'encrypted',
             'phone' => 'encrypted',
+            'date_of_birth' => 'encrypted',
+            'password' => 'hashed',
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'blocked_at' => 'datetime',
@@ -124,6 +130,11 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function hasPassword(): bool
+    {
+        return filled($this->password);
     }
 
     public function hasTwoFactor(): bool
@@ -190,6 +201,10 @@ class User extends Authenticatable
             'name' => null,
             'phone' => null,
             'phone_hash' => null,
+            'password' => null,
+            'date_of_birth' => null,
+            'google_id_hash' => null,
+            'apple_id_hash' => null,
             'blocked_at' => now(),
             'anonymised_at' => now(),
             'two_factor_secret' => null,

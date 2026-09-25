@@ -10,6 +10,7 @@ import { money } from '@/lib/money'
 import { productImage } from '@/assets/products'
 import { AppBar, Body, Button, Empty, Note, Row, Small } from '@/components/ui'
 import { color, font, space } from '@/theme/tokens'
+import { leaveApp } from '@/lib/nav'
 
 export default function Basket () {
   const cart = useCart()
@@ -22,7 +23,7 @@ export default function Basket () {
 
   function checkout () {
     if (!auth.signedIn) {
-      router.push({ pathname: '/sign-in', params: { next: '/checkout' } })
+      leaveApp(router)
       return
     }
     router.push('/checkout')

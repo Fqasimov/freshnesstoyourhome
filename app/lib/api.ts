@@ -195,7 +195,20 @@ export type User = {
   name: string | null
   phone: string | null
   locale: Lang
+  date_of_birth: string | null
+  has_password: boolean
   profile_complete: boolean
+}
+
+export type Session = { token: string; expires_at: string; user: User }
+export type CodeSent = { status: 'code_sent'; ticket: string; expires_in_minutes: number }
+
+export type SignUpForm = {
+  name: string
+  email: string
+  date_of_birth: string
+  password: string
+  password_confirmation: string
 }
 
 export type Address = {
@@ -290,10 +303,25 @@ export const api = {
       method: 'POST', body: { email, code, device_name }, auth: false,
     }),
 
+  register: (form: SignUpForm) =>
+    request<CodeSent>('auth/register', { method: 'POST', body: { ...form, locale: getLang() }, auth: false }),
+
+  forgotPassword: (body: { email: string; password: string; password_confirmation: string }) =>
+    request<CodeSent>('auth/password/forgot', { method: 'POST', body: { ...body, locale: getLang() }, auth: false }),
+
+  confirm: (body: { ticket: string; email: string; code: string; device_name: string }) =>
+    request<Session>('auth/confirm', { method: 'POST', body, auth: false }),
+
+  login: (body: { email: string; password: string; device_name: string }) =>
+    request<Session>('auth/login', { method: 'POST', body, auth: false }),
+
+  social: (provider: 'google' | 'apple', body: { id_token: string; name?: string | null; device_name: string }) =>
+    request<Session>(`auth/social/${provider}`, { method: 'POST', body: { ...body, locale: getLang() }, auth: false }),
+
   catalogue: () => request<CatalogueResponse>('catalogue', { auth: false }),
 
   me: () => request<{ data: User }>('me'),
-  updateMe: (data: Partial<Pick<User, 'name' | 'phone' | 'locale'>>) =>
+  updateMe: (data: Partial<Pick<User, 'name' | 'phone' | 'locale' | 'date_of_birth'>>) =>
     request<{ data: User }>('me', { method: 'PATCH', body: data }),
   deleteAccount: () => request<{ status: string }>('me', { method: 'DELETE' }),
   logout: () => request<{ status: string }>('auth/logout', { method: 'POST' }),

@@ -1,128 +1,145 @@
 import { memo } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Image } from 'expo-image'
+import { useRouter } from 'expo-router'
+import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated'
+import * as Haptics from 'expo-haptics'
+
 import { useCart } from '@/lib/cart'
-import { useCatalogue } from '@/lib/catalogue'
 import { pick, t } from '@/lib/i18n'
-import { money } from '@/lib/money'
+import { price } from '@/lib/money'
+import { duration, ease } from '@/lib/motion'
 import { productImage } from '@/assets/products'
 import type { Product } from '@/lib/api'
+import { Icon } from './Icon'
+import { PressableScale } from './PressableScale'
 import { color, font, space } from '@/theme/tokens'
 
-export const ProductCard = memo(function ProductCard ({ product }: { product: Product }) {
+const tap = () => { if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}) }
+
+/**
+ * A product on a shelf: the photograph on a soft ground, the price in a pill
+ * under it, the name below — the order a shopper's eye goes in. The "+" sits
+ * on the photo's corner and becomes a − n + stepper once the product is in
+ * the basket, so adding a second never means opening anything.
+ */
+export const ProductCard = memo(function ProductCard ({ product, width }: { product: Product; width?: number }) {
   const cart = useCart()
-  const catalogue = useCatalogue()
+  const router = useRouter()
 
   const qty = cart.qtyOf(product.id)
-
-  // Half-kilo steps for weighed goods, whole units for everything else. Asking
-  // someone to type 0.5 on a phone to buy half a kilo of cheese is a bad screen.
+  // Half-kilo steps for weighed goods, whole units for everything else.
   const step = product.is_weight_based ? 0.5 : 1
-
-  const category = catalogue.categories.find(c => c.id === product.category_id)
   const image = productImage(product.id)
 
   return (
-    <View style={s.card}>
+    <PressableScale
+      scaleTo={0.98}
+      onPress={() => router.push({ pathname: '/product/[id]', params: { id: product.id } })}
+      style={[s.card, width ? { width } : { flex: 1 }]}
+      accessibilityRole="button"
+      accessibilityLabel={pick(product.name)}
+    >
       <View style={s.media}>
-        {image ? (
-          <Image source={image} style={StyleSheet.absoluteFill} contentFit="cover" transition={160} />
+        {image ? <Image source={image} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} /> : (
+          <View style={s.noPhoto}><Icon name="basket" size={30} color={color.paper3} /></View>
+        )}
+
+        {product.is_popular ? (
+          <View style={s.hit}>
+            <Icon name="fire" size={10} color={color.brick} />
+            <Text style={s.hitText}>{t('cat.hit')}</Text>
+          </View>
         ) : null}
-        {product.is_weight_based ? (
-          <View style={s.flag}><Text style={s.flagText}>{t('shop.perKg')}</Text></View>
-        ) : null}
-      </View>
 
-      <View style={s.body}>
-        {category ? <Text style={s.cat}>{pick(category.name)}</Text> : null}
-        <Text style={s.name} numberOfLines={2}>{pick(product.name)}</Text>
-        <Text style={s.unit}>{pick(product.unit_label)}</Text>
-
-        <View style={s.foot}>
-          <Text style={s.price}>{money(product.price_minor, product.currency)}</Text>
-
+        <View style={s.corner}>
           {qty > 0 ? (
-            <View style={s.stepper}>
+            <Animated.View entering={FadeIn.duration(duration.fast).easing(ease.out)} style={s.stepper}>
               <Pressable
-                onPress={() => cart.setQty(product.id, qty - step)}
+                onPress={() => { tap(); cart.setQty(product.id, qty - step) }}
                 hitSlop={6}
+                style={s.stepBtn}
                 accessibilityRole="button"
                 accessibilityLabel={t('cart.remove')}
-                style={s.stepBtn}
               >
-                <Text style={s.stepText}>−</Text>
+                <Icon name="dash-lg" size={15} color="#fff" />
               </Pressable>
-              <Text style={s.qty}>{product.is_weight_based ? `${qty} kg` : qty}</Text>
+              <Animated.Text key={qty} entering={ZoomIn.duration(160).easing(ease.out)} style={s.qty}>
+                {product.is_weight_based ? `${qty} ${t('unit.kg')}` : qty}
+              </Animated.Text>
               <Pressable
-                onPress={() => cart.add(product.id, step)}
+                onPress={() => { tap(); cart.add(product.id, step) }}
                 hitSlop={6}
+                style={s.stepBtn}
                 accessibilityRole="button"
                 accessibilityLabel={t('shop.add')}
-                style={s.stepBtn}
               >
-                <Text style={s.stepText}>+</Text>
+                <Icon name="plus-lg" size={15} color="#fff" />
               </Pressable>
-            </View>
+            </Animated.View>
           ) : (
-            <Pressable
-              onPress={() => cart.add(product.id, step)}
-              accessibilityRole="button"
-              accessibilityLabel={t('shop.add')}
-              // String transform, not the legacy [{ scale }] array: React
-              // Native Web 0.21 throws on the array form and takes the whole
-              // screen down with it on the first tap.
-              style={({ pressed }) => [s.add, pressed && { opacity: 0.8, transform: 'scale(0.92)' }]}
-            >
-              <Text style={s.addText}>+</Text>
-            </Pressable>
+            <Animated.View entering={FadeIn.duration(duration.fast)} exiting={FadeOut.duration(100)}>
+              <PressableScale
+                scaleTo={0.9}
+                onPress={() => { tap(); cart.add(product.id, step) }}
+                style={s.add}
+                accessibilityRole="button"
+                accessibilityLabel={t('shop.add')}
+                hitSlop={6}
+              >
+                <Icon name="plus-lg" size={18} color={color.forest} />
+              </PressableScale>
+            </Animated.View>
           )}
         </View>
       </View>
-    </View>
+
+      <View style={s.body}>
+        <View style={s.pricePill}>
+          <Text style={s.price}>{price(product.price_minor, product.currency)}</Text>
+          {product.is_weight_based ? <Text style={s.per}>/{t('unit.kg')}</Text> : null}
+        </View>
+        <Text style={s.name} numberOfLines={2}>{pick(product.name)}</Text>
+        <Text style={s.unit} numberOfLines={1}>{pick(product.unit_label)}</Text>
+      </View>
+    </PressableScale>
   )
 })
 
 const s = StyleSheet.create({
-  card: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: space.radius,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: color.lineSoft,
-    overflow: 'hidden',
+  card: { },
+  media: {
+    aspectRatio: 1, borderRadius: space.radiusLg, overflow: 'hidden',
+    backgroundColor: color.paper2,
   },
-  media: { aspectRatio: 1, backgroundColor: color.paper3 },
-  flag: {
-    position: 'absolute', left: 0, top: 10,
-    backgroundColor: color.forest,
-    paddingVertical: 3, paddingHorizontal: 8,
+  noPhoto: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  hit: {
+    position: 'absolute', left: 8, top: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingVertical: 3, paddingHorizontal: 7, borderRadius: 999,
+    backgroundColor: color.acid,
   },
-  flagText: {
-    fontFamily: font.semi, fontSize: 10, color: '#fff',
-    letterSpacing: 0.6, textTransform: 'uppercase',
-  },
-  body: { padding: 11, paddingBottom: 13, flex: 1, gap: 3 },
-  cat: {
-    fontFamily: font.semi, fontSize: 10, letterSpacing: 0.7,
-    textTransform: 'uppercase', color: color.leafDark,
-  },
-  name: { fontFamily: font.displaySemi, fontSize: 17, lineHeight: 20, color: color.ink },
-  unit: { fontFamily: font.body, fontSize: 13, color: color.ink3 },
-  foot: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    gap: 8, marginTop: 'auto', paddingTop: 8,
-  },
-  price: { fontFamily: font.bold, fontSize: 17, color: color.ink },
+  hitText: { fontFamily: font.bold, fontSize: 10.5, color: color.ink, letterSpacing: 0.3 },
+  corner: { position: 'absolute', right: 8, bottom: 8 },
   add: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: color.forest, alignItems: 'center', justifyContent: 'center',
+    width: 38, height: 38, borderRadius: 19, backgroundColor: '#fff',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#1B2916', shadowOpacity: 0.16, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
-  addText: { color: '#fff', fontSize: 22, lineHeight: 24, fontFamily: font.medium },
   stepper: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: color.paper2, borderRadius: 999,
+    flexDirection: 'row', alignItems: 'center', height: 38, borderRadius: 19,
+    backgroundColor: color.forest, paddingHorizontal: 2,
+    shadowColor: '#1B2916', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
-  stepBtn: { width: 34, height: 36, alignItems: 'center', justifyContent: 'center' },
-  stepText: { fontSize: 18, fontFamily: font.semi, color: color.ink },
-  qty: { minWidth: 40, textAlign: 'center', fontFamily: font.semi, fontSize: 13, color: color.ink },
+  stepBtn: { width: 34, height: 38, alignItems: 'center', justifyContent: 'center' },
+  qty: { minWidth: 26, textAlign: 'center', fontFamily: font.bold, fontSize: 13.5, color: '#fff' },
+  body: { paddingTop: 9, paddingHorizontal: 2, gap: 4 },
+  pricePill: {
+    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'baseline',
+    paddingVertical: 4, paddingHorizontal: 9, borderRadius: 999, backgroundColor: color.paper2,
+  },
+  price: { fontFamily: font.bold, fontSize: 16, color: color.ink },
+  per: { fontFamily: font.semi, fontSize: 12.5, color: color.ink2, marginLeft: 1 },
+  name: { fontFamily: font.medium, fontSize: 14, lineHeight: 18.5, color: color.ink, marginTop: 2 },
+  unit: { fontFamily: font.body, fontSize: 12.5, color: color.ink3 },
 })

@@ -93,10 +93,29 @@ class LoginCodeService
     {
         $email = BlindIndex::normaliseEmail($email);
 
+        if (! $this->consume($email, $code)) {
+            return null;
+        }
+
+        return $this->resolveUser($email);
+    }
+
+    /**
+     * Check and spend a code, without touching any account.
+     *
+     * True only for the live code of that address, typed correctly, within
+     * its attempts. Registration uses this directly: the account it creates
+     * carries the details from the sign-up form, which verify() knows nothing
+     * about.
+     */
+    public function consume(string $email, string $code): bool
+    {
+        $email = BlindIndex::normaliseEmail($email);
+
         $record = LoginCode::usableFor($email)->latest('id')->first();
 
         if ($record === null || $record->isExhausted()) {
-            return null;
+            return false;
         }
 
         if (! Hash::check($code, $record->code_hash)) {
@@ -104,7 +123,7 @@ class LoginCodeService
             // runs the code out instead of getting unlimited tries.
             $record->increment('attempts');
 
-            return null;
+            return false;
         }
 
         // Single use. Marked consumed in the same statement that checks it is
@@ -114,11 +133,7 @@ class LoginCodeService
             ->whereNull('consumed_at')
             ->update(['consumed_at' => now()]);
 
-        if ($claimed === 0) {
-            return null;
-        }
-
-        return $this->resolveUser($email);
+        return $claimed === 1;
     }
 
     private function resolveUser(string $email): ?User

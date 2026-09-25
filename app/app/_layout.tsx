@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Stack, useRouter } from 'expo-router'
+import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from 'expo-font'
@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth'
 import { refreshPushRegistration } from '@/lib/push'
 import * as Notifications from 'expo-notifications'
 import { color } from '@/theme/tokens'
+import { leaveApp } from '@/lib/nav'
 
 // Held until the app can actually show something, rather than auto-hiding into
 // a blank screen while fonts and the saved language are still loading.
@@ -23,6 +24,7 @@ export default function RootLayout () {
   const [langReady, setLangReady] = useState(false)
 
   const [fontsLoaded, fontError] = useFonts({
+    'Fraunces-SemiBold': require('../assets/fonts/Fraunces-SemiBold.ttf'),
     'Cormorant-SemiBold': require('../assets/fonts/Cormorant-SemiBold.ttf'),
     'Cormorant-Bold': require('../assets/fonts/Cormorant-Bold.ttf'),
     'Onest-Regular': require('../assets/fonts/Onest-Regular.ttf'),
@@ -53,7 +55,8 @@ export default function RootLayout () {
           <CatalogueProvider>
             <CartProvider>
               <PushBridge />
-              <StatusBar style="light" />
+              <AuthGate />
+              <StatusBar style="dark" />
               <Stack
                 screenOptions={{
                   headerShown: false,
@@ -61,8 +64,18 @@ export default function RootLayout () {
                   animation: 'slide_from_right',
                 }}
               >
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="sign-in" options={{ animation: 'slide_from_bottom' }} />
+                <Stack.Screen name="index" options={{ animation: 'none' }} />
+                <Stack.Screen name="auth/index" options={{ animation: 'fade' }} />
+                <Stack.Screen name="auth/verify" />
+                <Stack.Screen name="auth/forgot" />
+                <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+                <Stack.Screen name="category/[id]" />
+                <Stack.Screen name="search" options={{ animation: 'fade' }} />
+                <Stack.Screen
+                  name="product/[id]"
+                  options={{ presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }}
+                />
+                <Stack.Screen name="profile/details" />
                 <Stack.Screen name="checkout" />
                 <Stack.Screen name="orders/[id]" />
                 <Stack.Screen name="profile/addresses" />
@@ -73,6 +86,27 @@ export default function RootLayout () {
       </SafeAreaProvider>
     </GestureHandlerRootView>
   )
+}
+
+/**
+ * The shop is for signed-in customers. Anyone else — signed out, or whose
+ * session ran out mid-use — is sent to the front door, from wherever they
+ * are. The opening animation and the auth screens are the only places open
+ * without an account.
+ */
+function AuthGate () {
+  const auth = useAuth()
+  const segments = useSegments()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!auth.ready) return
+    const first = segments[0] as string | undefined
+    const open = first === undefined || first === 'index' || first === 'auth'
+    if (!auth.signedIn && !open) leaveApp(router)
+  }, [auth.ready, auth.signedIn, segments, router])
+
+  return null
 }
 
 /**

@@ -94,6 +94,19 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(6)->by('email:'.sha1((string) $r->input('email'))),
         ]);
 
+        RateLimiter::for('register', fn (Request $r) => [
+            Limit::perMinute(10)->by($r->ip()),
+            Limit::perHour(40)->by($r->ip()),
+        ]);
+
+        // Guessing passwords. Per address as well as per source, so a botnet
+        // spreading guesses across IPs still runs into the address's budget.
+        RateLimiter::for('password-login', fn (Request $r) => [
+            Limit::perMinute(10)->by($r->ip()),
+            Limit::perHour(60)->by($r->ip()),
+            Limit::perMinutes(15, 10)->by('login:'.sha1(mb_strtolower((string) $r->input('email')))),
+        ]);
+
         // Placing an order is cheap for the customer and expensive for the
         // shop: every one is goods set aside and a courier slot.
         RateLimiter::for('place-order', fn (Request $r) => [

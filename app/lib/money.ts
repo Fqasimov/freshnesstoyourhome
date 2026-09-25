@@ -23,3 +23,14 @@ export function money (minor: number | null | undefined, currency = 'AZN'): stri
 export function round3 (n: number): number {
   return Math.round(n * 1000) / 1000
 }
+
+/**
+ * The catalogue's short form: "65 ₼", "6.50 ₼". Whole manats drop the
+ * qəpik — on a tile, "65.00 AZN" is noise. Checkout keeps the full form.
+ */
+export function price (minor: number | null | undefined, currency = 'AZN'): string {
+  if (minor === null || minor === undefined) return ''
+  const symbol = currency === 'AZN' ? '₼' : currency
+  const text = minor % 100 === 0 ? String(minor / 100) : (minor / 100).toFixed(2)
+  return `${text} ${symbol}`
+}

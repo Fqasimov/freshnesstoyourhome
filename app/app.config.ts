@@ -15,6 +15,13 @@ import type { ExpoConfig } from 'expo/config'
  */
 const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? ''
 
+/**
+ * Google sign-in on iOS needs the reversed iOS client id as a URL scheme
+ * (Google Cloud shows it as "iOS URL scheme"). Without it the plugin is left
+ * out and the Google button stays hidden on iPhone; Android does not need it.
+ */
+const GOOGLE_IOS_URL_SCHEME = process.env.GOOGLE_IOS_URL_SCHEME ?? ''
+
 const config: ExpoConfig = {
   name: 'Freshness To Your Home',
   slug: 'freshness-to-your-home',
@@ -46,6 +53,8 @@ const config: ExpoConfig = {
 
   ios: {
     bundleIdentifier: 'az.freshnesstoyourhome.app',
+    // Required once Google sign-in is offered on iOS (App Store 4.8).
+    usesAppleSignIn: true,
     supportsTablet: false,
     infoPlist: {
       // No encryption beyond standard HTTPS, which is exempt. Declaring this
@@ -79,13 +88,22 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     'expo-secure-store',
+    'expo-apple-authentication',
+    // Without options this plugin switches to its Firebase mode, which this
+    // app does not use; Android needs no plugin at all, only autolinking.
+    ...(GOOGLE_IOS_URL_SCHEME
+      ? [['@react-native-google-signin/google-signin', { iosUrlScheme: GOOGLE_IOS_URL_SCHEME }] as [string, any]]
+      : []),
     [
       'expo-splash-screen',
       {
-        image: './assets/splash.png',
-        imageWidth: 220,
+        // Plain paper, nothing on it: the opening animation draws the mark
+        // onto the same ground, so the hand-over from the system splash to
+        // the app is invisible.
+        image: './assets/splash-blank.png',
+        imageWidth: 64,
         resizeMode: 'contain',
-        backgroundColor: '#3A6A2C',
+        backgroundColor: '#F6F3EA',
       },
     ],
     [
@@ -105,6 +123,7 @@ const config: ExpoConfig = {
         // not wait on a font CDN, and a shop app should not announce itself to
         // a third party every time it opens.
         fonts: [
+          './assets/fonts/Fraunces-SemiBold.ttf',
           './assets/fonts/Cormorant-SemiBold.ttf',
           './assets/fonts/Cormorant-Bold.ttf',
           './assets/fonts/Onest-Regular.ttf',

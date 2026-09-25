@@ -41,26 +41,49 @@ npx eas submit --profile production --platform ios
 
 ```
 app/                  expo-router routes, one file per screen
-  (tabs)/             shop, basket, orders, profile
-  sign-in.tsx         email + one-time code
+  index.tsx           the opening animation, then catalogue or sign-in
+  auth/               sign in / sign up, the 6-digit code, new password
+  (tabs)/             catalogue, basket, orders, profile
+  category/[id].tsx   one category's shelf, with sort
+  product/[id].tsx    a product in a sheet over the shelf
+  search.tsx          search across AZ / RU / EN names
   checkout.tsx        address, date, payment
   orders/[id].tsx     status, items, cancel
-  profile/addresses.tsx
+  profile/            personal details, addresses
 lib/
   api.ts              typed client, keychain token storage, error types
-  auth.tsx            session context
+  auth.tsx            session context: sign up, code, password, Google/Apple
+  social(.native).ts  Google and Apple sign-in (phones only)
+  remember.ts         "Welcome back" — the last person on this phone
+  motion.ts           easing curves and durations, in one place
   cart.tsx            basket + server quote
   catalogue.tsx       catalogue + offline cache
   i18n.ts             AZ / RU / EN, 92 keys each, Azerbaijani default
   money.ts            formatting only — the app never computes a total
 theme/tokens.ts       colours, fonts, spacing, type scale
-components/           ui.tsx primitives, ProductCard
+components/           ui.tsx primitives, Icon (Bootstrap Icons), Intro,
+                      ProductCard, CategoryTile, Sheet, Wheel, auth/ forms
 assets/
   products/           the 54 photos + a generated require map
-  fonts/              Cormorant + Onest, bundled
+  fonts/              Cormorant + Onest, and Fraunces for the wordmark
 ```
 
 ### Things that are the way they are on purpose
+
+**No account exists until the emailed code is typed back.** The sign-up form
+is held on the server for ten minutes under a ticket only this phone has
+(`RegistrationService`); the code creates the account. A forgotten password
+goes the same way. Google and Apple skip the code — they have already
+verified the address.
+
+**Icons are Bootstrap Icons, as on the website**, drawn from their path data
+with react-native-svg (`components/Icon.tsx`). To add one, add its name to
+`scripts/app-icons.mjs` and run it.
+
+**Motion is short and front-loaded.** Everything eases out on the curves in
+`lib/motion.ts`, UI moves in 150–300ms, presses shrink to 0.97 at once, and
+nothing grows from zero. The opening is the one long animation, and a tap
+skips it.
 
 **The basket holds ids and quantities, never prices.** Totals come from the
 server's quote endpoint, so the figure on screen is the figure that will be
@@ -120,7 +143,8 @@ npm run journey       # the whole customer flow in a real browser
 ```
 
 `npm run journey` exports the app for web and drives it against a real API:
-browse, basket, sign in, profile, address, order, language switch. It needs the
+the opening, sign-up with the emailed code, catalogue, basket, profile,
+address, order, language switch, sign out, "welcome back", sign in. It needs the
 API running with `MAIL_MAILER=log` so the code can be read back, and the export
 served on :8090 — see the header of `tests/journey.mjs`.
 
