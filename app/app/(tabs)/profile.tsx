@@ -9,6 +9,17 @@ import { LANGS, setLang, t, useLang, type Lang } from '@/lib/i18n'
 import { AppBar, Body, Button, Empty, Field, Note, Small, inputStyle } from '@/components/ui'
 import { disablePush, enablePush, isEnabledOnThisDevice } from '@/lib/push'
 import { color, font, space } from '@/theme/tokens'
+import { CONTACT } from '@/lib/brand'
+
+/* Apple (5.1.1) and Google Play both want the privacy policy reachable from
+   inside the app, signed in or not. */
+function PrivacyLink () {
+  return (
+    <Pressable style={s.privacy} onPress={() => Linking.openURL(CONTACT.privacyUrl)} accessibilityRole="link">
+      <Text style={s.privacyText}>{t('profile.privacy')}</Text>
+    </Pressable>
+  )
+}
 
 export default function Profile () {
   const auth = useAuth()
@@ -101,6 +112,7 @@ export default function Profile () {
         <Empty title={t('auth.title')}>
           <Button title={t('auth.verify')} onPress={() => router.push('/sign-in')} style={{ marginTop: 16 }} />
         </Empty>
+        <PrivacyLink />
       </View>
     )
   }
@@ -197,6 +209,8 @@ export default function Profile () {
             </View>
           )}
         </View>
+
+        <PrivacyLink />
       </ScrollView>
     </View>
   )
@@ -225,5 +239,7 @@ const s = StyleSheet.create({
     borderRadius: space.radius, padding: 16, marginTop: 26,
   },
   linkText: { fontFamily: font.semi, fontSize: 16, color: color.ink },
+  privacy: { alignSelf: 'center', paddingVertical: 14, marginTop: 8 },
+  privacyText: { fontFamily: font.body, fontSize: 14, color: color.ink3, textDecorationLine: 'underline' },
   deleteLink: { fontFamily: font.body, fontSize: 15, color: color.brick, textDecorationLine: 'underline' },
 })

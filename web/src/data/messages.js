@@ -73,6 +73,7 @@ const OWN = {
     'h.order':'Sifariş','h.orderv':'1 gün öncədən məsləhət görülür',
     'h.zonenote':'Çatdırılma əraziləri və qiymətləri üzrə dəqiq məlumat üçün bizimlə əlaqə saxlayın.',
 
+    'foot.privacy':'Məxfilik siyasəti',
     'foot.note':'Qiymətlər AZN ilə, göstərilən vahidə görədir, dərc olunduğu tarixə aiddir və bazara uyğun dəyişə bilər. “1 kq” kimi göstərilən çəkilər çatdırılma zamanı faktiki çəkiyə görə dəqiqləşdirilir.',
 
     'cart.t':'Səbətiniz','cart.sub':'Təxmini məbləğ',
@@ -180,6 +181,7 @@ const OWN = {
     'h.order':'Заказ','h.orderv':'Рекомендуем оформлять за день',
     'h.zonenote':'Точные зоны доставки и стоимость уточняйте у нас.',
 
+    'foot.privacy':'Политика конфиденциальности',
     'foot.note':'Цены в манатах, за указанную единицу, действительны на момент публикации и могут меняться вслед за рынком. Вес, указанный как «1 кг», уточняется при доставке по фактически отпущенному весу.',
 
     'cart.t':'Ваша корзина','cart.sub':'Примерная сумма',
@@ -287,6 +289,7 @@ const OWN = {
     'h.order':'Ordering','h.orderv':'A day in advance is recommended',
     'h.zonenote':'Get in touch for exact delivery areas and charges.',
 
+    'foot.privacy':'Privacy policy',
     'foot.note':'Prices in AZN, per the unit shown, current at the time of publication and subject to change with the market. Weights marked “1 kg” are settled on delivery against the actual weight supplied.',
 
     'cart.t':'Your basket','cart.sub':'Estimated total',

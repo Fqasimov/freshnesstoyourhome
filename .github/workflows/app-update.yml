@@ -1,0 +1,68 @@
+# Publish the app's code to phones over the air (EAS Update).
+#
+# On every push that touches the app or shared/, this typechecks the app and
+# publishes an update to the "production" channel. Installed apps download it
+# in the background and use it from their next launch — no store review.
+#
+# Only the app's own code travels this way. A change to native code (a new
+# library with native parts, a permission, the Expo SDK) produces a different
+# runtime fingerprint, so the update is simply not offered to existing
+# installs; that change needs a new store build (`eas build`).
+#
+# Off until the repository variable APP_UPDATES_ENABLED is "true" and the
+# secret EXPO_TOKEN exists. See DEPLOY.md → "App updates without a store review".
+
+name: App update
+
+on:
+  push:
+    branches: [claude/photo-analysis-bgp25f]
+    paths: ['app/**', 'shared/**', 'scripts/**']
+  workflow_dispatch:
+
+concurrency:
+  group: app-update
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: vars.APP_UPDATES_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: app
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      # The same API the store builds use (eas.json → production).
+      EXPO_PUBLIC_API_URL: https://freshnesstoyourhome.az/server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      # typecheck regenerates everything from shared/ first (pretypecheck),
+      # including the product photos, which are not committed.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Publish to the production channel
+        env:
+          # Through the environment, not pasted into the command: a commit
+          # message with a quote in it would otherwise break the shell line.
+          MESSAGE: ${{ github.event.head_commit.message || 'Manual publish' }}
+        run: |
+          npx --yes eas-cli@latest update \
+            --channel production \
+            --message "$(printf '%s' "$MESSAGE" | head -n 1)" \
+            --non-interactive

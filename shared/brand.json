@@ -5,8 +5,22 @@
   "phoneDisplay": "+994 50 352 19 19",
   "whatsapp": "994503521919",
   "instagram": "freshness_to_your_home",
-  "hours": { "az": "Həftənin 7 günü · 10:00 – 22:00", "ru": "7 дней в неделю · 10:00 – 22:00", "en": "7 days a week · 10:00 – 22:00" },
-  "city": { "az": "Bakı, Azərbaycan", "ru": "Баку, Азербайджан", "en": "Baku, Azerbaijan" },
+  "email": "info@freshnesstoyourhome.az",
+  "privacyUrl": "https://freshnesstoyourhome.az/privacy/",
+  "hours": {
+    "az": "Həftənin 7 günü · 10:00 – 22:00",
+    "ru": "7 дней в неделю · 10:00 – 22:00",
+    "en": "7 days a week · 10:00 – 22:00"
+  },
+  "city": {
+    "az": "Bakı, Azərbaycan",
+    "ru": "Баку, Азербайджан",
+    "en": "Baku, Azerbaijan"
+  },
   "_map": "Where the map opens when no pin has been dropped yet — the middle of Baku. The embedded picker replaces this once there is a Maps key; see VITE_GOOGLE_MAPS_KEY.",
-  "mapCentre": { "lat": 40.3777, "lng": 49.892, "zoom": 13 }
+  "mapCentre": {
+    "lat": 40.3777,
+    "lng": 49.892,
+    "zoom": 13
+  }
 }

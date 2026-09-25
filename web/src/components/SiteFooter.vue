@@ -43,7 +43,7 @@ const links = computed(() => [
       </div>
       <div class="foot__bot">
         <p>{{ t('foot.note') }}</p>
-        <p>© {{ year }} Freshness To Your Home</p>
+        <p>© {{ year }} Freshness To Your Home · <a href="/privacy/">{{ t('foot.privacy') }}</a></p>
       </div>
     </div>
   </footer>
@@ -68,6 +68,7 @@ const links = computed(() => [
 .foot__nav a:hover{ color:var(--paper); }
 .foot__bot{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; padding-top:24px; font-size:.76rem; }
 .foot__bot p{ margin:0; max-width:60ch; line-height:1.6; }
+.foot__bot a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
 
 @media (max-width:640px){
   .foot__top{ flex-direction:column; }

@@ -159,6 +159,7 @@ export const FILES = [
         '\nexport const CONTACT = ' + JSON.stringify({
           name: b.name, phone: b.phone, phoneDisplay: b.phoneDisplay,
           whatsapp: b.whatsapp, instagram: b.instagram,
+          email: b.email, privacyUrl: b.privacyUrl,
           hours: b.hours, city: b.city,
         }, null, 2).replace(/"([A-Za-z]\w*)":/g, '$1:').replace(/"/g, "'") + '\n' +
         '\n/* Where the map opens before a pin exists. */\n' +
@@ -177,6 +178,7 @@ export const FILES = [
         '\nexport const CONTACT = {\n' +
         `  name: '${b.name}',\n  phone: '${b.phone}',\n  phoneDisplay: '${b.phoneDisplay}',\n` +
         `  whatsapp: '${b.whatsapp}',\n  instagram: '${b.instagram}',\n` +
+        `  email: '${b.email}',\n  privacyUrl: '${b.privacyUrl}',\n` +
         `  hours: ${l(b.hours)},\n  city: ${l(b.city)},\n} as const\n` +
         '\n/* Where the map opens before a pin exists. */\n' +
         `export const MAP_CENTRE = { lat: ${b.mapCentre.lat}, lng: ${b.mapCentre.lng}, zoom: ${b.mapCentre.zoom} } as const\n` +

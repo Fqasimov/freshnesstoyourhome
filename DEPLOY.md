@@ -190,6 +190,25 @@ Never deployed: `.env`, `storage/logs`, `storage/framework`, uploaded
 photos, the `public_html/server/storage` link — the action only removes
 files it uploaded itself. Revoking it is deleting the FTP account.
 
+### App updates without a store review (EAS Update)
+
+`.github/workflows/app-update.yml` publishes the app's code to the
+`production` update channel on every push that touches `app/`, `shared/` or
+`scripts/`. Installed apps download it in the background and use it from the
+next launch. The runtime version is the native **fingerprint**, so an update
+only reaches builds with an identical native side; anything native (a new
+library with native code, a permission, an SDK upgrade) needs `eas build` and
+a store release instead. Store builds carry the channel from `eas.json`.
+
+Off until: the Expo project ID is in `app/app.config.ts`, the repository
+secret `EXPO_TOKEN` exists (expo.dev → Account settings → Access tokens), and
+the repository variable `APP_UPDATES_ENABLED` is `true`. Nothing reaches a
+phone until a store build with updates enabled is installed on it.
+
+The app's product photographs are generated from `shared/products` like the
+website's, so `app/package.json` runs the sync in `eas-build-post-install` —
+without it a cloud build fails on the missing images.
+
 **Sanctum runs stateless.** The panel and the app send a bearer token; nothing
 uses cookies. `bootstrap/app.php` therefore does not call
 `statefulApi()` at all — it once called `statefulApi(false)`, which Laravel

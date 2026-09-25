@@ -8,6 +8,13 @@ import type { ExpoConfig } from 'expo/config'
  * things that are safe to publish belong in them — an API base URL, yes; a key
  * of any kind, never.
  */
+/**
+ * The Expo project this app belongs to (expo.dev → the project → its ID).
+ * Not a secret: it names the project, it grants nothing. Needed for push
+ * notifications in a real build and for over-the-air updates.
+ */
+const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? ''
+
 const config: ExpoConfig = {
   name: 'Freshness To Your Home',
   slug: 'freshness-to-your-home',
@@ -17,6 +24,25 @@ const config: ExpoConfig = {
   userInterfaceStyle: 'light',
   icon: './assets/icon.png',
   assetBundlePatterns: ['**/*'],
+
+  /*
+   * Over-the-air updates (EAS Update). A change to the app's own code —
+   * text, a screen, a fix — reaches phones without a store review; the app
+   * picks it up the next time it starts. A change to native code (a new
+   * library with native parts, a permission, the SDK) still needs a store
+   * build. `fingerprint` enforces that line: an update only goes to builds
+   * whose native side is identical to the one it was made from, so an
+   * update can never land on a build it would crash.
+   */
+  runtimeVersion: { policy: 'fingerprint' },
+  updates: {
+    enabled: EAS_PROJECT_ID !== '',
+    url: EAS_PROJECT_ID ? `https://u.expo.dev/${EAS_PROJECT_ID}` : undefined,
+    checkAutomatically: 'ON_LOAD',
+    // Start straight away with what is on the phone; a downloaded update is
+    // used from the next launch. A customer never waits on a spinner for it.
+    fallbackToCacheTimeout: 0,
+  },
 
   ios: {
     bundleIdentifier: 'az.freshnesstoyourhome.app',
@@ -97,8 +123,7 @@ const config: ExpoConfig = {
   extra: {
     router: {},
     eas: {
-      // Filled in by `eas init` on first build.
-      projectId: process.env.EAS_PROJECT_ID,
+      projectId: EAS_PROJECT_ID || undefined,
     },
   },
 }

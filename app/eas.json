@@ -15,13 +15,15 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://freshnesstoyourhome.az/server"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://freshnesstoyourhome.az/server"
-      }
+      },
+      "channel": "production"
     }
   },
   "submit": {
