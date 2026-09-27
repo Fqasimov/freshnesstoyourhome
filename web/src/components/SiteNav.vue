@@ -46,6 +46,8 @@ const links = computed(() => [
   { to: { path: '/', hash: '#story' }, key: 'nav.story' },
   ...(SETS.length ? [{ to: { path: '/', hash: '#sets' }, key: 'nav.sets' }] : []),
   { to: { path: '/', hash: '#week' }, key: 'nav.week' },
+  // The catalogue button leaves the toolbar on a phone; it lives here instead.
+  { to: { name: 'catalogue' }, key: 'cta.go', phone: true },
   { to: { path: '/', hash: '#order' }, key: 'nav.how' },
 ])
 
@@ -95,7 +97,7 @@ watch(count, (now, before) => {
 </script>
 
 <template>
-  <header class="nav" :class="{ solid }">
+  <header class="nav" :class="{ solid: solid || menu }">
     <div class="nav__in">
       <RouterLink to="/" class="nav__brand">
         <span class="nav__mark"><img :src="mark" alt="Freshness To Your Home"></span>
@@ -106,7 +108,7 @@ watch(count, (now, before) => {
       </RouterLink>
 
       <nav class="nav__links" :class="{ open: menu }">
-        <RouterLink v-for="l in links" :key="l.key" :to="l.to" @click="menu = false">{{ t(l.key) }}</RouterLink>
+        <RouterLink v-for="l in links" :key="l.key" :to="l.to" :class="{ 'only-phone': l.phone }" @click="menu = false">{{ t(l.key) }}</RouterLink>
       </nav>
 
       <div class="nav__tools">
@@ -159,9 +161,14 @@ watch(count, (now, before) => {
 
 /* Below the toolbar's breaking point the label goes and the icon stays: the
    basket and the language switch have first call on the width. */
+.only-phone{ display:none !important; }
+
+/* On a phone the toolbar keeps three things — basket, menu, language — and
+   the catalogue button moves into the menu, where it has room to say what it
+   is. Four round buttons side by side read as clutter at this width. */
 @media (max-width:720px){
-  .navcat span{ display:none; }
-  .navcat{ padding:9px 11px; }
+  .navcat{ display:none; }
+  .only-phone{ display:block !important; font-weight:600; color:var(--brick) !important; }
 }
 
 /* ---------- 4. Header ---------------------------------------------------- */
@@ -299,7 +306,7 @@ watch(count, (now, before) => {
   .nav__brand{ min-width:0; }
 }
 
-@media (max-width:440px){
+@media (max-width:340px){
   .nav__name{ display:none; }
 }
 </style>

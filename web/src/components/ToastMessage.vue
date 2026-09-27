@@ -15,11 +15,14 @@ const { message, showing } = useToast()
 /* ---------- 18. Toast ---------------------------------------------------- */
 .toast{
   position:fixed; left:50%; bottom:28px; z-index:700;
-  transform:translate(-50%,140%); transition:transform .6s var(--ease-out);
+  transform:translate(-50%,140%); transition:transform .6s var(--ease-out), visibility 0s linear .6s;
+  /* Hidden, not just pushed down: on a phone with a home-bar inset the
+     parked pill peeked above the bottom edge of every screen. */
+  visibility:hidden;
   background:var(--ink); color:var(--paper);
   border-radius:100px; padding:13px 24px; font-size:.84rem; letter-spacing:.02em;
   display:flex; align-items:center; gap:10px; box-shadow:0 16px 40px rgba(0,0,0,.3);
 }
-.toast.on{ transform:translate(-50%,0); }
+.toast.on{ transform:translate(-50%,0); visibility:visible; transition:transform .6s var(--ease-out); }
 .toast .bi{ color:var(--acid); }
 </style>

@@ -69,7 +69,7 @@ const shots = [
     <div class="hero__lines"></div>
     <div class="wrap hero__in">
       <div class="hero__text">
-        <p class="eyebrow eyebrow--inv">{{ t('hero.eyebrow') }}</p>
+        <p class="eyebrow eyebrow--inv">{{ t('hero.eyebrow').replace(/ – /g, '\u00a0–\u00a0') }}</p>
         <!--
           The wordmark, set as one: Freshness large with "to your home" beneath
           it. Both halves are the brand's own name, so neither is translated
@@ -201,6 +201,9 @@ const shots = [
 }
 
 @media (max-width:640px){
+  /* The opening hours are one phrase; the tracking is eased so the line
+     breaks between phrases, not inside "10:00 – 22:00". */
+  .hero .eyebrow{ letter-spacing:.14em; font-size:.66rem; }
   .collage__seal{ left:auto; right:4%; bottom:16%; }
 }
 </style>

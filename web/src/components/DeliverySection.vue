@@ -1,6 +1,8 @@
 <script setup>
 import { useI18n } from '../composables/useI18n'
 import BIcon from './BIcon.vue'
+import DeliveryZones from './DeliveryZones.vue'
+import { ZONES } from '../data/delivery'
 
 const { t } = useI18n()
 
@@ -13,12 +15,13 @@ const facts = [
   { k: 'dl.pay', icon: 'credit-card' },
 ]
 
-/* The zones table has no numbers to show yet: every delivery zone ships with
-   a zero fee because the business has not set real ones. Saying "confirmed
-   when you order" is honest; a fabricated "5 AZN" would not be. */
+/* The fee as a span across every area — the table under this card has each
+   one. The minimum order is not set yet, so it still says so honestly. */
+const lo = Math.min(...ZONES.map(z => z.fee[0]))
+const hi = Math.max(...ZONES.map(z => z.fee[1]))
 const terms = [
   ['dl.zones', 'h.zonev'],
-  ['dl.fee', 'dl.ask'],
+  ['dl.fee', null],
   ['dl.min', 'dl.ask'],
 ]
 </script>
@@ -48,11 +51,13 @@ const terms = [
         <dl>
           <template v-for="[k, v] in terms" :key="k">
             <dt>{{ t(k) }}</dt>
-            <dd>{{ t(v) }}</dd>
+            <dd>{{ v ? t(v) : `${lo}–${hi} AZN · ${t('dl.byArea')}` }}</dd>
           </template>
         </dl>
-        <p class="terms__note">{{ t('h.zonenote') }}</p>
+        <p class="terms__note">{{ t('dl.seeTable') }}</p>
       </div>
+
+      <DeliveryZones />
     </div>
   </section>
 </template>
