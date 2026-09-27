@@ -13,7 +13,7 @@ const { t, lang } = useI18n()
    opens on request: fifty-one rows is a scroll nobody asked for. */
 const query = ref('')
 const all = ref(false)
-const SHORT = 12
+const SHORT = 16
 
 // Only a phone starts short; a wide screen has room for all of them.
 const mq = typeof window !== 'undefined' ? window.matchMedia('(min-width:900px)') : null
@@ -51,7 +51,7 @@ const hidden = computed(() => matches.value.length - shown.value.length)
       </thead>
       <tbody>
         <tr v-for="z in shown" :key="z.id">
-          <td>{{ name(z) }}</td>
+          <td :title="name(z)">{{ name(z) }}</td>
           <td class="zones__fee" :class="{ 'is-range': z.fee[0] !== z.fee[1] }">{{ feeText(z) }} <small>AZN</small></td>
         </tr>
         <tr v-if="!matches.length"><td colspan="2" class="zones__none">{{ t('deliv.zoneNone') }}</td></tr>
@@ -69,7 +69,7 @@ const hidden = computed(() => matches.value.length - shown.value.length)
 
 <style scoped>
 .zones{
-  grid-column:1 / -1;
+  grid-column:1 / -1; min-width:0;
   border:1px solid var(--line); border-radius:var(--radius);
   background:var(--paper-2); padding:clamp(20px,2.6vw,32px);
 }
@@ -83,13 +83,21 @@ const hidden = computed(() => matches.value.length - shown.value.length)
 
 /* Three columns of rows on a wide screen, one on a phone. The table flows as
    a block so the browser can break it into columns. */
-.zones__table{ width:100%; border-collapse:collapse; font-size:.9rem; }
+.zones__table{ display:block; width:100%; border-collapse:collapse; font-size:.82rem; }
+.zones__table td{ display:block; }
 .zones__table thead{ display:none; }
-.zones__table tbody{ display:block; columns:3 240px; column-gap:36px; }
-.zones__table tr{ display:flex; justify-content:space-between; gap:12px; break-inside:avoid; padding:9px 0; border-bottom:1px solid var(--line); }
+.zones__table tbody{ display:block; columns:5 170px; column-gap:24px; }
+.zones__table tr{ display:flex; justify-content:space-between; gap:8px; break-inside:avoid; padding:5px 0; border-bottom:1px solid var(--line-soft, var(--line)); }
+.zones__table td:first-child{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .zones__table td{ padding:0; }
 .zones__fee{ font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums lining-nums; }
-.zones__fee small{ font-weight:500; color:var(--ink-3); font-size:.72rem; }
+.zones__fee small{ font-weight:500; color:var(--ink-3); font-size:.66rem; }
+
+/* A phone gets two columns: the names are short enough, and the list halves. */
+@media (max-width:640px){
+  .zones__table tbody{ columns:2; column-gap:16px; }
+  .zones__table{ font-size:.78rem; }
+}
 .zones__fee.is-range{ color:var(--brick); }
 .zones__none{ color:var(--ink-3); flex:1; }
 
