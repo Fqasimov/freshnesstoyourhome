@@ -214,7 +214,7 @@ watch([category, band], () => { if (isNarrow()) filtersOpen.value = false })
             </ul>
           </section>
 
-          <button class="btn btn--ghost cat__resetwide" @click="reset">{{ t('cat.reset') }}</button>
+          <button class="btn btn--outline cat__resetwide" @click="reset">{{ t('cat.reset') }}</button>
         </aside>
 
         <div class="cat__results">
@@ -228,7 +228,7 @@ watch([category, band], () => { if (isNarrow()) filtersOpen.value = false })
           <div v-else class="empty">
             <h3>{{ t('ui.empty.t') }}</h3>
             <p>{{ t('cat.none') }}</p>
-            <button class="btn btn--ghost" style="margin-top:16px" @click="reset">{{ t('cat.reset') }}</button>
+            <button class="btn btn--outline" style="margin-top:16px" @click="reset">{{ t('cat.reset') }}</button>
           </div>
         </div>
       </div>

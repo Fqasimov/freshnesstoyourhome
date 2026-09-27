@@ -144,6 +144,11 @@ section{ position:relative; scroll-margin-top:78px; }
 .btn--ghost{ --bg:transparent; --fg:var(--paper); box-shadow:inset 0 0 0 1px rgba(246,243,234,.4); }
 .btn--ghost::before{ background:var(--paper); }
 .btn--ghost:hover{ color:var(--ink); }
+/* The ghost's twin for cream backgrounds. The ghost is cream-on-transparent
+   for the dark hero and contact band; on paper it vanished until hovered. */
+.btn--outline{ --bg:transparent; --fg:var(--brick); box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--brick) 55%, transparent); }
+.btn--outline::before{ background:var(--brick); }
+.btn--outline:hover{ color:#fff; }
 .btn--brick{ --bg:var(--brick); --fg:#fff; }
 .btn--brick::before{ background:var(--ink); }
 .btn--brick:hover{ color:#fff; }
