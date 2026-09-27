@@ -24,6 +24,15 @@ Options -Indexes -MultiViews
   RewriteRule (^|/)(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml)$ - [F,L,NC]
   RewriteRule \.(env|ini|log|sql|sqlite|bak|old|orig|swp|dist|sh|ya?ml)$ - [F,L,NC]
 
+  # The shop's pages (/, /kataloq) are one app: any path that is not a real
+  # file or folder is answered by index.html, and the app shows the page.
+  # The API, the panel and the privacy page are real folders and never
+  # reach this line.
+  RewriteCond %{REQUEST_URI} !^/(server|cms|privacy|\.well-known)(/|$)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+
   # The site is static: no PHP runs outside the API folder.
   RewriteCond %{REQUEST_URI} !^/server/
   RewriteRule \.(php[0-9]?|phtml|phar|pht)$ - [F,L,NC]

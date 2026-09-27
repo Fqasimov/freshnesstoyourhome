@@ -1,18 +1,28 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import { glideTo } from './composables/glide'
 
 /**
- * Two pages.
+ * Two pages, at real addresses: freshnesstoyourhome.az/ and /kataloq.
  *
- * Hash history rather than HTML5 history, because this site is built as static
- * files and also as a single self-contained .html for previews. Clean paths
- * would need the host to rewrite every unknown URL back to index.html, and a
- * deep link would 404 anywhere that is not configured for it. Switching is one
- * import once there is hosting that rewrites.
+ * The site used to route on the part after a "#" (/#/kataloq), so it could
+ * run from any static folder. On the real host Apache sends every unknown
+ * path back to index.html (deploy/website.htaccess), so clean paths work —
+ * and Google indexes /kataloq as a page of its own, which it never does for
+ * an address that only differs after the "#".
+ *
+ * The single-file preview still uses the "#" form: it is opened straight
+ * from disk, where nothing can do that rewriting.
  */
+const SINGLE = import.meta.env.MODE === 'single'
+
+// Old links and bookmarks (/#/kataloq) land on the clean address.
+if (!SINGLE && location.hash.startsWith('#/')) {
+  history.replaceState(null, '', location.hash.slice(1) || '/')
+}
+
 export const router = createRouter({
-  history: createWebHashHistory(),
+  history: SINGLE ? createWebHashHistory() : createWebHistory(),
   routes: [
     { path: '/', name: 'home', component: HomeView },
     {
