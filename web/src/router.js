@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
+import { glideTo } from './composables/glide'
 
 /**
  * Two pages.
@@ -30,7 +31,12 @@ export const router = createRouter({
    * page drops you halfway down the catalogue.
    */
   scrollBehavior (to, from, saved) {
-    if (to.hash) return { el: to.hash, behavior: 'smooth' }
+    if (to.hash) {
+      // Our own glide rather than the browser's, which is too quick to follow.
+      // Coming from another page, wait a beat for the home page to render.
+      setTimeout(() => glideTo(to.hash), from.name === to.name ? 0 : 120)
+      return false
+    }
     if (saved) return saved
     return { top: 0 }
   },

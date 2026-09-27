@@ -1,4 +1,5 @@
 <script setup>
+import { glideTo } from '../composables/glide'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n, lang, LANGS } from '../composables/useI18n'
@@ -52,6 +53,13 @@ const links = computed(() => [
 ])
 
 const route = useRoute()
+
+/* Clicking the section you are already linked to does not change the route,
+   so the router would not scroll — glide there ourselves. */
+const go = l => {
+  menu.value = false
+  if (l.to.hash && route.name === 'home' && route.hash === l.to.hash) glideTo(l.to.hash)
+}
 
 /* The transparent header is for the home page, where it sits over a dark hero
    photograph. Every other page starts at the paper background, so the nav has
@@ -108,7 +116,7 @@ watch(count, (now, before) => {
       </RouterLink>
 
       <nav class="nav__links" :class="{ open: menu }">
-        <RouterLink v-for="l in links" :key="l.key" :to="l.to" :class="{ 'only-phone': l.phone }" @click="menu = false">{{ t(l.key) }}</RouterLink>
+        <RouterLink v-for="l in links" :key="l.key" :to="l.to" :class="{ 'only-phone': l.phone }" @click="go(l)">{{ t(l.key) }}</RouterLink>
       </nav>
 
       <div class="nav__tools">

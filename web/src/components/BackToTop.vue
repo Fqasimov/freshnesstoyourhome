@@ -1,11 +1,11 @@
 <script setup>
+import { glideTo } from '../composables/glide'
 import BIcon from './BIcon.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
-import { reducedMotion } from '../composables/useMotion'
 
 const shown = ref(false)
 const onScroll = () => { shown.value = window.scrollY > 900 }
-const toTop = () => window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' })
+const toTop = () => glideTo(document.body)
 
 onMounted(() => { window.addEventListener('scroll', onScroll, { passive: true }); onScroll() })
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
