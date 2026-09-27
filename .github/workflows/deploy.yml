@@ -16,7 +16,7 @@ name: Deploy
 on:
   push:
     branches: [claude/photo-analysis-bgp25f]
-    paths-ignore: ['**.md', 'app/**']
+    paths-ignore: ['**.md', 'app/**', '.claude/**']
   workflow_dispatch:
 
 # One deploy at a time, in order: a second push waits for the first.
