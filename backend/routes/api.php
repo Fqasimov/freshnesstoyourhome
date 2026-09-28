@@ -48,6 +48,11 @@ Route::get('catalogue', [CatalogueController::class, 'index'])
 Route::post('orders/quote', [OrderController::class, 'quote'])
     ->middleware('throttle:catalogue');
 
+// An order from the website, which has no accounts. Tightly limited: it is
+// public and it writes. See OrderController::storeFromWebsite.
+Route::post('orders/web', [OrderController::class, 'storeFromWebsite'])
+    ->middleware('throttle:web-order');
+
 // Run migrations after an automated upload. Token-gated; see DeployController.
 Route::post('deploy/migrate', [DeployController::class, 'migrate'])->middleware('throttle:deploy');
 
@@ -169,12 +174,14 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::patch('categories/{id}', [CategoryController::class, 'update']);
 
         Route::get('bundles', [BundleController::class, 'index']);
+        Route::post('bundles', [BundleController::class, 'store']);
         Route::patch('bundles/{id}', [BundleController::class, 'update']);
         Route::post('bundles/{id}/photo', [BundleController::class, 'photo'])
             ->middleware('throttle:admin-upload');
         Route::delete('bundles/{id}/photo', [BundleController::class, 'removePhoto']);
 
         Route::get('zones', [DeliveryZoneController::class, 'index']);
+        Route::post('zones', [DeliveryZoneController::class, 'store']);
         Route::patch('zones/{id}', [DeliveryZoneController::class, 'update']);
 
         Route::get('customers', [CustomerController::class, 'index']);

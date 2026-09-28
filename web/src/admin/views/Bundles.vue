@@ -4,6 +4,7 @@ import { api, money } from '../api'
 import { say, complain } from '../toast'
 import PhotoField from './PhotoField.vue'
 import { bundledPhoto } from '../bundledPhotos'
+import BundleForm from './BundleForm.vue'
 
 /**
  * Aksiyalar.
@@ -16,6 +17,8 @@ import { bundledPhoto } from '../bundledPhotos'
 const rows = ref([])
 const busy = ref(true)
 const draft = ref({})
+/* null: closed · 'new': a new set · a bundle: that one being edited */
+const editing = ref(null)
 
 async function load () {
   busy.value = true
@@ -62,11 +65,22 @@ function saveDiscount (b) {
   patch(b, { discount_percent: Math.round(value) }, `Endirim ${Math.round(value)}%`)
 }
 
+function saved (bundle) {
+  const card = rows.value.find(b => b.id === bundle.id)
+  if (card) Object.assign(card, bundle)
+  else rows.value.push(bundle)
+  draft.value[bundle.id] = bundle.discount_percent
+  editing.value = null
+}
+
 onMounted(load)
 </script>
 
 <template>
-  <h2 class="a-h">Aksiyalar və setlər</h2>
+  <div class="a-row" style="align-items:flex-start">
+    <h2 class="a-h" style="flex:1">Aksiyalar və setlər</h2>
+    <button class="a-btn" @click="editing = 'new'">+ Yeni set</button>
+  </div>
   <p class="a-sub">
     Setlər söndürülmüş vəziyyətdə gəlir. Yandırılan set yalnız tərkibindəki
     bütün məhsullar stokda olduqda saytda görünür. Şəkil yükləsəniz, sayt
@@ -74,7 +88,7 @@ onMounted(load)
   </p>
 
   <div v-if="busy" class="a-empty">Yüklənir…</div>
-  <div v-else-if="!rows.length" class="a-empty">Set yoxdur.</div>
+  <div v-else-if="!rows.length" class="a-empty">Set yoxdur. «+ Yeni set» ilə yaradın.</div>
 
   <div v-else class="a-grid" style="grid-template-columns:repeat(auto-fill,minmax(310px,1fr))">
     <div v-for="b in rows" :key="b.id" class="a-card">
@@ -88,7 +102,7 @@ onMounted(load)
       </div>
 
       <div class="a-row" style="margin-bottom:8px">
-        <b style="flex:1">{{ b.name?.az ?? b.id }}</b>
+        <button type="button" class="a-link" style="flex:1" @click="editing = b">{{ b.name?.az ?? b.id }}</button>
         <label class="a-sw">
           <input type="checkbox" :checked="b.is_active" @change="toggle(b)">
           <span>{{ b.is_active ? 'Aktiv' : 'Söndürülüb' }}</span>
@@ -135,4 +149,7 @@ onMounted(load)
       </p>
     </div>
   </div>
+
+  <BundleForm v-if="editing" :bundle="editing === 'new' ? null : editing"
+              @close="editing = null" @saved="saved" />
 </template>

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { api, toAzn, toMinor } from '../api'
 import { say, complain } from '../toast'
+import ZoneForm from './ZoneForm.vue'
 
 /**
  * Delivery areas and what they cost.
@@ -14,6 +15,7 @@ const rows = ref([])
 const busy = ref(true)
 const fee = ref({})
 const min = ref({})
+const editing = ref(null)
 
 async function load () {
   busy.value = true
@@ -53,12 +55,26 @@ function saveMin (z) {
   patch(z, { min_order_minor: minor }, `${z.name?.az ?? z.id}: minimum ${toAzn(minor)} AZN`)
 }
 
+function saved (zone) {
+  const row = rows.value.find(z => z.id === zone.id)
+  if (row) Object.assign(row, zone)
+  else rows.value.push(zone)
+  fee.value[zone.id] = toAzn(zone.fee_minor)
+  min.value[zone.id] = toAzn(zone.min_order_minor)
+  editing.value = null
+}
+
 onMounted(load)
 </script>
 
 <template>
-  <h2 class="a-h">Çatdırılma zonaları</h2>
-  <p class="a-sub">Burada yazılan haqq növbəti sifarişdən tutulur.</p>
+  <div class="a-row" style="align-items:flex-start">
+    <div style="flex:1">
+      <h2 class="a-h">Çatdırılma zonaları</h2>
+      <p class="a-sub">Burada yazılan haqq növbəti sifarişdən tutulur. Adı dəyişmək üçün zonanın adına toxunun.</p>
+    </div>
+    <button class="a-btn" @click="editing = 'new'">+ Yeni zona</button>
+  </div>
 
   <div v-if="busy" class="a-empty">Yüklənir…</div>
   <div v-else class="a-scroll">
@@ -74,7 +90,7 @@ onMounted(load)
       <tbody>
         <tr v-for="z in rows" :key="z.id">
           <td>
-            <b>{{ z.name?.az ?? z.id }}</b>
+            <button type="button" class="a-link" @click="editing = z">{{ z.name?.az ?? z.id }}</button>
             <div class="a-mono a-muted">{{ z.id }}</div>
           </td>
           <td class="num">
@@ -95,4 +111,7 @@ onMounted(load)
       </tbody>
     </table>
   </div>
+
+  <ZoneForm v-if="editing" :zone="editing === 'new' ? null : editing"
+            @close="editing = null" @saved="saved" />
 </template>

@@ -94,6 +94,12 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(6)->by('email:'.sha1(\App\Support\BlindIndex::normaliseEmail((string) $r->input('email')))),
         ]);
 
+        // Website orders need no account, so the only brake is the source.
+        RateLimiter::for('web-order', fn (Request $r) => [
+            Limit::perMinute(3)->by($r->ip()),
+            Limit::perDay(30)->by($r->ip()),
+        ]);
+
         RateLimiter::for('register', fn (Request $r) => [
             Limit::perMinute(10)->by($r->ip()),
             Limit::perHour(40)->by($r->ip()),

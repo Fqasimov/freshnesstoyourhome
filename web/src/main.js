@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import { loadCatalogue } from './data/catalogue'
+import { loadCatalogue, keepCatalogueLive } from './data/catalogue'
 import { router } from './router'
 import reveal from './directives/reveal'
 import favicon from './assets/logo-mark.png'
@@ -21,3 +21,4 @@ createApp(App).use(router).directive('reveal', reveal).mount('#app')
    replaces it in place the moment the API answers. Making first paint wait on
    the network would trade a correct price for a blank page. */
 loadCatalogue()
+keepCatalogueLive()

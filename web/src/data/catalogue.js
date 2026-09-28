@@ -23,6 +23,7 @@ import {
   PRODUCTS as BUNDLED_PRODUCTS,
   SETS as BUNDLED_SETS,
 } from './catalogue.generated'
+import { ZONES } from './delivery'
 
 /* The shop's own details live in shared/brand.json, where the app reads them
    too. Re-exported from here so the many components that already import
@@ -181,6 +182,36 @@ function adaptCategories (apiCategories, products) {
  * shows yesterday's prices is worth more than a shop that shows nothing —
  * which is also why nothing here awaits before the first paint.
  */
+/* The delivery areas the server serves, in the website's shape.
+   An area the panel added appears; one it switched off disappears; a fee it
+   changed wins. Where the server's fee is still the low end of the range in
+   shared/delivery.json, that range is kept — "5–7 AZN" is truer than "5". */
+function mergeZones (apiZones) {
+  const bundled = new Map(ZONES.map(z => [z.id, z]))
+  const next = apiZones.map(z => {
+    const fee = Math.round(z.fee_minor / 100)
+    const known = bundled.get(z.id)
+    const name = z.name ?? {}
+    return {
+      id: z.id,
+      fee: known && known.fee[0] === fee ? known.fee : [fee, fee],
+      az: name.az ?? known?.az ?? z.id,
+      ru: name.ru ?? known?.ru ?? name.az ?? z.id,
+      en: name.en ?? known?.en ?? name.az ?? z.id,
+    }
+  })
+  ZONES.splice(0, ZONES.length, ...next)
+}
+
+/* Keeps the page in step with the panel: fetched again when the tab comes
+   back into view, and once a minute while it is being looked at. The server
+   drops its own cache on every panel edit, so the next fetch is the edit. */
+export function keepCatalogueLive () {
+  const again = () => { if (document.visibilityState === 'visible') loadCatalogue() }
+  document.addEventListener('visibilitychange', again)
+  setInterval(again, 60_000)
+}
+
 export async function loadCatalogue () {
   if (!API) {
     // No API configured — a plain static build of the marketing site. The
@@ -190,6 +221,8 @@ export async function loadCatalogue () {
 
   try {
     const response = await fetch(`${API}/api/catalogue`, {
+      // Always the server's current copy, never one the browser kept.
+      cache: 'no-store',
       headers: { Accept: 'application/json' },
     })
     if (!response.ok) return
@@ -210,6 +243,8 @@ export async function loadCatalogue () {
        not switched any on yet would be advertising a price nobody agreed to.
        The admin panel is what turns them on. */
     SETS.splice(0, SETS.length, ...(data.bundles ?? []).map(adaptBundle))
+
+    if (Array.isArray(data.zones) && data.zones.length) mergeZones(data.zones)
 
     catalogueStale.value = false
   } catch {

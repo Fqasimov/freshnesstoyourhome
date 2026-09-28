@@ -27,6 +27,7 @@ class StaffOrderController extends Controller
         $filters = $request->validate([
             'date' => ['sometimes', 'date_format:Y-m-d'],
             'status' => ['sometimes', Rule::in(array_keys(Order::TRANSITIONS))],
+            'source' => ['sometimes', Rule::in([Order::SOURCE_WEB, Order::SOURCE_IOS, Order::SOURCE_ANDROID, Order::SOURCE_APP])],
         ]);
 
         // A courier sees the work in hand, without contact details; names,
@@ -41,6 +42,7 @@ class StaffOrderController extends Controller
             ->when($courier, fn ($q) => $q->whereNotIn('status', [Order::DELIVERED, Order::CANCELLED]))
             ->when($filters['date'] ?? null, fn ($q, $date) => $q->whereDate('delivery_date', $date))
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
+            ->when($filters['source'] ?? null, fn ($q, $source) => $q->where('source', $source))
             ->orderBy('delivery_date')
             ->orderBy('created_at')
             ->paginate(50);

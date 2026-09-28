@@ -54,6 +54,15 @@ defineExpose({ load })
       </div>
     </div>
 
+    <h2 class="a-h" style="margin-top:26px">Sifarişlər haradan gəlir</h2>
+    <p class="a-sub">Son 30 gün.</p>
+    <div class="a-grid">
+      <div v-for="(n, src) in data.orders.by_source ?? {}" :key="src" class="a-card a-stat">
+        <b>{{ n }}</b>
+        <span>{{ { web: 'Sayt', ios: 'iPhone', android: 'Android', app: 'Tətbiq (digər)' }[src] ?? src }}</span>
+      </div>
+    </div>
+
     <h2 class="a-h" style="margin-top:26px">Dövriyyə</h2>
     <p class="a-sub">Yalnız çatdırılmış sifarişlər sayılır.</p>
     <div class="a-grid">

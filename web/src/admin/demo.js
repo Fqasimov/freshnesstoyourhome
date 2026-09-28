@@ -254,6 +254,7 @@ function dashboard () {
       today: db.orders.filter(o => o.delivery_date === today).length,
       tomorrow: db.orders.filter(o => o.delivery_date === day(1)).length,
       new_today: 1,
+      by_source: { web: 2, ios: 2, android: 1, app: 0 },
       awaiting_weights: open.filter(o => o.requires_weighing && !o.weighed_at).length,
     },
     revenue: {
@@ -429,6 +430,13 @@ export async function respond (path, method, body) {
 
   if (seg[0] === 'admin' && seg[1] === 'products' && method === 'PATCH') {
     const p = db.products.find(x => x.id === seg[2])
+    for (const [k, v] of Object.entries(body.translations ?? {})) {
+      for (const f of ['name', 'description', 'unit_label']) {
+        if (v[f]) p[f] = { ...p[f], [k]: v[f] }
+        else if (f !== 'name' && v[f] === null && p[f]) { const next = { ...p[f] }; delete next[k]; p[f] = next }
+      }
+    }
+    if (body.category_id) p.category_id = body.category_id
     // The same bounds the server validates against, so the preview refuses
     // what the real panel would refuse.
     if (body.price_minor !== undefined && (body.price_minor < 1 || body.price_minor > 10_000_000)) {
@@ -480,8 +488,26 @@ export async function respond (path, method, body) {
     audit('bundle.photo', 'bundle', b.id, { image_file: { from: null, to: file.name } })
     return bundleShape(b)
   }
+  if (route === '/admin/bundles' && method === 'POST') {
+    if (db.bundles.some(x => x.id === body.id)) throw new DemoError('Bu kod artıq var.', { id: ['Bu kod artıq var.'] })
+    const b = {
+      id: body.id, discount_percent: body.discount_percent, is_active: false, sort: db.bundles.length,
+      image_url: null, thumb_url: null,
+      name: Object.fromEntries(Object.entries(body.translations).filter(([, v]) => v.name).map(([k, v]) => [k, v.name])),
+      description: Object.fromEntries(Object.entries(body.translations).filter(([, v]) => v.description).map(([k, v]) => [k, v.description])),
+      items: body.items.map(i => ({ ...i })),
+    }
+    db.bundles.push(b)
+    audit('bundle.create', 'bundle', b.id, { discount_percent: { from: null, to: b.discount_percent } })
+    return bundleShape(b)
+  }
   if (seg[0] === 'admin' && seg[1] === 'bundles' && method === 'PATCH') {
     const b = db.bundles.find(x => x.id === seg[2])
+    if (body.items) b.items = body.items.map(i => ({ ...i }))
+    for (const [k, v] of Object.entries(body.translations ?? {})) {
+      if (v.name) b.name = { ...b.name, [k]: v.name }
+      if (v.description !== undefined) b.description = { ...b.description, [k]: v.description }
+    }
     if (body.discount_percent !== undefined && (body.discount_percent < 0 || body.discount_percent > 60)) {
       throw new DemoError('Endirim 0 və 60% arasında olmalıdır.',
         { discount_percent: ['Endirim 0 və 60% arasında olmalıdır.'] })
@@ -499,8 +525,19 @@ export async function respond (path, method, body) {
 
   /* zones */
   if (route === '/admin/zones' && method === 'GET') return { data: db.zones }
+  if (route === '/admin/zones' && method === 'POST') {
+    if (db.zones.some(x => x.id === body.id)) throw new DemoError('Bu kod artıq var.', { id: ['Bu kod artıq var.'] })
+    const z = {
+      id: body.id, fee_minor: body.fee_minor, min_order_minor: body.min_order_minor ?? 0, is_active: true, sort: db.zones.length,
+      name: Object.fromEntries(Object.entries(body.translations).filter(([, v]) => v.name).map(([k, v]) => [k, v.name])),
+    }
+    db.zones.push(z)
+    audit('zone.create', 'zone', z.id, { fee_minor: { from: null, to: z.fee_minor } })
+    return { ...z }
+  }
   if (seg[0] === 'admin' && seg[1] === 'zones' && method === 'PATCH') {
     const z = db.zones.find(x => x.id === seg[2])
+    for (const [k, v] of Object.entries(body.translations ?? {})) if (v.name) z.name = { ...z.name, [k]: v.name }
     const changes = {}
     for (const key of ['fee_minor', 'min_order_minor', 'is_active', 'sort']) {
       if (body[key] !== undefined && body[key] !== z[key]) {
@@ -509,7 +546,7 @@ export async function respond (path, method, body) {
       }
     }
     if (Object.keys(changes).length) audit('zone.update', 'zone', z.id, changes)
-    return { status: 'ok' }
+    return { ...z }
   }
 
   /* customers */
@@ -551,9 +588,12 @@ export async function respond (path, method, body) {
   if (route === '/staff/orders' && method === 'GET') {
     const status = params.get('status')
     const date = params.get('date')
+    const source = params.get('source')
+    // Sample orders from each door, so the Mənbə column shows what it does.
+    db.orders.forEach((o, i) => { o.source ??= ['web', 'ios', 'android', 'web', 'ios'][i % 5] })
     return {
       data: db.orders.filter(o =>
-        (!status || o.status === status) && (!date || o.delivery_date === date)),
+        (!status || o.status === status) && (!date || o.delivery_date === date) && (!source || o.source === source)),
     }
   }
   if (seg[0] === 'staff' && seg[1] === 'orders' && seg[2] && seg[3] === 'transition') {

@@ -21,6 +21,7 @@ const form = ref({
   unit_kind: 'kg',
   unit_qty: 1,
   az: '', en: '', ru: '',
+  desc_az: '', desc_en: '', desc_ru: '',
   unit_az: '1 kq', unit_en: '1 kg', unit_ru: '1 кг',
   in_stock: true,
   is_popular: false,
@@ -81,9 +82,9 @@ async function submit () {
         in_stock: form.value.in_stock,
         is_popular: form.value.is_popular,
         translations: {
-          az: { name: form.value.az.trim(), unit_label: form.value.unit_az },
-          en: { name: form.value.en.trim() || undefined, unit_label: form.value.unit_en },
-          ru: { name: form.value.ru.trim() || undefined, unit_label: form.value.unit_ru },
+          az: { name: form.value.az.trim(), description: form.value.desc_az.trim() || undefined, unit_label: form.value.unit_az },
+          en: { name: form.value.en.trim() || undefined, description: form.value.desc_en.trim() || undefined, unit_label: form.value.unit_en },
+          ru: { name: form.value.ru.trim() || undefined, description: form.value.desc_ru.trim() || undefined, unit_label: form.value.unit_ru },
         },
       },
     })
@@ -140,6 +141,23 @@ async function submit () {
       <div class="a-field">
         <label for="np-ru">Rusca</label>
         <input id="np-ru" v-model="form.ru" class="a-in" placeholder="Кефир 1 л">
+      </div>
+    </div>
+
+    <div class="a-sec">
+      <h3>Təsvir</h3>
+      <div class="a-field">
+        <label for="np-daz">Azərbaycanca</label>
+        <textarea id="np-daz" v-model="form.desc_az" class="a-in" maxlength="600"
+                  placeholder="Mənşəyi, dadı, necə bişirilir…"></textarea>
+      </div>
+      <div class="a-field">
+        <label for="np-den">İngiliscə</label>
+        <textarea id="np-den" v-model="form.desc_en" class="a-in" maxlength="600"></textarea>
+      </div>
+      <div class="a-field">
+        <label for="np-dru">Rusca</label>
+        <textarea id="np-dru" v-model="form.desc_ru" class="a-in" maxlength="600"></textarea>
       </div>
     </div>
 

@@ -36,6 +36,75 @@ class BundleController extends Controller
         return response()->json(['data' => $bundles->map(fn (Bundle $b) => $this->shape($b))]);
     }
 
+    /**
+     * Make a new set.
+     *
+     * It starts switched off, like the sets that shipped with the site: the
+     * shopkeeper sees the price it works out to and turns it on when that
+     * number is one they mean.
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            // A slug, permanent, like a product's: it names the set's photo
+            // folder and the line a basket holds it under.
+            'id' => ['required', 'string', 'min:3', 'max:40', 'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/', 'unique:bundles,id'],
+            'discount_percent' => ['required', 'integer', 'min:0', 'max:60'],
+            'is_active' => ['sometimes', 'boolean'],
+
+            'items' => ['required', 'array', 'min:1', 'max:12'],
+            'items.*.product_id' => ['required', 'string', 'distinct', 'exists:products,id'],
+            'items.*.qty' => ['required', 'numeric', 'min:0.001', 'max:99'],
+
+            'translations' => ['required', 'array'],
+            'translations.az.name' => ['required', 'string', 'max:120'],
+            'translations.*.name' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'translations.*.description' => ['sometimes', 'nullable', 'string', 'max:600'],
+        ]);
+
+        $bundle = DB::transaction(function () use ($data) {
+            $bundle = Bundle::create([
+                'id' => $data['id'],
+                'discount_percent' => $data['discount_percent'],
+                'is_active' => $data['is_active'] ?? false,
+                'sort' => (int) Bundle::max('sort') + 1,
+            ]);
+
+            foreach ($data['items'] as $item) {
+                BundleItem::create([
+                    'bundle_id' => $bundle->id,
+                    'product_id' => $item['product_id'],
+                    'qty' => $item['qty'],
+                ]);
+            }
+
+            foreach ($data['translations'] as $locale => $fields) {
+                if (! in_array($locale, self::LOCALES, true) || blank($fields['name'] ?? null)) {
+                    continue;
+                }
+
+                BundleTranslation::create([
+                    'bundle_id' => $bundle->id,
+                    'locale' => $locale,
+                    'name' => $fields['name'],
+                    'description' => $fields['description'] ?? null,
+                ]);
+            }
+
+            return $bundle;
+        });
+
+        Audit::record($request->user(), 'bundle.create', 'bundle', $bundle->id, [
+            'discount_percent' => ['from' => null, 'to' => $bundle->discount_percent],
+            'items' => ['from' => null, 'to' => collect($data['items'])->map(fn ($i) => $i['product_id'].'×'.(float) $i['qty'])->all()],
+            'name' => ['from' => null, 'to' => $data['translations']['az']['name']],
+        ]);
+
+        return response()->json($this->shape(
+            $bundle->fresh(['translations', 'items.product.translations'])
+        ), 201);
+    }
+
     public function update(Request $request, string $id): JsonResponse
     {
         $data = $request->validate([
@@ -46,7 +115,7 @@ class BundleController extends Controller
             'sort' => ['sometimes', 'integer', 'min:0', 'max:9999'],
 
             'items' => ['sometimes', 'array', 'min:1', 'max:12'],
-            'items.*.product_id' => ['required', 'string', 'exists:products,id'],
+            'items.*.product_id' => ['required', 'string', 'distinct', 'exists:products,id'],
             'items.*.qty' => ['required', 'numeric', 'min:0.001', 'max:99'],
 
             'translations' => ['sometimes', 'array'],

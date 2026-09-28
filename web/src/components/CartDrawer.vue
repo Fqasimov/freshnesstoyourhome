@@ -11,6 +11,7 @@ const { t, nm } = useI18n()
 const {
   lines, count, total, open, setQty, remove, whatsapp, weighed, ceiling,
   zoneId, address, mapLink, zone, deliveryText, canSend,
+  name, phone, send, sending, placedCode,
 } = useCart()
 
 const countLabel = computed(() =>
@@ -72,6 +73,14 @@ const MAPS_URL = mapsUrl()
       </TransitionGroup>
     </div>
 
+    <!-- Just ordered: the basket is empty and the order has a code. -->
+    <div v-if="placedCode && !lines.length" class="placed">
+      <p class="placed__h">{{ t('cart.placed') }}</p>
+      <p class="placed__code">{{ placedCode }}</p>
+      <p class="placed__p">{{ t('cart.placedP') }}</p>
+      <a class="placed__wa" :href="whatsapp" target="_blank" rel="noopener">{{ t('cart.placedWa') }}</a>
+    </div>
+
     <div class="drawer__foot" v-if="lines.length">
       <div class="total">
         <span>{{ t('cart.sub') }}</span>
@@ -90,6 +99,14 @@ const MAPS_URL = mapsUrl()
            courier reads it off the order instead of a chat thread. -->
       <div class="deliv">
         <p class="deliv__h">{{ t('deliv.h') }}</p>
+
+        <label class="deliv__l" for="cart-name">{{ t('deliv.name') }}</label>
+        <input id="cart-name" class="deliv__in" autocomplete="name"
+               :placeholder="t('deliv.namePh')" v-model="name">
+
+        <label class="deliv__l" for="cart-phone">{{ t('deliv.phone') }}</label>
+        <input id="cart-phone" class="deliv__in" type="tel" inputmode="tel" autocomplete="tel"
+               :placeholder="t('deliv.phonePh')" v-model="phone">
 
         <label class="deliv__l" for="cart-zone">{{ t('deliv.zone') }}</label>
         <select id="cart-zone" class="deliv__in" v-model="zoneId">
@@ -124,12 +141,11 @@ const MAPS_URL = mapsUrl()
       </div>
 
       <p class="drawer__note">{{ t('cart.note') }}</p>
-      <a class="btn btn--brick" :class="{ 'is-off': !canSend }" :href="canSend ? whatsapp : undefined"
-         :aria-disabled="!canSend" target="_blank" rel="noopener"
-         @click="!canSend && $event.preventDefault()">
-        <span>{{ t('cart.send') }}</span>
+      <button type="button" class="btn btn--brick" :class="{ 'is-off': !canSend || sending }"
+              :aria-disabled="!canSend || sending" @click="send">
+        <span>{{ sending ? '…' : t('cart.send') }}</span>
         <BIcon name="arrow-right" :size="14" />
-      </a>
+      </button>
       <p v-if="!canSend" class="deliv__need">{{ t('deliv.needAddr') }}</p>
     </div>
     </div>
@@ -137,6 +153,11 @@ const MAPS_URL = mapsUrl()
 </template>
 
 <style scoped>
+.placed{ margin:18px var(--dpad,24px); padding:18px; border-radius:18px; background:var(--paper-2); text-align:center; }
+.placed__h{ margin:0; font-family:var(--display); font-size:1.3rem; }
+.placed__code{ margin:8px 0; font-size:1.6rem; font-weight:700; letter-spacing:.12em; color:var(--forest); }
+.placed__p{ margin:0 0 10px; font-size:.86rem; color:var(--ink-2); line-height:1.5; }
+.placed__wa{ font-size:.86rem; font-weight:600; color:var(--forest); }
 .drawer{
   position:fixed; top:0; right:0; bottom:0; z-index:500;
   width:min(430px,100%); background:var(--paper);

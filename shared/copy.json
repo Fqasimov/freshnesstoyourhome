@@ -24,8 +24,8 @@
     "en": "In this area the fee depends on the distance. We confirm the exact amount when we confirm the order."
   },
   "deliv.needAddr": {
-    "az": "Göndərmək üçün ərazi və ünvan lazımdır.",
-    "ru": "Укажите район и адрес, чтобы отправить.",
-    "en": "Choose an area and address to send."
+    "az": "Göndərmək üçün ad, telefon, ərazi və ünvan lazımdır.",
+    "ru": "Укажите имя, телефон, район и адрес, чтобы отправить.",
+    "en": "Add your name, phone, area and address to send."
   }
 }

@@ -105,7 +105,9 @@ type RequestOptions = {
 export async function request<T> (path: string, opts: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, auth = true, signal } = opts
 
-  const headers: Record<string, string> = { Accept: 'application/json' }
+  // Which kind of phone this is, so the shop's panel can show where an order
+  // came from. A label only — it grants nothing on the server.
+  const headers: Record<string, string> = { Accept: 'application/json', 'X-Client': Platform.OS }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
 
   if (auth) {

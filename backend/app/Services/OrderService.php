@@ -24,31 +24,69 @@ class OrderService
      * server's own numbers. The only things taken from the request are which
      * products, how many, where to deliver and when.
      */
-    public function place(User $user, array $input): Order
+    public function place(User $user, array $input, string $source = Order::SOURCE_APP): Order
     {
         $address = $user->addresses()->findOrFail($input['address_id']);
 
+        return $this->write($user, $input, $source, [
+            'contact_name' => $user->name,
+            'contact_phone' => $user->phone,
+            'address_line' => $address->line,
+            'address_notes' => $address->notes,
+            'address_map_link' => $address->map_link,
+            'delivery_zone_id' => $address->delivery_zone_id,
+        ], 'Placed by customer.');
+    }
+
+    /**
+     * An order from the website, where there is no account: the name, phone
+     * and address come with the order itself. Priced by exactly the same
+     * code as an app order, and on the same list in the panel.
+     */
+    public function placeFromWebsite(array $input): Order
+    {
+        return $this->write(null, $input, Order::SOURCE_WEB, [
+            'contact_name' => $input['contact_name'],
+            'contact_phone' => $input['contact_phone'],
+            'address_line' => $input['address_line'],
+            'address_notes' => $input['address_notes'] ?? null,
+            'address_map_link' => $input['map_link'] ?? null,
+            'delivery_zone_id' => $input['zone_id'],
+        ], 'Placed on the website.');
+    }
+
+    /**
+     * Everything that decides money is computed here and written from the
+     * server's own numbers. The only things taken from the request are which
+     * products, how many, where to deliver and when.
+     *
+     * @param  array<string, mixed>  $contact  the name, phone and address snapshot
+     */
+    private function write(?User $user, array $input, string $source, array $contact, string $note): Order
+    {
         // The fee and the minimum come from the zone. An address whose zone
         // has since been switched off would otherwise price at a fee of 0 for
         // an area the shop no longer serves.
-        $zoneActive = $address->delivery_zone_id !== null
-            && DeliveryZone::whereKey($address->delivery_zone_id)->where('is_active', true)->exists();
+        $zoneId = $contact['delivery_zone_id'];
+        $zoneActive = $zoneId !== null
+            && DeliveryZone::whereKey($zoneId)->where('is_active', true)->exists();
 
         if (! $zoneActive) {
             throw new OrderRejected('We no longer deliver to this area. Please update the address.');
         }
 
-        $basket = $this->pricing->quote($input['lines'], $address->delivery_zone_id);
+        $basket = $this->pricing->quote($input['lines'], $zoneId);
 
         $this->assertPlaceable($basket);
 
-        return DB::transaction(function () use ($user, $address, $basket, $input) {
+        return DB::transaction(function () use ($user, $basket, $input, $source, $contact, $note) {
             $order = new Order;
 
             $order->forceFill([
                 'code' => $this->nextCode(),
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'status' => Order::PLACED,
+                'source' => $source,
                 'currency' => config('freshness.currency'),
 
                 // Server-computed, every one of them.
@@ -60,14 +98,9 @@ class OrderService
 
                 // Snapshotted, so that editing a saved address next month does
                 // not rewrite where last month's order went.
-                'contact_name' => $user->name,
-                'contact_phone' => $user->phone,
-                'address_line' => $address->line,
-                'address_notes' => $address->notes,
-                'address_map_link' => $address->map_link,
-                'delivery_zone_id' => $address->delivery_zone_id,
+                ...$contact,
 
-                'delivery_date' => $input['delivery_date'],
+                'delivery_date' => $input['delivery_date'] ?? null,
                 'delivery_slot' => $input['delivery_slot'] ?? null,
                 'payment_method' => $input['payment_method'] ?? 'cash',
                 'customer_note' => $input['note'] ?? null,
@@ -91,7 +124,7 @@ class OrderService
                 ]);
             }
 
-            $this->record($order, null, Order::PLACED, $user, 'Placed by customer.');
+            $this->record($order, null, Order::PLACED, $user, $note);
 
             return $order->load('items');
         });

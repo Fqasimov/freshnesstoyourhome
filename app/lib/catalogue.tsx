@@ -3,6 +3,7 @@ import {
   type PropsWithChildren,
 } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { AppState } from 'react-native'
 import { api, type CatalogueResponse, type Category, type Product, type Zone } from './api'
 import { FALLBACK_CATALOGUE } from './fallbackCatalogue'
 
@@ -85,6 +86,16 @@ export function CatalogueProvider ({ children }: PropsWithChildren) {
     })()
 
     return () => { cancelled = true }
+  }, [refresh])
+
+  // A price, a photo or a delivery zone changed in the shop's panel reaches
+  // the app without a restart: fetched again whenever the app comes back to
+  // the front, and once a minute while it is open.
+  useEffect(() => {
+    const quiet = () => { refresh().catch(() => {}) }
+    const sub = AppState.addEventListener('change', s => { if (s === 'active') quiet() })
+    const timer = setInterval(() => { if (AppState.currentState === 'active') quiet() }, 60_000)
+    return () => { sub.remove(); clearInterval(timer) }
   }, [refresh])
 
   const value = useMemo<CatalogueValue>(() => {

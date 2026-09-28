@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { api, money, toAzn } from '../api'
 import { say, complain } from '../toast'
 
@@ -11,6 +11,10 @@ const STATUS = {
 const rows = ref([])
 const busy = ref(true)
 const status = ref('')
+const source = ref('')
+
+/* Where each order was placed. */
+const SOURCE = { web: 'Sayt', ios: 'iPhone', android: 'Android', app: 'Tətbiq' }
 const date = ref('')
 
 const open = ref(null)       // the order in the drawer
@@ -19,15 +23,16 @@ const nextSteps = ref([])
 const weights = ref({})      // item id → kg typed by the courier
 const working = ref(false)
 
-async function load () {
-  busy.value = true
+async function load ({ quiet = false } = {}) {
+  if (!quiet) busy.value = true
   try {
     const query = new URLSearchParams()
     if (status.value) query.set('status', status.value)
+    if (source.value) query.set('source', source.value)
     if (date.value) query.set('date', date.value)
     rows.value = (await api(`/staff/orders?${query}`)).data
   } catch (e) {
-    complain(e)
+    if (!quiet) complain(e)
   } finally {
     busy.value = false
   }
@@ -95,8 +100,20 @@ async function saveWeights () {
 const needsWeighing = computed(() =>
   open.value?.requires_weighing && !open.value?.weighed_at)
 
-watch([status, date], load)
-onMounted(load)
+watch([status, source, date], load)
+/* New orders from the website and the app arrive while this screen is open,
+   so it checks every 30 seconds — and at once when the tab comes back. */
+let timer = null
+const tick = () => { if (document.visibilityState === 'visible') load({ quiet: true }) }
+onMounted(() => {
+  load()
+  timer = setInterval(tick, 30_000)
+  document.addEventListener('visibilitychange', tick)
+})
+onUnmounted(() => {
+  clearInterval(timer)
+  document.removeEventListener('visibilitychange', tick)
+})
 defineExpose({ load })
 </script>
 
@@ -110,8 +127,12 @@ defineExpose({ load })
       <option v-for="(label, key) in STATUS" :key="key" :value="key">{{ label }}</option>
     </select>
     <input v-model="date" type="date" class="a-in" style="max-width:170px">
-    <button v-if="status || date" class="a-btn a-btn--sm a-btn--ghost"
-            @click="status = ''; date = ''">Sıfırla</button>
+    <select v-model="source" class="a-in" style="max-width:170px">
+      <option value="">Bütün mənbələr</option>
+      <option v-for="(label, id) in SOURCE" :key="id" :value="id">{{ label }}</option>
+    </select>
+    <button v-if="status || source || date" class="a-btn a-btn--sm a-btn--ghost"
+            @click="status = ''; source = ''; date = ''">Sıfırla</button>
     <span class="a-muted" style="font-size:.8rem">{{ rows.length }} sifariş</span>
   </div>
 
@@ -122,13 +143,14 @@ defineExpose({ load })
     <table class="a-t">
       <thead>
         <tr>
-          <th>Kod</th><th>Status</th><th>Çatdırılma</th><th>Müştəri</th>
+          <th>Kod</th><th>Mənbə</th><th>Status</th><th>Çatdırılma</th><th>Müştəri</th>
           <th class="num">Məbləğ</th><th></th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="o in rows" :key="o.id">
           <td class="a-mono">{{ o.code }}</td>
+          <td><span class="a-src" :class="`a-src--${o.source}`">{{ SOURCE[o.source] ?? o.source }}</span></td>
           <td><span class="a-pill" :class="`a-pill--${o.status}`">{{ STATUS[o.status] ?? o.status }}</span></td>
           <td>
             {{ o.delivery_date }}
@@ -161,6 +183,7 @@ defineExpose({ load })
       </div>
 
       <dl class="a-dl">
+        <dt>Mənbə</dt><dd><span class="a-src" :class="`a-src--${open.source}`">{{ SOURCE[open.source] ?? open.source }}</span></dd>
         <dt>Müştəri</dt><dd>{{ open.contact_name }}</dd>
         <dt>Telefon</dt><dd><a :href="`tel:${open.contact_phone}`">{{ open.contact_phone }}</a></dd>
         <dt>Ünvan</dt><dd>{{ open.address_line }}</dd>

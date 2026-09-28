@@ -5,6 +5,7 @@ import { say, complain } from '../toast'
 import PhotoField from './PhotoField.vue'
 import { bundledPhoto } from '../bundledPhotos'
 import NewProduct from './NewProduct.vue'
+import EditProduct from './EditProduct.vue'
 
 /**
  * The price list.
@@ -20,6 +21,7 @@ const busy = ref(true)
 const saving = ref(null)
 const picked = ref(new Set())
 const adding = ref(false)
+const editing = ref(null)
 
 /* The edited value lives beside the row, so the row still knows what the
    server last said and can show that the field has been touched. */
@@ -111,6 +113,11 @@ function replaceRow (updated) {
   if (row) Object.assign(row, updated)
 }
 
+function edited (updated) {
+  replaceRow(updated)
+  editing.value = null
+}
+
 function added (product) {
   adding.value = false
   rows.value.unshift(product)
@@ -125,7 +132,8 @@ onMounted(load)
     <div style="flex:1">
       <h2 class="a-h">Məhsullar və qiymətlər</h2>
       <p class="a-sub">
-        Qiyməti dəyişin və Enter basın. Şəkil üçün çərçivəyə toxunun və ya faylı üstünə atın.
+        Qiyməti dəyişin və Enter basın. Adı, təsviri və vahidi dəyişmək üçün məhsulun adına toxunun.
+        Şəkil üçün çərçivəyə toxunun və ya faylı üstünə atın.
         Dəyişiklik saytda və tətbiqdə dərhal görünür.
       </p>
     </div>
@@ -181,8 +189,11 @@ onMounted(load)
               @updated="replaceRow" />
           </td>
           <td>
-            <b>{{ r.name?.az ?? r.id }}</b>
+            <button type="button" class="a-link" @click="editing = r">{{ r.name?.az ?? r.id }}</button>
             <div class="a-mono a-muted">{{ r.id }}</div>
+            <div v-if="r.description?.az" class="a-muted" style="font-size:.76rem; max-width:32ch; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">
+              {{ r.description.az }}
+            </div>
           </td>
           <td class="a-muted">{{ r.category?.az ?? r.category_id }}</td>
           <td class="a-muted">
@@ -214,5 +225,7 @@ onMounted(load)
     </table>
   </div>
 
+  <EditProduct v-if="editing" :product="editing" :categories="categories"
+               @close="editing = null" @saved="edited" />
   <NewProduct v-if="adding" :categories="categories" @close="adding = false" @created="added" />
 </template>

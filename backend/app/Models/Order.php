@@ -18,6 +18,12 @@ class Order extends Model
     public const DELIVERED = 'delivered';
     public const CANCELLED = 'cancelled';
 
+    /** Where an order was placed. `app` is a phone that did not say which. */
+    public const SOURCE_WEB = 'web';
+    public const SOURCE_IOS = 'ios';
+    public const SOURCE_ANDROID = 'android';
+    public const SOURCE_APP = 'app';
+
     /**
      * The only transitions that exist.
      *

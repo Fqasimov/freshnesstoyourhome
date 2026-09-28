@@ -66,7 +66,13 @@ function onSignedIn () {
   refreshBadges()
 }
 
-onMounted(boot)
+onMounted(() => {
+  boot()
+  // The order badge keeps up with new orders from the website and the app.
+  setInterval(() => {
+    if (me.value && document.visibilityState === 'visible') refreshBadges()
+  }, 30_000)
+})
 </script>
 
 <template>

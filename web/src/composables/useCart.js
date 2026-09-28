@@ -23,11 +23,17 @@ const saved = readDelivery()
 const zoneId  = ref(saved.zoneId || '')
 const address = ref(saved.address || '')
 const mapLink = ref(saved.mapLink || '')
+const name    = ref(saved.name || '')
+const phone   = ref(saved.phone || '')
 
-watch([zoneId, address, mapLink], ([z, a, m]) => {
-  try { localStorage.setItem('fth.delivery', JSON.stringify({ zoneId: z, address: a, mapLink: m })) }
+watch([zoneId, address, mapLink, name, phone], ([z, a, m, n, p]) => {
+  try { localStorage.setItem('fth.delivery', JSON.stringify({ zoneId: z, address: a, mapLink: m, name: n, phone: p })) }
   catch (e) {}
 })
+
+/* The code of the order just placed, shown in the drawer once it is sent. */
+const placedCode = ref('')
+const sending = ref(false)
 
 /* The server's pricing of the current basket. Null until it answers, and on a
    static build with no API it stays null for good. */
@@ -178,10 +184,13 @@ export function useCart () {
   const deliveryText = computed(() => (zone.value ? `${feeText(zone.value)} AZN` : ''))
 
   /* Nowhere to send it is as incomplete a basket as nothing in it. */
-  const canSend = computed(() => Boolean(zone.value && address.value.trim()))
+  const canSend = computed(() => Boolean(
+    zone.value && address.value.trim() && name.value.trim().length >= 2 &&
+    /^\+?[0-9 ()-]{7,20}$/.test(phone.value.trim())))
 
-  const whatsapp = computed(() => {
+  const messageFor = code => {
     let msg = t('ui.waIntro') + '\n\n'
+    if (code) msg += `${t('ui.waCode')}: ${code}\n\n`
     lines.value.forEach(l => {
       msg += `• ${nm(l.product)} — ${l.unit} × ${l.qty} = ${money(l.price * l.qty)} AZN\n`
     })
@@ -195,10 +204,75 @@ export function useCart () {
     if (address.value.trim()) msg += `\n${t('ui.waAddr')}: ${address.value.trim()}`
     if (mapLink.value.trim()) msg += `\n${t('ui.waMap')}: ${mapLink.value.trim()}`
 
+    if (name.value.trim()) msg += `\n${t('deliv.name')}: ${name.value.trim()}`
+    if (phone.value.trim()) msg += `\n${t('deliv.phone')}: ${phone.value.trim()}`
+
     msg += `\n\n${t('ui.waOutro')}`
 
     return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(msg)}`
-  })
+  }
+
+  const whatsapp = computed(() => messageFor(placedCode.value))
+
+  /* What the order is made of, as the server understands it: plain products,
+     and each set as the products inside it. */
+  function orderLines () {
+    const qty = new Map()
+    for (const it of items.value) {
+      if (it.kind === 'set') {
+        const set = SETS.find(x => x.id === it.id)
+        for (const p of set?.items ?? []) qty.set(p.id, (qty.get(p.id) ?? 0) + (p.qty ?? 1) * it.qty)
+      } else {
+        qty.set(it.id, (qty.get(it.id) ?? 0) + it.qty)
+      }
+    }
+    return [...qty].map(([product_id, q]) => ({ product_id, qty: q }))
+  }
+
+  /**
+   * Place the order, then open WhatsApp.
+   *
+   * The order goes to the shop's system first, so it is on the panel beside
+   * the app's orders with "website" on it; the WhatsApp message carries its
+   * code, and is where the shop confirms the time and the weights. If the
+   * system cannot be reached the message still goes — a customer is never
+   * stopped from ordering by our server.
+   *
+   * The tab is opened before the request, while the click still counts as the
+   * customer's own, or the browser would block it as a popup.
+   */
+  async function send () {
+    if (!canSend.value || sending.value) return
+    const tab = window.open('', '_blank')
+    sending.value = true
+    let code = ''
+
+    if (API) {
+      try {
+        const res = await fetch(`${API}/api/orders/web`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            lines: orderLines(),
+            zone_id: zoneId.value,
+            contact_name: name.value.trim(),
+            contact_phone: phone.value.trim(),
+            address_line: address.value.trim(),
+            map_link: mapLink.value.trim() || null,
+          }),
+        })
+        if (res.ok) code = (await res.json()).code ?? ''
+      } catch (e) { /* offline: WhatsApp alone still works */ }
+    }
+
+    const url = messageFor(code)
+    if (tab) tab.location.href = url
+    else window.location.href = url
+
+    placedCode.value = code
+    if (code) items.value = []
+    sending.value = false
+  }
 
   /* How many of a plain product (no tin size chosen) are in the basket, and
      a step up or down — what a card's − n + stepper reads and writes. */
@@ -210,5 +284,6 @@ export function useCart () {
     add, setQty, remove, whatsapp, qtyOf, step,
     quote, quoting, weighed, ceiling,
     zoneId, address, mapLink, zone, deliveryText, canSend,
+    name, phone, send, sending, placedCode,
   }
 }

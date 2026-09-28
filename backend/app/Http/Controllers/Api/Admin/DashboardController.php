@@ -48,6 +48,12 @@ class DashboardController extends Controller
                 'today' => Order::whereDate('delivery_date', $today)->count(),
                 'tomorrow' => Order::whereDate('delivery_date', $today->copy()->addDay())->count(),
                 'new_today' => Order::whereDate('placed_at', $today)->count(),
+                // Where the last thirty days of orders came from: the website
+                // or a phone.
+                'by_source' => collect([Order::SOURCE_WEB, Order::SOURCE_IOS, Order::SOURCE_ANDROID, Order::SOURCE_APP])
+                    ->mapWithKeys(fn (string $src) => [$src => Order::where('source', $src)
+                        ->where('placed_at', '>=', $today->copy()->subDays(29))
+                        ->count()]),
                 // Weight-based lines the courier has not confirmed yet: until
                 // these are recorded the shop does not know what it is owed.
                 'awaiting_weights' => Order::where('requires_weighing', true)

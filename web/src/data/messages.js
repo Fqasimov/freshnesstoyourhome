@@ -80,6 +80,8 @@ const OWN = {
     'cart.t':'Səbətiniz','cart.sub':'Təxmini məbləğ',
     'cart.note':'Onlayn heç bir ödəniş alınmır. Səbəti göndərdikdə WhatsApp siyahınızla açılır — dəqiq çəki və yekun məbləği çatdırılmadan əvvəl təsdiqləyirik.',
     'cart.send':'Səbəti WhatsApp-a göndər',
+    'deliv.name':'Adınız','deliv.namePh':'Adınızı daxil edin','deliv.phone':'Telefon','deliv.phonePh':'Telefon nömrənizi daxil edin',
+    'ui.waCode':'Sifariş kodu','cart.placed':'Sifarişiniz qəbul edildi','cart.placedP':'WhatsApp-da çatdırılma vaxtını və çəkini təsdiqləyəcəyik.','cart.placedWa':'WhatsApp-ı yenidən aç',
 
     'ui.set':'Dəst','ui.quick':'Ətraflı','ui.items':'məhsul','ui.item':'məhsul',
     'ui.added':'Səbətə əlavə edildi','ui.empty.t':'Uyğun nəticə tapılmadı',
@@ -192,6 +194,8 @@ const OWN = {
     'cart.t':'Ваша корзина','cart.sub':'Примерная сумма',
     'cart.note':'Онлайн ничего не списывается. Отправка корзины откроет WhatsApp с готовым списком — точный вес и итоговую сумму подтверждаем до доставки.',
     'cart.send':'Отправить корзину в WhatsApp',
+    'deliv.name':'Ваше имя','deliv.namePh':'Введите ваше имя','deliv.phone':'Телефон','deliv.phonePh':'Введите номер телефона',
+    'ui.waCode':'Код заказа','cart.placed':'Заказ принят','cart.placedP':'Мы подтвердим время доставки и вес в WhatsApp.','cart.placedWa':'Открыть WhatsApp снова',
 
     'ui.set':'Набор','ui.quick':'Подробнее','ui.items':'товаров','ui.item':'товар',
     'ui.added':'Добавлено в корзину','ui.empty.t':'Ничего не найдено',
@@ -304,6 +308,8 @@ const OWN = {
     'cart.t':'Your basket','cart.sub':'Estimated total',
     'cart.note':'Nothing is charged online. Sending the basket opens WhatsApp with your list ready — we confirm exact weights and the final total before delivery.',
     'cart.send':'Send basket on WhatsApp',
+    'deliv.name':'Your name','deliv.namePh':'Enter your name','deliv.phone':'Phone','deliv.phonePh':'Enter your phone number',
+    'ui.waCode':'Order code','cart.placed':'Order received','cart.placedP':'We will confirm the delivery time and weights on WhatsApp.','cart.placedWa':'Open WhatsApp again',
 
     'ui.set':'Set','ui.quick':'Quick view','ui.items':'items','ui.item':'item',
     'ui.added':'Added to basket','ui.empty.t':'Nothing matches that',

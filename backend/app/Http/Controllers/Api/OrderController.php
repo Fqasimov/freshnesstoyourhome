@@ -73,9 +73,75 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request): JsonResponse
     {
-        $order = $this->orders->place($request->user(), $request->validated());
+        // The app says which phone it is on. A client that says nothing, or
+        // something else, is filed as a plain app order — the header only
+        // labels the order for the panel and grants nothing.
+        $source = match (strtolower((string) $request->header('X-Client'))) {
+            'ios' => Order::SOURCE_IOS,
+            'android' => Order::SOURCE_ANDROID,
+            default => Order::SOURCE_APP,
+        };
+
+        $order = $this->orders->place($request->user(), $request->validated(), $source);
 
         return response()->json(new OrderResource($order), 201);
+    }
+
+    /**
+     * An order from the website, where there is no account.
+     *
+     * The customer gives a name, a phone and an address with the order, the
+     * server prices it exactly as it prices an app order, and it lands in the
+     * panel beside them. The website still opens WhatsApp afterwards, with the
+     * order's code in the message, because that is where the shop confirms the
+     * weights and the delivery time.
+     */
+    public function storeFromWebsite(Request $request): JsonResponse
+    {
+        $lead = (int) config('freshness.order.lead_days');
+        $maxAhead = (int) config('freshness.order.max_days_ahead');
+
+        $data = $request->validate([
+            'lines' => ['required', 'array', 'min:1', 'max:'.config('freshness.order.max_lines')],
+            'lines.*.product_id' => ['required', 'string', 'max:60', 'distinct', Rule::exists('products', 'id')],
+            'lines.*.qty' => ['required', 'numeric', 'min:0.001', 'max:'.config('freshness.order.max_qty_per_line')],
+
+            'zone_id' => ['required', 'string', Rule::exists('delivery_zones', 'id')->where('is_active', true)],
+            'contact_name' => ['required', 'string', 'min:2', 'max:80'],
+            // Digits, spaces, dashes, brackets and an optional leading +.
+            'contact_phone' => ['required', 'string', 'regex:/^\+?[0-9 ()-]{7,20}$/'],
+            'address_line' => ['required', 'string', 'min:5', 'max:300'],
+            'address_notes' => ['sometimes', 'nullable', 'string', 'max:200'],
+            'map_link' => [
+                'sometimes', 'nullable', 'string', 'max:500',
+                'regex:#^https://(maps\.app\.goo\.gl/|goo\.gl/maps|(www\.|maps\.)?google\.(com|az)/)#i',
+            ],
+            'delivery_date' => [
+                'sometimes', 'nullable', 'date_format:Y-m-d',
+                'after_or_equal:'.now()->addDays($lead)->toDateString(),
+                'before_or_equal:'.now()->addDays($maxAhead)->toDateString(),
+            ],
+            'note' => ['sometimes', 'nullable', 'string', 'max:500'],
+        ]);
+
+        // Whole units only for things sold by the piece, as in the app.
+        $kinds = \App\Models\Product::whereIn('id', array_column($data['lines'], 'product_id'))->pluck('unit_kind', 'id');
+        foreach ($data['lines'] as $i => $line) {
+            $qty = (float) $line['qty'];
+            if (($kinds[$line['product_id']] ?? null) !== \App\Models\Product::UNIT_KG && floor($qty) !== $qty) {
+                throw \Illuminate\Validation\ValidationException::withMessages(["lines.{$i}.qty" => 'This item is sold in whole units.']);
+            }
+        }
+
+        $order = $this->orders->placeFromWebsite($data);
+
+        return response()->json([
+            'id' => $order->id,
+            'code' => $order->code,
+            'total_minor' => $order->total_minor,
+            'delivery_fee_minor' => $order->delivery_fee_minor,
+            'requires_weighing' => $order->requires_weighing,
+        ], 201);
     }
 
     /**
