@@ -1,128 +1,168 @@
 <script setup>
 import BIcon from './BIcon.vue'
 import { computed } from 'vue'
-import { money, perKg } from '../data/catalogue'
+import { money } from '../data/catalogue'
+import { useCart } from '../composables/useCart'
 import { useI18n } from '../composables/useI18n'
 
+/**
+ * A product on a shelf — the same card as the app's.
+ *
+ * The photograph on a soft ground, the price in a pill under it, the name
+ * below: the order a shopper's eye goes in. The "+" sits on the photo's
+ * corner and turns into a − n + stepper once the product is in the basket,
+ * so a second one never means opening anything. The rest of the card opens
+ * the quick view.
+ */
 const props = defineProps({
   product: { type: Object, required: true },
   /* 'grid' sits in the catalogue; 'slide' sizes itself for the slider. */
-  variant: { type: String, default: 'grid' }
+  variant: { type: String, default: 'grid' },
 })
 const emit = defineEmits(['add', 'peek'])
 
-const { t, nm, alt, catName, unitOf } = useI18n()
-const kg = computed(() => perKg(props.product))
+const { t, nm, unitOf } = useI18n()
+const cart = useCart()
+
+/* Tins that come in two sizes go through the quick view to pick one, so
+   they never show a stepper: there is no single line for it to count. */
+const qty = computed(() => (props.product.variants ? 0 : cart.qtyOf(props.product.id)))
+const byKg = computed(() => props.product.unit?.kind === 'kg')
+
+function add (ev) {
+  emit('add', { product: props.product, el: ev.currentTarget.closest('.card') })
+}
 </script>
 
 <template>
   <article class="card" :class="{ 'card--slide': variant === 'slide' }">
-    <div class="card__media">
-      <img :src="product.img" :alt="nm(product)" loading="lazy" decoding="async">
-      <div class="card__flags">
-        <span v-if="kg" class="flag flag--kg">{{ money(kg) }} AZN{{ t('ui.perkg') }}</span>
-        <!-- Sold by weight: the price shown is for the stated amount, and the
-             courier's scales decide the final figure. -->
-        <span v-else-if="product.weighed" class="flag flag--kg">{{ t('ui.weighedFlag') }}</span>
-      </div>
-      <div class="card__peek">
-        <button type="button" @click="emit('peek', product)">{{ t('ui.quick') }}</button>
-      </div>
-    </div>
+    <button type="button" class="card__open" :aria-label="nm(product)" @click="emit('peek', product)">
+      <span class="card__media">
+        <img v-if="product.img" :src="product.img" :alt="nm(product)" loading="lazy" decoding="async">
+        <BIcon v-else name="basket" :size="30" class="card__none" />
+        <span v-if="product.popular" class="card__hit"><BIcon name="fire" :size="10" />{{ t('cat.hit') }}</span>
+      </span>
 
-    <div class="card__body">
-      <span class="card__cat">{{ catName(product.cat) }}</span>
-      <h3 class="card__name">{{ nm(product) }}</h3>
-      <p class="card__alt">{{ alt(product) }}</p>
-
-      <div class="card__foot">
+      <span class="card__body">
         <span class="card__price">
-          <b>{{ product.price }}<i>AZN</i></b>
-          <span>{{ unitOf(product) }}</span>
+          <b>{{ money(product.price) }} ₼</b><i v-if="byKg">{{ t('ui.perkg') }}</i>
         </span>
-        <button class="add" type="button" :aria-label="t('ui.add')"
-                @click="emit('add', { product, el: $event.currentTarget.closest('.card') })">
-          <BIcon name="plus-lg" :size="15" />
+        <span class="card__name">{{ nm(product) }}</span>
+        <span class="card__unit">{{ unitOf(product) }}</span>
+      </span>
+    </button>
+
+    <div class="card__corner">
+      <Transition name="swap" mode="out-in">
+        <div v-if="qty > 0" key="step" class="stepper">
+          <button type="button" :aria-label="t('ui.less')" @click="cart.step(product.id, -1)">
+            <BIcon name="dash-lg" :size="14" />
+          </button>
+          <Transition name="tick" mode="out-in">
+            <span :key="qty" class="stepper__n" aria-live="polite">{{ qty }}</span>
+          </Transition>
+          <button type="button" :aria-label="t('ui.more')" @click="cart.step(product.id, 1)">
+            <BIcon name="plus-lg" :size="14" />
+          </button>
+        </div>
+        <button v-else key="add" type="button" class="add" :aria-label="t('ui.add')" @click="add">
+          <BIcon name="plus-lg" :size="17" />
         </button>
-      </div>
+      </Transition>
     </div>
   </article>
 </template>
 
 <style scoped>
-/* ---------- 11. Product card -------------------------------------------- */
-.card{
-  position:relative; display:flex; flex-direction:column;
-  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
-  overflow:hidden; will-change:transform;
-  transition:border-color .45s var(--ease), box-shadow .5s var(--ease-out), transform .5s var(--ease-out);
-}
-.card:hover{ border-color:rgba(27,41,22,.3); box-shadow:0 20px 44px -22px rgba(27,41,22,.4); transform:translateY(-3px); }
-.card::before{
-  content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--acid);
-  transform:scaleX(0); transform-origin:left; z-index:4;
-  transition:transform .6s var(--ease-out);
-}
-.card:hover::before{ transform:scaleX(1); }
+/* Motion follows one rule: things answer at once and settle quickly. Presses
+   scale to .97 in 160ms, anything that appears comes from .9, never from
+   nothing, and hover effects exist only where there is a pointer to hover. */
+.card{ --ease-snap: cubic-bezier(.23,1,.32,1); position:relative; min-width:0; }
 
-.card__media{ position:relative; aspect-ratio:1/1; overflow:hidden; background:var(--paper-2); }
+.card__open{
+  display:flex; flex-direction:column; width:100%; padding:0; border:0; background:none;
+  text-align:left; color:inherit; cursor:pointer;
+  transition:transform .16s var(--ease-snap);
+}
+.card__open:active{ transform:scale(.97); }
+.card__open:focus-visible{ outline:none; }
+.card__open:focus-visible .card__media{ box-shadow:0 0 0 3px var(--paper), 0 0 0 5px var(--forest); }
+
+.card__media{
+  position:relative; display:grid; place-items:center;
+  aspect-ratio:1/1; border-radius:22px; overflow:hidden; background:var(--paper-2);
+  transition:box-shadow .25s var(--ease-snap);
+}
 .card__media img{
-  width:100%; height:100%; object-fit:cover;
-  transition:transform 1.1s var(--ease-out), filter .6s var(--ease);
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  transition:transform .5s var(--ease-snap);
 }
-.card:hover .card__media img{ transform:scale(1.06); }
+.card__none{ color:var(--paper-3); }
 
-.card__flags{ position:absolute; top:10px; left:10px; display:flex; flex-direction:column; gap:6px; z-index:3; }
-.flag{
-  font-size:.6rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
-  padding:5px 9px; border-radius:2px; background:var(--brick); color:#fff;
+.card__hit{
+  position:absolute; left:10px; top:10px;
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px 8px; border-radius:999px; background:var(--acid); color:var(--ink);
+  font-size:.66rem; font-weight:700; letter-spacing:.03em;
 }
-.flag--kg{ background:rgba(27,41,22,.82); color:var(--paper); font-weight:600; letter-spacing:.06em; }
 
-.card__peek{
-  position:absolute; inset:auto 10px 10px; z-index:3;
-  display:flex; justify-content:center;
-  opacity:0; transform:translateY(10px);
-  transition:opacity .45s var(--ease), transform .5s var(--ease-out);
+.card__body{ display:flex; flex-direction:column; gap:5px; padding:10px 2px 0; }
+.card__price{
+  align-self:flex-start; display:inline-flex; align-items:baseline;
+  padding:4px 10px; border-radius:999px; background:var(--paper-2);
 }
-.card:hover .card__peek, .card:focus-within .card__peek{ opacity:1; transform:none; }
-.card__peek button{
-  background:rgba(246,243,234,.95); backdrop-filter:blur(6px);
-  border-radius:100px; padding:8px 16px; font-size:.74rem; font-weight:600; letter-spacing:.07em;
-  text-transform:uppercase; box-shadow:0 6px 18px rgba(0,0,0,.16);
-  transition:background .35s var(--ease), color .35s var(--ease);
+.card__price b{ font-size:1.02rem; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+.card__price i{ font-style:normal; font-size:.8rem; font-weight:600; color:var(--ink-2); margin-left:1px; }
+.card__name{
+  font-size:.92rem; font-weight:500; line-height:1.32; color:var(--ink);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  margin-top:1px;
 }
-.card__peek button:hover{ background:var(--ink); color:var(--paper); }
+.card__unit{ font-size:.8rem; color:var(--ink-3); }
 
-.card__body{ padding:16px 16px 18px; display:flex; flex-direction:column; gap:4px; flex:1; }
-.card__cat{ font-size:.6rem; letter-spacing:.18em; text-transform:uppercase; color:var(--leaf-d); font-weight:600; }
-.card__name{ font-family:var(--display); font-size:1.09rem; font-weight:500; letter-spacing:-.014em; line-height:1.18; margin:2px 0 0; }
-.card__alt{ font-size:.78rem; color:var(--ink-3); line-height:1.4; }
-.card__foot{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:auto; padding-top:14px; }
-.card__price{ display:flex; flex-direction:column; line-height:1; }
-.card__price b{ font-family:var(--display); font-variant-numeric:lining-nums tabular-nums; font-size:1.42rem; font-weight:600; letter-spacing:-.02em; }
-.card__price b i{ font-style:normal; font-size:.58em; font-weight:500; margin-left:3px; opacity:.62; }
-.card__price span{ font-size:.72rem; color:var(--ink-3); margin-top:6px; letter-spacing:.02em; }
+/* The corner control sits over the photograph, outside the open button, so
+   adding never opens the quick view by accident. */
+.card__corner{ position:absolute; top:0; right:0; aspect-ratio:1/1; width:100%; pointer-events:none; }
+.card__corner > *{ position:absolute; right:9px; bottom:9px; pointer-events:auto; }
 
 .add{
-  width:42px; height:42px; border-radius:100px; flex:none;
-  background:var(--forest); color:var(--paper);
-  display:grid; place-items:center; position:relative; overflow:hidden;
-  transition:width .5s var(--ease-out), background .4s var(--ease);
+  width:40px; height:40px; border-radius:50%; border:0; cursor:pointer;
+  display:grid; place-items:center; background:#fff; color:var(--forest);
+  box-shadow:0 3px 10px rgba(27,41,22,.16);
+  transition:transform .16s var(--ease-snap), background .2s var(--ease-snap), color .2s var(--ease-snap);
 }
-.add:hover{ background:var(--brick); }
-.add .bi{ transition:transform .45s var(--ease-out); }
-.add:hover .bi{ transform:rotate(90deg); }
-.add.done{ background:var(--leaf-d); }
-@media (max-width:640px){
-  .card__body{ padding:13px 13px 15px; }
-  .card__name{ font-size:.98rem; }
-  .card__price b{ font-size:1.2rem; }
-  .add{ width:38px; height:38px; }
+.add:active{ transform:scale(.9); }
+
+.stepper{
+  display:flex; align-items:center; height:40px; padding:0 2px; border-radius:999px;
+  background:var(--forest); color:#fff; box-shadow:0 3px 10px rgba(27,41,22,.2);
+}
+.stepper button{
+  width:34px; height:40px; border:0; background:none; color:inherit; cursor:pointer;
+  display:grid; place-items:center; transition:transform .16s var(--ease-snap);
+}
+.stepper button:active{ transform:scale(.85); }
+.stepper__n{ min-width:22px; text-align:center; font-size:.9rem; font-weight:700; font-variant-numeric:tabular-nums; }
+
+.swap-enter-active, .swap-leave-active{ transition:opacity .15s var(--ease-snap), transform .18s var(--ease-snap); }
+.swap-enter-from, .swap-leave-to{ opacity:0; transform:scale(.9); }
+.tick-enter-active, .tick-leave-active{ transition:opacity .12s var(--ease-snap), transform .14s var(--ease-snap); }
+.tick-enter-from{ opacity:0; transform:translateY(5px); }
+.tick-leave-to{ opacity:0; transform:translateY(-5px); }
+
+@media (hover:hover) and (pointer:fine){
+  .card__open:hover .card__media img{ transform:scale(1.04); }
+  .card__open:hover .card__media{ box-shadow:0 14px 30px -18px rgba(27,41,22,.45); }
+  .add:hover{ background:var(--forest); color:#fff; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .card__open, .card__media img, .add, .stepper button{ transition:none; }
+  .card__open:active, .add:active{ transform:none; }
 }
 </style>
 
 <style scoped>
 /* Sizing for the slider, so the parent never has to style a child's root. */
-.card--slide{ scroll-snap-align:start; flex:0 0 clamp(230px,25vw,318px); }
+.card--slide{ scroll-snap-align:start; flex:0 0 clamp(170px,19vw,240px); }
 </style>

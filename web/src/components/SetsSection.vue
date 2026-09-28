@@ -160,6 +160,21 @@ function addSet (set, ev) {
 .sets--compact .set__foot{ padding-top:14px; }
 .sets--compact .set__foot .btn{ padding:9px 13px; font-size:.72rem; }
 
+/* On the catalogue page the sets wear the shelf's look — soft grounds and
+   round corners, the price in a pill — so they read as part of the shop
+   rather than a banner dropped into it. */
+.sets--compact .set{ border:0; border-radius:22px; background:var(--paper-2); }
+.sets--compact .set__shots{ margin:8px 8px 0; border-radius:16px; background:var(--paper-3); }
+.sets--compact .set__save{ border-radius:999px; letter-spacing:.04em; text-transform:none; font-size:.72rem; }
+.sets--compact .set__price{ flex-direction:row; align-items:baseline; gap:8px; }
+.sets--compact .set__price b{ font-family:var(--sans); font-weight:700; font-size:1.15rem; }
+.sets--compact .set__price s{ margin:0; }
+.sets--compact .set__foot .btn{
+  --bg:var(--forest); border-radius:999px; padding:10px 16px; font-size:.8rem; letter-spacing:0; text-transform:none;
+}
+.sets--compact .set__foot .btn::before{ background:var(--forest-2); }
+@media (hover:hover){ .sets--compact .set:hover{ box-shadow:0 16px 34px -22px rgba(27,41,22,.5); } }
+
 .sets__chead{ margin:0 0 clamp(12px,1.6vw,18px); }
 .sets__chead h2{ font-family:var(--display); font-size:clamp(1.25rem,2.6vw,1.6rem); font-weight:600; letter-spacing:-.016em; margin:0; }
 .sets__chead p{ margin:4px 0 0; font-size:.88rem; color:var(--ink-3); }

@@ -17,7 +17,16 @@
     "ru": "Баку, Азербайджан",
     "en": "Baku, Azerbaijan"
   },
-  "_map": "Where the map opens when no pin has been dropped yet — the middle of Baku. The embedded picker replaces this once there is a Maps key; see VITE_GOOGLE_MAPS_KEY.",
+  "_categoryLook": "How each category looks as a tile in the catalogue, on the website and in the app alike: a soft ground, the ink for its count, and the product whose photograph stands for it. A category added later in the admin panel falls back to paper and its first product's photo.",
+  "categoryLook": {
+    "smoked": { "bg": "#F4E2D8", "ink": "#90452E", "photo": "smoked-salmon" },
+    "fresh": { "bg": "#E2EED5", "ink": "#2C5121", "photo": "fresh-dorado" },
+    "seafood": { "bg": "#E3EBE6", "ink": "#2C5121", "photo": "black-tiger-shrimp" },
+    "poultry": { "bg": "#F5EBD2", "ink": "#52712F", "photo": "duck-fillet" },
+    "cheese": { "bg": "#F7F1C9", "ink": "#3D4C35", "photo": "burrata-plain" },
+    "pantry": { "bg": "#EFE5DA", "ink": "#90452E", "photo": "frozen-croissant" }
+  },
+  "_map":"Where the map opens when no pin has been dropped yet — the middle of Baku. The embedded picker replaces this once there is a Maps key; see VITE_GOOGLE_MAPS_KEY.",
   "mapCentre": {
     "lat": 40.3777,
     "lng": 49.892,

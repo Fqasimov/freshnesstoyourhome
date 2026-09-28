@@ -200,9 +200,14 @@ export function useCart () {
     return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(msg)}`
   })
 
+  /* How many of a plain product (no tin size chosen) are in the basket, and
+     a step up or down — what a card's − n + stepper reads and writes. */
+  const qtyOf = id => items.value.find(c => c.key === keyOf(id, null, 'product'))?.qty ?? 0
+  const step = (id, delta) => setQty(keyOf(id, null, 'product'), delta)
+
   return {
     items, lines, count, total, localTotal, open,
-    add, setQty, remove, whatsapp,
+    add, setQty, remove, whatsapp, qtyOf, step,
     quote, quoting, weighed, ceiling,
     zoneId, address, mapLink, zone, deliveryText, canSend,
   }

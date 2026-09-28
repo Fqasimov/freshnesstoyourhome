@@ -38,6 +38,15 @@ export const shared = {
   copy: read('copy.json'),
 }
 
+/* The catalogue's category tiles, identical on both surfaces. `type` is the
+   TypeScript annotation for the app, empty for the website. */
+function categoryLook (b, type) {
+  const rows = Object.entries(b.categoryLook).map(([id, l]) =>
+    `  ${id}: { bg: '${l.bg}', ink: '${l.ink}', photo: '${l.photo}' },`)
+  return '\n/* How each category looks as a tile: its ground, its ink, its photo. */\n' +
+    `export const CATEGORY_LOOK${type} = {\n${rows.join('\n')}\n}\n`
+}
+
 /* Checks the data has to pass before a single file is written from it. Each
    one is here because getting it wrong is silent: a duplicate id shadows a
    listing, a sort that restarts per category drops a pantry item among the
@@ -165,7 +174,8 @@ export const FILES = [
         '\n/* Where the map opens before a pin exists. */\n' +
         `export const MAP_CENTRE = { lat: ${b.mapCentre.lat}, lng: ${b.mapCentre.lng}, zoom: ${b.mapCentre.zoom} }\n` +
         '\nexport const mapsUrl = () =>\n' +
-        '  `https://www.google.com/maps/@${MAP_CENTRE.lat},${MAP_CENTRE.lng},${MAP_CENTRE.zoom}z`\n'
+        '  `https://www.google.com/maps/@${MAP_CENTRE.lat},${MAP_CENTRE.lng},${MAP_CENTRE.zoom}z`\n' +
+        categoryLook(b, '')
     },
   },
 
@@ -183,7 +193,8 @@ export const FILES = [
         '\n/* Where the map opens before a pin exists. */\n' +
         `export const MAP_CENTRE = { lat: ${b.mapCentre.lat}, lng: ${b.mapCentre.lng}, zoom: ${b.mapCentre.zoom} } as const\n` +
         '\nexport const mapsUrl = () =>\n' +
-        '  `https://www.google.com/maps/@${MAP_CENTRE.lat},${MAP_CENTRE.lng},${MAP_CENTRE.zoom}z`\n'
+        '  `https://www.google.com/maps/@${MAP_CENTRE.lat},${MAP_CENTRE.lng},${MAP_CENTRE.zoom}z`\n' +
+        categoryLook(b, ': Record<string, { bg: string; ink: string; photo: string }>')
     },
   },
 
