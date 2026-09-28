@@ -44,13 +44,19 @@ class LoginCodeService
      *
      * Returns self::SENT or self::TOO_MANY. Callers must respond identically
      * for an address that exists and one that does not.
+     *
+     * `$panel` is true only for the admin panel's own door. Panel codes have
+     * their own lane and budgets (see lane()): otherwise anyone could spend
+     * the admin's hourly budget, or kill the code just mailed to them, by
+     * asking the shop for a code to that address — a lock on the panel that
+     * costs five requests an hour to keep shut.
      */
-    public function issue(string $email, ?string $ip, string $locale = 'az'): string
+    public function issue(string $email, ?string $ip, string $locale = 'az', bool $panel = false): string
     {
         $email = BlindIndex::normaliseEmail($email);
-        $hash = BlindIndex::ofEmail($email);
+        $hash = $this->lane($email, $panel);
 
-        if (! $this->withinLimits($hash, $ip)) {
+        if (! $this->withinLimits($hash, $ip, $panel)) {
             return self::TOO_MANY;
         }
 
@@ -89,11 +95,11 @@ class LoginCodeService
      * "wrong code" from "expired" from "never issued": each of those is a fact
      * about somebody else's account that a guesser should not learn.
      */
-    public function verify(string $email, string $code): ?User
+    public function verify(string $email, string $code, bool $panel = false): ?User
     {
         $email = BlindIndex::normaliseEmail($email);
 
-        if (! $this->consume($email, $code)) {
+        if (! $this->consume($email, $code, $panel)) {
             return null;
         }
 
@@ -108,21 +114,30 @@ class LoginCodeService
      * carries the details from the sign-up form, which verify() knows nothing
      * about.
      */
-    public function consume(string $email, string $code): bool
+    public function consume(string $email, string $code, bool $panel = false): bool
     {
         $email = BlindIndex::normaliseEmail($email);
 
-        $record = LoginCode::usableFor($email)->latest('id')->first();
+        $record = LoginCode::where('email_hash', $this->lane($email, $panel))
+            ->whereNull('consumed_at')
+            ->where('expires_at', '>', now())
+            ->latest('id')
+            ->first();
 
-        if ($record === null || $record->isExhausted()) {
+        if ($record === null) {
             return false;
         }
 
-        if (! Hash::check($code, $record->code_hash)) {
-            // Count the miss before returning, so a client that keeps guessing
-            // runs the code out instead of getting unlimited tries.
-            $record->increment('attempts');
+        // Spend the attempt before comparing, in one statement that also
+        // checks there is one left. Counting after the comparison let a burst
+        // of parallel guesses all read "attempts left" during the slow hash
+        // check, and so try far more than max_attempts codes.
+        $reserved = LoginCode::where('id', $record->id)
+            ->whereNull('consumed_at')
+            ->where('attempts', '<', (int) config('freshness.auth.max_attempts'))
+            ->increment('attempts');
 
+        if ($reserved !== 1 || ! Hash::check($code, $record->code_hash)) {
             return false;
         }
 
@@ -174,15 +189,22 @@ class LoginCodeService
      * harvesting many addresses, and the global one caps the blast radius when
      * an attacker has many IPs — the case the first two cannot see.
      */
-    private function withinLimits(string $emailHash, ?string $ip): bool
+    private function withinLimits(string $emailHash, ?string $ip, bool $panel = false): bool
     {
         $limits = config('freshness.auth.throttle');
 
-        $budgets = [
-            ['otp:email:'.$emailHash, (int) $limits['per_email_hourly']],
-            ['otp:ip:'.sha1((string) $ip), (int) $limits['per_ip_hourly']],
-            ['otp:global', (int) $limits['global_hourly']],
-        ];
+        // The panel keeps budgets of its own, so nothing the public does can
+        // leave the admin without a code — not even filling the global one.
+        $budgets = $panel
+            ? [
+                ['otp:panel:email:'.$emailHash, (int) $limits['per_email_hourly']],
+                ['otp:panel:ip:'.sha1((string) $ip), (int) $limits['per_ip_hourly']],
+            ]
+            : [
+                ['otp:email:'.$emailHash, (int) $limits['per_email_hourly']],
+                ['otp:ip:'.sha1((string) $ip), (int) $limits['per_ip_hourly']],
+                ['otp:global', (int) $limits['global_hourly']],
+            ];
 
         foreach ($budgets as [$key, $max]) {
             if (RateLimiter::tooManyAttempts($key, $max)) {
@@ -198,6 +220,16 @@ class LoginCodeService
         }
 
         return true;
+    }
+
+    /**
+     * The key a code is filed under. Panel codes sit in a lane of their own,
+     * so a shop request for the admin's address neither kills the code just
+     * mailed for the panel nor burns its attempts with wrong guesses.
+     */
+    private function lane(string $email, bool $panel): string
+    {
+        return $panel ? BlindIndex::ofProvider('panel', $email) : BlindIndex::ofEmail($email);
     }
 
     /**

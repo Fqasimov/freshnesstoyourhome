@@ -140,8 +140,22 @@ class AccountAuthController extends Controller
                 return response()->json(['message' => 'Your account there has no confirmed email address.'], 422);
             }
 
-            // Same address as an existing account: it is the same person.
-            $user = User::findByEmail($claims['email'])
+            // Same address as an existing account. Joined silently only when
+            // the provider owns the address itself (Apple, a Gmail account, a
+            // Google Workspace domain): for any other address, Google's
+            // "verified" only means it was verified once, and a mailbox that
+            // has since changed hands would open the account that uses it now.
+            // Staff accounts are never joined this way.
+            $existing = User::findByEmail($claims['email']);
+
+            if ($existing !== null && (! $claims['authoritative'] || $existing->role !== User::ROLE_CUSTOMER)) {
+                return response()->json([
+                    'message' => 'An account with this email already exists. Sign in with your password or an emailed code first.',
+                    'code' => 'account_exists',
+                ], 409);
+            }
+
+            $user = $existing
                 ?? new User(['email' => $claims['email'], 'locale' => $data['locale'] ?? 'az']);
 
             $user->name ??= $claims['name'] ?: ($data['name'] ?? null);

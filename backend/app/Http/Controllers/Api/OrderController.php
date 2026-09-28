@@ -97,7 +97,7 @@ class OrderController extends Controller
             'reason' => ['sometimes', 'nullable', 'string', 'max:200'],
         ])['reason'] ?? null;
 
-        $order = $this->orders->transition($order, Order::CANCELLED, $request->user(), $reason);
+        $order = $this->orders->transition($order, Order::CANCELLED, $request->user(), $reason, byCustomer: true);
 
         return response()->json(new OrderResource($order->load('items')));
     }

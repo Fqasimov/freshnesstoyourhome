@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Jobs\SendOrderPush;
 use App\Models\Address;
+use App\Models\DeliveryZone;
 use App\Models\Order;
 use App\Models\OrderEvent;
 use App\Models\User;
@@ -26,6 +27,16 @@ class OrderService
     public function place(User $user, array $input): Order
     {
         $address = $user->addresses()->findOrFail($input['address_id']);
+
+        // The fee and the minimum come from the zone. An address whose zone
+        // has since been switched off would otherwise price at a fee of 0 for
+        // an area the shop no longer serves.
+        $zoneActive = $address->delivery_zone_id !== null
+            && DeliveryZone::whereKey($address->delivery_zone_id)->where('is_active', true)->exists();
+
+        if (! $zoneActive) {
+            throw new OrderRejected('We no longer deliver to this area. Please update the address.');
+        }
 
         $basket = $this->pricing->quote($input['lines'], $address->delivery_zone_id);
 
@@ -119,11 +130,18 @@ class OrderService
      * the status and then writing it — outside a lock — is the bug that lets
      * one order get delivered twice.
      */
-    public function transition(Order $order, string $to, User $actor, ?string $note = null): Order
+    public function transition(Order $order, string $to, User $actor, ?string $note = null, bool $byCustomer = false): Order
     {
-        return DB::transaction(function () use ($order, $to, $actor, $note) {
+        return DB::transaction(function () use ($order, $to, $actor, $note, $byCustomer) {
             /** @var Order $fresh */
             $fresh = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            // A customer's narrower rule is checked here, on the locked row:
+            // checked before the lock, staff could move the order on in
+            // between and the customer would cancel something already cut.
+            if ($byCustomer && ! $fresh->isCancellableByCustomer()) {
+                throw new OrderRejected('This order is already on its way. Please call us instead.');
+            }
 
             if (! $fresh->canTransitionTo($to)) {
                 throw new OrderRejected(
@@ -188,6 +206,8 @@ class OrderService
             }
 
             $subtotal = 0;
+            $weighedEstimate = 0;
+            $weighedFinal = 0;
 
             foreach ($fresh->items as $item) {
                 if (! $item->is_weight_based) {
@@ -216,6 +236,22 @@ class OrderService
                 ])->save();
 
                 $subtotal += $lineTotal;
+                $weighedEstimate += $item->line_total_minor;
+                $weighedFinal += $lineTotal;
+            }
+
+            // The customer agreed to "at most" the estimate plus the weight
+            // tolerance (PricedBasket::weighedCeilingMinor). Going past that
+            // is a conversation with the customer, not a number staff can set.
+            $tolerance = (int) config('freshness.order.weight_tolerance_percent');
+            $ceiling = $weighedEstimate + (int) ceil($weighedEstimate * $tolerance / 100);
+
+            if ($weighedFinal > $ceiling) {
+                throw new OrderRejected(sprintf(
+                    'The weighed goods come to %s, more than the %s the customer agreed to. Ask the customer first, or weigh again.',
+                    Money::format($weighedFinal),
+                    Money::format($ceiling),
+                ));
             }
 
             $finalTotal = $subtotal + $fresh->delivery_fee_minor - $fresh->discount_minor;

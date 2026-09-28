@@ -78,6 +78,8 @@ class DataProtectionTest extends TestCase
             'http://maps.google.com/?q=1,2',          // not https
             'javascript:alert(1)',
             'https://google.com.evil.test/maps',
+            'https://maps.app.goo.gl.evil.test/x',
+            'https://maps.app.goo.gl@evil.test/',
             'https://notgoogle.az/maps',
         ] as $bad) {
             $this->postJson('/api/addresses', $body + ['map_link' => $bad])

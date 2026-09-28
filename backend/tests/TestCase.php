@@ -22,6 +22,20 @@ abstract class TestCase extends BaseTestCase
     protected const ZONE = 'merkez';
 
     /**
+     * Each test starts a fresh database, so each gets a fresh audit-chain
+     * anchor too (see Audit::anchor) — one left by an earlier test would name
+     * a row this database never had.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $anchor = sys_get_temp_dir().'/fth-audit-anchor-'.bin2hex(random_bytes(6));
+        config(['freshness.audit_anchor' => $anchor]);
+        $this->beforeApplicationDestroyed(fn () => @unlink($anchor));
+    }
+
+    /**
      * Seed the real catalogue, not a fixture.
      *
      * Tests that price baskets should price the goods the shop actually sells:

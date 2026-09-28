@@ -182,6 +182,13 @@ It stays off until it is given the keys:
      Configure FTP Client), `FTP_USERNAME`, `FTP_PASSWORD`, `DEPLOY_TOKEN`
      (the same value as in `.env`).
    - Variables: `DEPLOY_ENABLED` = `true`.
+
+   The upload checks the FTP server's certificate (`security: strict`), so
+   `FTP_SERVER` must be a name that certificate covers. On cPanel that is
+   usually the server's own hostname (shown in cPanel's sidebar as "Server
+   Name", e.g. `serverNN.hostinq.az`), not `ftp.freshnesstoyourhome.az`. If
+   the upload step fails with a certificate error, change `FTP_SERVER` to that
+   hostname; do not switch the check off.
 4. Actions → Deploy → **Run workflow** for the first run. It uploads
    everything once (vendor/ is thousands of files — allow 15–30 minutes);
    later runs send only what changed.

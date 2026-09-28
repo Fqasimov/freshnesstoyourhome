@@ -86,20 +86,36 @@ class WeighedOrderTest extends TestCase
         $courier = User::factory()->courier()->create();
         $this->signInAs($courier->fresh());
 
-        // The scales said 1.180 kg, not the 1.000 kg estimated.
+        // The scales said 1.080 kg, not the 1.000 kg estimated.
         $this->postJson("/api/staff/orders/{$order->id}/weights", [
-            'weights' => [(string) $item->id => 1.18],
+            'weights' => [(string) $item->id => 1.08],
         ])->assertOk();
 
         $order->refresh();
 
-        $this->assertSame(Money::line($unit, 1.18), $order->final_subtotal_minor);
+        $this->assertSame(Money::line($unit, 1.08), $order->final_subtotal_minor);
         $this->assertSame(
             $order->final_subtotal_minor + $order->delivery_fee_minor - $order->discount_minor,
             $order->final_total_minor,
         );
-        $this->assertSame(1.18, $order->items->first()->confirmed_qty);
+        $this->assertSame(1.08, $order->items->first()->confirmed_qty);
         $this->assertNotNull($order->weighed_at);
+    }
+
+    public function test_a_weight_past_the_agreed_ceiling_is_refused(): void
+    {
+        $order = $this->placeOrder(['smoked-salmon' => 1]);
+        $item = $order->items->first();
+
+        $courier = User::factory()->courier()->create();
+        $this->signInAs($courier->fresh());
+
+        // Three times what was ordered: far past "at most" on the receipt.
+        $this->postJson("/api/staff/orders/{$order->id}/weights", [
+            'weights' => [(string) $item->id => 3.0],
+        ])->assertStatus(422);
+
+        $this->assertNull($order->fresh()->final_total_minor);
     }
 
     public function test_a_price_rise_between_ordering_and_weighing_does_not_reach_the_customer(): void

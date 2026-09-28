@@ -37,7 +37,7 @@ class SocialTokenVerifier
         return $this->audiences($provider) !== [];
     }
 
-    /** @return array{sub: string, email: ?string, email_verified: bool, name: ?string}|null */
+    /** @return array{sub: string, email: ?string, email_verified: bool, authoritative: bool, name: ?string}|null */
     public function verify(string $provider, string $idToken): ?array
     {
         $spec = self::PROVIDERS[$provider] ?? null;
@@ -64,10 +64,18 @@ class SocialTokenVerifier
         // Apple sends "true" as a string; Google sends a boolean.
         $verified = filter_var($claims['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
+        $email = is_string($claims['email'] ?? null) ? $claims['email'] : null;
+
         return [
             'sub' => $claims['sub'],
-            'email' => is_string($claims['email'] ?? null) ? $claims['email'] : null,
+            'email' => $email,
             'email_verified' => $verified,
+            // Whether the provider owns the mailbox, not merely checked it
+            // once: Apple for the addresses it issues or verifies, Google
+            // for Gmail and for Workspace domains (the `hd` claim).
+            'authoritative' => $verified && ($provider === 'apple'
+                || ($email !== null && str_ends_with(strtolower($email), '@gmail.com'))
+                || is_string($claims['hd'] ?? null)),
             'name' => is_string($claims['name'] ?? null) ? $claims['name'] : null,
         ];
     }

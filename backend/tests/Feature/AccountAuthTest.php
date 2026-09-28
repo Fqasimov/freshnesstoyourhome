@@ -249,14 +249,40 @@ class AccountAuthTest extends TestCase
         $this->assertNotNull(User::first()->google_id_hash);
     }
 
-    public function test_google_sign_in_joins_the_existing_account_with_that_address(): void
+    public function test_google_sign_in_joins_the_existing_gmail_account(): void
     {
+        $user = User::factory()->create(['email' => 'same@gmail.com']);
+        $this->provider('google', 'web-client');
+
+        $this->postJson('/api/auth/social/google', ['id_token' => $this->idToken([
+            'iss' => 'accounts.google.com', 'aud' => 'web-client', 'sub' => 'abc', 'email' => 'same@gmail.com', 'email_verified' => true,
+        ])])->assertOk()->assertJsonPath('user.id', $user->id);
+    }
+
+    public function test_google_does_not_join_an_account_on_an_address_it_does_not_own(): void
+    {
+        // A non-Gmail address Google once verified may belong to someone else
+        // now; joining would hand them the account that uses it today.
         $user = User::factory()->create(['email' => 'same@example.com']);
         $this->provider('google', 'web-client');
 
         $this->postJson('/api/auth/social/google', ['id_token' => $this->idToken([
             'iss' => 'accounts.google.com', 'aud' => 'web-client', 'sub' => 'abc', 'email' => 'same@example.com', 'email_verified' => true,
-        ])])->assertOk()->assertJsonPath('user.id', $user->id);
+        ])])->assertStatus(409);
+
+        $this->assertNull($user->fresh()->google_id_hash);
+    }
+
+    public function test_social_sign_in_never_joins_a_staff_account(): void
+    {
+        $courier = User::factory()->courier()->create(['email' => 'rider@gmail.com']);
+        $this->provider('google', 'web-client');
+
+        $this->postJson('/api/auth/social/google', ['id_token' => $this->idToken([
+            'iss' => 'accounts.google.com', 'aud' => 'web-client', 'sub' => 'r1', 'email' => 'rider@gmail.com', 'email_verified' => true,
+        ])])->assertStatus(409);
+
+        $this->assertNull($courier->fresh()->google_id_hash);
     }
 
     public function test_a_token_for_another_app_or_unverified_address_is_refused(): void

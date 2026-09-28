@@ -37,9 +37,9 @@ jobs:
     env:
       DOMAIN: freshnesstoyourhome.az
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
           # The host's version. composer.json pins the platform to it too.
           php-version: '8.2'
@@ -47,7 +47,7 @@ jobs:
           tools: composer:v2
           coverage: none
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
           cache: npm
@@ -85,13 +85,17 @@ jobs:
       # ---- Upload: backend first, so the site never calls code that is not
       #      there yet -----------------------------------------------------
       - name: Upload ~/freshness
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@8e83cea8672e3fbcbb9fdafff34debf6ae4c5f65 # v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
-          security: loose
+          # Verify the server's certificate, or the FTP password goes to
+          # whoever answers. FTP_SERVER must be a name the host's certificate
+          # covers (cPanel's is usually the server's own hostname, e.g.
+          # serverNN.hostinq.az, not ftp.<domain>).
+          security: strict
           local-dir: ${{ runner.temp }}/site/freshness/
           server-dir: freshness/
           exclude: |
@@ -108,13 +112,13 @@ jobs:
             "https://$DOMAIN/server/api/deploy/migrate"
 
       - name: Upload ~/public_html
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@8e83cea8672e3fbcbb9fdafff34debf6ae4c5f65 # v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
-          security: loose
+          security: strict
           local-dir: ${{ runner.temp }}/site/public_html/
           server-dir: public_html/
 

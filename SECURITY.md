@@ -18,19 +18,37 @@ hostile client might try and asserts that all of them are ignored.
 
 ## Authentication
 
-Passwordless, by email code. There is no password column anywhere and there
-should never be one: no password to reuse, no reset flow to attack, no hash
-worth stealing.
+Three ways in for customers: an emailed six-digit code, email and password,
+and Google or Apple. Every one of them ends at the emailed code or at the
+provider, never at the password alone:
 
-That concentrates the risk into one place — a six-digit code — and four things
-hold it:
+- **Sign-up and password reset finish only with the code.** Nothing is
+  written to `users` until it is typed back, and the form is bound to a
+  ticket held by the device that sent it (`RegistrationService`), so someone
+  else's form for your address cannot be confirmed by your code. A new
+  password ends every existing session.
+- **Passwords** are bcrypt, need eight characters with upper and lower case,
+  a digit and a symbol, and are rate limited per IP and per address. An
+  unknown address costs the same hash check as a known one.
+- **Google and Apple** ID tokens are checked against the provider's keys,
+  issuer, our client ids and expiry. A new provider identity joins an
+  existing account only when the provider owns the mailbox (Apple, Gmail, a
+  Google Workspace domain) and the account is a customer's; otherwise the
+  person signs in the old way first. A non-Gmail address Google "verified"
+  once may belong to someone else now.
+
+The code carries most of the weight, and four things hold it:
 
 - **The code is stored only as a bcrypt hash.** Six digits is a small search
   space; a fast hash here would be recoverable from a database copy in
   milliseconds while the code was still live.
 - **Wrong guesses are counted and the code dies** after `LOGIN_CODE_MAX_ATTEMPTS`.
   A million possibilities and five tries is 1 in 200,000 per code, and the code
-  expires within minutes regardless.
+  expires within minutes regardless. The attempt is spent in one conditional
+  `UPDATE` *before* the hash is compared: counted afterwards, a burst of
+  parallel guesses all saw "tries left" during the slow bcrypt check. The
+  per-address guess limiter uses the normalised address, so `A@x.az` and
+  `a@x.az` share one bucket.
 - **Issuing is budgeted three ways** — per address, per IP, and globally. They
   answer different attacks: mailbombing one person, harvesting many addresses
   from one client, and an attacker with many IPs, which the first two cannot
@@ -38,6 +56,10 @@ hold it:
   strangers, sent from our domain and charged to our reputation.
 - **Asking for a new code kills the old one.** Otherwise every resend widens
   the window a guesser is shooting into.
+- **The admin panel's codes live apart.** Panel codes are filed under their
+  own key with their own budgets. Before, anyone could ask the *shop* for a
+  code to the admin's address five times an hour, spend its budget, kill the
+  code just mailed for the panel, and keep the admin out indefinitely.
 
 The response is identical whether the address belongs to a customer, has never
 been seen, or has just run out of budget. Anything more specific makes the
@@ -172,6 +194,17 @@ they held at the time, the IP, and what actually moved — `{"price_minor":
 nothing writes no row, because a log full of "changed nothing" is a log nobody
 reads.
 
+The same rule holds for couriers. Their order list (`/api/staff/orders`) shows
+only open orders and **no** contact details; a name, phone and address come
+from the single-order view, which writes an `order.view` row. A courier signs
+in with an ordinary app token and no second factor, so that token must not be
+a way to page through every customer the shop has had.
+
+The audit chain's first row is anchored outside the database
+(`storage/app/audit-chain-start`). Without that, someone holding only the
+database could blank every hash and the log would read as "written before the
+chain existed" instead of broken.
+
 ## Payments
 
 Nothing is charged online. Cash or card at the door, which keeps this system
@@ -191,7 +224,9 @@ strips the contact and address snapshot from past orders. The financial record
 shop still has to account for what it sold.
 
 An account with an order in flight cannot be deleted. Somebody is about to
-knock on a door with goods.
+knock on a door with goods. Staff are always anonymised, never hard-deleted:
+`order_events` and `weighed_by` point at them, and deleting the row would
+erase who moved or weighed an order.
 
 ## Still to do
 

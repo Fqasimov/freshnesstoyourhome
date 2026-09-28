@@ -49,7 +49,7 @@ class PanelAuthController extends Controller
         $email = $request->string('email')->toString();
 
         if (AdminAccess::isNamed($email)) {
-            $this->codes->issue($email, $request->ip(), 'az');
+            $this->codes->issue($email, $request->ip(), 'az', panel: true);
         }
 
         return response()->json([
@@ -70,7 +70,7 @@ class PanelAuthController extends Controller
             return $this->refused();
         }
 
-        $user = $this->codes->verify($email, $request->string('code')->toString());
+        $user = $this->codes->verify($email, $request->string('code')->toString(), panel: true);
 
         if ($user === null) {
             return $this->refused();

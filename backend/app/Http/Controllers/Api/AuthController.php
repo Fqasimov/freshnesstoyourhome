@@ -124,11 +124,15 @@ class AuthController extends Controller
             ], 409);
         }
 
-        // Nothing sold to them and no admin history: the row itself goes.
-        // Otherwise the person is erased and the accounting stays.
+        // Nothing sold to them and no staff history: the row itself goes.
+        // Otherwise the person is erased and the accounting stays. Staff are
+        // never hard-deleted: order_events and weighed_by point at them and
+        // would be nulled, erasing who moved or weighed an order.
         $erasable = ! $user->orders()->exists()
-            && ! $user->isAdmin()
-            && ! \App\Models\AdminAudit::where('actor_id', $user->id)->exists();
+            && $user->role === \App\Models\User::ROLE_CUSTOMER
+            && ! \App\Models\AdminAudit::where('actor_id', $user->id)->exists()
+            && ! \App\Models\OrderEvent::where('actor_id', $user->id)->exists()
+            && ! \App\Models\Order::where('weighed_by', $user->id)->exists();
 
         if ($erasable) {
             $user->tokens()->delete();

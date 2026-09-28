@@ -120,7 +120,7 @@ Route::middleware(['auth:sanctum', 'blocked'])->group(function () {
 
 // ----------------------------------------------------------------- staff ---
 
-Route::middleware(['auth:sanctum', 'blocked', 'role:courier,admin'])
+Route::middleware(['auth:sanctum', 'blocked', 'role:courier,admin', 'throttle:admin'])
     ->prefix('staff')
     ->group(function () {
         Route::get('orders', [StaffOrderController::class, 'index']);

@@ -9,6 +9,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class OrderResource extends JsonResource
 {
+    /** Request attribute: leave the customer's contact details out. */
+    public const MASK_CONTACT = 'order.mask_contact';
+
     public function toArray(Request $request): array
     {
         $locale = $request->user()?->locale ?? 'az';
@@ -39,12 +42,24 @@ class OrderResource extends JsonResource
             'delivery_slot' => $this->delivery_slot,
             'payment_method' => $this->payment_method,
 
-            'address_line' => $this->address_line,
-            'address_notes' => $this->address_notes,
-            'address_map_link' => $this->address_map_link,
-            'contact_name' => $this->contact_name,
-            'contact_phone' => $this->contact_phone,
-            'note' => $this->customer_note,
+            // A courier's order list carries no contact details: those come
+            // one order at a time, from the audited single-order view. See
+            // StaffOrderController::index.
+            ...($request->attributes->get(self::MASK_CONTACT) ? [
+                'address_line' => null,
+                'address_notes' => null,
+                'address_map_link' => null,
+                'contact_name' => null,
+                'contact_phone' => null,
+                'note' => null,
+            ] : [
+                'address_line' => $this->address_line,
+                'address_notes' => $this->address_notes,
+                'address_map_link' => $this->address_map_link,
+                'contact_name' => $this->contact_name,
+                'contact_phone' => $this->contact_phone,
+                'note' => $this->customer_note,
+            ]),
 
             'can_cancel' => $this->isCancellableByCustomer(),
 

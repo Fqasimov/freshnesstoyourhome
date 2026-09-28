@@ -53,7 +53,6 @@ class RegistrationService
             // Hashed now, so the plain password never rests anywhere.
             'password' => Hash::make($form['password']),
             'locale' => $form['locale'] ?? 'az',
-            'attempts' => 0,
         ], now()->addMinutes((int) config('freshness.auth.code_ttl_minutes')));
 
         // Throttled inside; a refusal is not reported, for the same reason the
@@ -78,21 +77,23 @@ class RegistrationService
         }
 
         // The code itself has an attempt count; this one stops a ticket from
-        // being tried against a fresh code after the old one is spent.
-        if ($pending['attempts'] >= (int) config('freshness.auth.max_attempts')) {
+        // being tried against a fresh code after the old one is spent. Counted
+        // with an atomic increment before the check, so parallel tries cannot
+        // all see the same count.
+        Cache::add($key.':tries', 0, now()->addMinutes((int) config('freshness.auth.code_ttl_minutes')));
+
+        if (Cache::increment($key.':tries') > (int) config('freshness.auth.max_attempts')) {
             Cache::forget($key);
 
             return null;
         }
 
         if (! $this->codes->consume($pending['email'], $code)) {
-            $pending['attempts']++;
-            Cache::put($key, $pending, now()->addMinutes((int) config('freshness.auth.code_ttl_minutes')));
-
             return null;
         }
 
         Cache::forget($key);
+        Cache::forget($key.':tries');
 
         return DB::transaction(function () use ($pending) {
             $user = User::findByEmail($pending['email']);

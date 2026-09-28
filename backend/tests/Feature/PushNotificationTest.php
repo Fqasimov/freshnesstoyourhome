@@ -153,7 +153,7 @@ class PushNotificationTest extends TestCase
         $this->signInAs($courier->fresh());
 
         $this->postJson("/api/staff/orders/{$order->id}/weights", [
-            'weights' => [(string) $order->items->first()->id => 1.2],
+            'weights' => [(string) $order->items->first()->id => 1.05],
         ])->assertOk();
 
         Queue::assertPushed(SendOrderPush::class, fn ($job) => $job->event === 'weighed');

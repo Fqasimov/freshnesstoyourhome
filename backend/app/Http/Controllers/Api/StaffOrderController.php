@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderEvent;
 use App\Models\User;
 use App\Services\OrderService;
+use App\Support\Audit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -28,13 +29,25 @@ class StaffOrderController extends Controller
             'status' => ['sometimes', Rule::in(array_keys(Order::TRANSITIONS))],
         ]);
 
+        // A courier sees the work in hand, without contact details; names,
+        // phones and addresses come from show(), one order at a time and on
+        // the record. Otherwise one courier token pages through every
+        // customer the shop has ever had. The admin (panel token, 2FA) keeps
+        // the full list.
+        $courier = ! $request->user()->isAdmin();
+
         $orders = Order::query()
             ->with('items')
+            ->when($courier, fn ($q) => $q->whereNotIn('status', [Order::DELIVERED, Order::CANCELLED]))
             ->when($filters['date'] ?? null, fn ($q, $date) => $q->whereDate('delivery_date', $date))
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
             ->orderBy('delivery_date')
             ->orderBy('created_at')
             ->paginate(50);
+
+        if ($courier) {
+            $request->attributes->set(OrderResource::MASK_CONTACT, true);
+        }
 
         return OrderResource::collection($orders);
     }
@@ -46,9 +59,13 @@ class StaffOrderController extends Controller
      * late has a row saying which member of staff confirmed it, at what time,
      * and with what note.
      */
-    public function show(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
         $order = Order::with('items')->findOrFail($id);
+
+        // Full contact details, so on the record — as the admin's customer
+        // view is.
+        Audit::record($request->user(), 'order.view', 'order', $order->id);
 
         $events = OrderEvent::where('order_id', $order->id)
             ->orderBy('created_at')

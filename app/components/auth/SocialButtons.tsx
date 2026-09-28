@@ -44,6 +44,9 @@ export function SocialButtons ({ onError }: { onError: (msg: string | null) => v
       const err = e as ApiError
       onError(err?.status === 503 || err?.message === 'unavailable'
         ? t('social.off')
+        // An account already uses this address: the owner signs in the way
+        // they did before, so a mailbox that changed hands opens nothing.
+        : err?.status === 409 ? t('social.exists')
         : err?.isOffline ? t('err.offline') : t('err.generic'))
     } finally {
       setBusy(null)

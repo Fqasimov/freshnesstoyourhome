@@ -91,7 +91,7 @@ class AppServiceProvider extends ServiceProvider
         // across many addresses of their own.
         RateLimiter::for('otp-verify', fn (Request $r) => [
             Limit::perMinute(6)->by($r->ip()),
-            Limit::perMinute(6)->by('email:'.sha1((string) $r->input('email'))),
+            Limit::perMinute(6)->by('email:'.sha1(\App\Support\BlindIndex::normaliseEmail((string) $r->input('email')))),
         ]);
 
         RateLimiter::for('register', fn (Request $r) => [

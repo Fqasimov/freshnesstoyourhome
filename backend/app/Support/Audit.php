@@ -46,11 +46,33 @@ final class Audit
         DB::transaction(function () use ($row): void {
             $prev = AdminAudit::query()->latest('id')->lockForUpdate()->value('hash');
 
-            AdminAudit::create($row + [
+            $audit = AdminAudit::create($row + [
                 'prev_hash' => $prev,
                 'hash' => self::seal($prev, $row),
             ]);
+
+            if ($prev === null) {
+                self::anchor($audit->id);
+            }
         });
+    }
+
+    /**
+     * Where the chain starts, kept outside the database.
+     *
+     * Without it, someone holding only the database could blank every hash
+     * and the log would read as "written before the chain existed" rather
+     * than broken. Written once, by the first chained row, and never again.
+     */
+    private static function anchor(?int $id = null): ?int
+    {
+        $path = (string) config('freshness.audit_anchor', storage_path('app/audit-chain-start'));
+
+        if ($id !== null && ! is_file($path)) {
+            @file_put_contents($path, (string) $id);
+        }
+
+        return is_file($path) ? (int) file_get_contents($path) : null;
     }
 
     /**
@@ -69,8 +91,16 @@ final class Audit
         $unchained = 0;
         $started = false;
 
+        // A log chained before the anchor file existed gets one now, from its
+        // first hashed row.
+        $firstChained = self::anchor()
+            ?? self::anchor(AdminAudit::whereNotNull('hash')->min('id'));
+
         foreach (AdminAudit::query()->lazyById(500) as $audit) {
-            if ($audit->hash === null && ! $started) {
+            // Rows written before the chain existed carry no hash, but only
+            // up to the first chained row — whose id is kept outside the
+            // database, so blanking every hash cannot pass the log off as old.
+            if ($audit->hash === null && ! $started && ($firstChained === null || $audit->id < $firstChained)) {
                 $unchained++;
 
                 continue;
@@ -99,6 +129,12 @@ final class Audit
 
             $prev = $audit->hash;
             $checked++;
+        }
+
+        // The chain was started and no chained row is left: everything from
+        // the anchor on has been removed.
+        if ($firstChained !== null && $checked === 0) {
+            return ['intact' => false, 'checked' => 0, 'unchained' => $unchained, 'broken_at' => $firstChained];
         }
 
         return ['intact' => true, 'checked' => $checked, 'unchained' => $unchained, 'broken_at' => null];
