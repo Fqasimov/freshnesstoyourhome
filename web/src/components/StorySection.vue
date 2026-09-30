@@ -18,7 +18,7 @@ const stats = [
   { key: 'st1', value: () => PRODUCTS.length },
   // Minus the synthetic "everything" row the page adds to the front.
   { key: 'st2', value: () => Math.max(CATEGORIES.length - 1, 0) },
-  { key: 'st3', text: '10–22' },
+  { key: 'st3', text: '10:00–22:00' },
   { key: 'st4', text: '24/7' },
 ]
 
@@ -64,7 +64,7 @@ onUnmounted(() => io && io.disconnect())
 
       <div class="stats" ref="box" v-reveal="'120ms'">
         <div v-for="(s, i) in stats" :key="s.key" class="stat">
-          <b>{{ shown[i] }}</b>
+          <b :class="{ 'stat__text': s.text }">{{ shown[i] }}</b>
           <span>{{ t(s.key) }}</span>
         </div>
       </div>
@@ -96,6 +96,7 @@ onUnmounted(() => io && io.disconnect())
 .stats{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
 .stat{ background:var(--paper-2); padding:clamp(20px,2.6vw,32px); }
 .stat b{ font-family:var(--display); font-variant-numeric:lining-nums tabular-nums; font-size:clamp(2rem,4vw,3.1rem); font-weight:500; letter-spacing:-.03em; line-height:1; display:block; }
+.stat b.stat__text{ white-space:nowrap; font-size:clamp(1.2rem,2.7vw,2.2rem); padding-top:.35em; }
 .stat b i{ font-style:normal; font-size:.44em; margin-left:2px; opacity:.55; }
 .stat span{ display:block; margin-top:10px; font-size:.76rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); }
 

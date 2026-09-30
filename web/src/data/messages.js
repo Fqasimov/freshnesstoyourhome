@@ -54,7 +54,7 @@ const OWN = {
     'dl.table':'Ərazilər və çatdırılma haqqı','dl.area':'Ərazi','dl.feeCol':'Haqq','dl.showAll':'Bütün {n} ərazini göstər','dl.showLess':'Daha az göstər','dl.byArea':'əraziyə görə','dl.seeTable':'Hər ərazinin haqqı aşağıdakı cədvəldədir.','dl.rangeNote':'Aralıq göstərilən ərazilərdə haqq məsafədən asılıdır — dəqiq məbləği sifarişi təsdiqləyərkən bildiririk.',
     'dl.cold.t':'Soyuq zəncir','dl.cold.d':'Məhsullar soyuq qablaşdırma ilə daşınır — qapınıza qədər zəncir pozulmur.',
     'dl.pay.t':'Ödəniş','dl.pay.d':'Çatdırılma zamanı nağd və ya POS terminal ilə.',
-    'st1':'Kataloqda məhsul','st2':'Bölmə, bir çatdırılma','st3':'Hər gün, saat 10–22','st4':'Dəstək xidməti 24/7',
+    'st1':'Kataloqda məhsul','st2':'Bölmə, bir çatdırılma','st3':'Hər gün, çatdırılma saatları','st4':'Dəstək xidməti 24/7',
 
     'how.eyebrow':'Üç addım','how.h2':'Necə sifariş etmək olar?',
     's1.t':'Səbəti doldurun',
@@ -168,7 +168,7 @@ const OWN = {
     'dl.table':'Районы и стоимость доставки','dl.area':'Район','dl.feeCol':'Стоимость','dl.showAll':'Показать все {n} районов','dl.showLess':'Свернуть','dl.byArea':'в зависимости от района','dl.seeTable':'Стоимость для каждого района — в таблице ниже.','dl.rangeNote':'Где указан диапазон, стоимость зависит от расстояния — точную сумму сообщим при подтверждении заказа.',
     'dl.cold.t':'Холодовая цепь','dl.cold.d':'Продукты едут в холодной упаковке — цепь не прерывается до вашей двери.',
     'dl.pay.t':'Оплата','dl.pay.d':'При доставке — наличными или картой через POS-терминал.',
-    'st1':'товаров в каталоге','st2':'разделов, одна доставка','st3':'ежедневно, с 10 до 22','st4':'поддержка 24/7',
+    'st1':'товаров в каталоге','st2':'разделов, одна доставка','st3':'ежедневно, часы доставки','st4':'поддержка 24/7',
 
     'how.eyebrow':'Три шага','how.h2':'Как заказать?',
     's1.t':'Соберите корзину',
@@ -282,7 +282,7 @@ const OWN = {
     'dl.table':'Areas and delivery fees','dl.area':'Area','dl.feeCol':'Fee','dl.showAll':'Show all {n} areas','dl.showLess':'Show fewer','dl.byArea':'depending on the area','dl.seeTable':'Each area\'s fee is in the table below.','dl.rangeNote':'Where a range is shown, the fee depends on the distance — we confirm the exact amount when we confirm the order.',
     'dl.cold.t':'The cold chain','dl.cold.d':'Everything travels in cold packaging — the chain is not broken before your door.',
     'dl.pay.t':'Payment','dl.pay.d':'On delivery, in cash or by card on the POS terminal.',
-    'st1':'Products in the catalogue','st2':'Counters, one delivery','st3':'Every day, 10 till 22','st4':'Support, 24/7',
+    'st1':'Products in the catalogue','st2':'Counters, one delivery','st3':'Every day, delivery hours','st4':'Support, 24/7',
 
     'how.eyebrow':'Three steps','how.h2':'How to order?',
     's1.t':'Fill your basket',
