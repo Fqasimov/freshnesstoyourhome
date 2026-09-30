@@ -24,6 +24,7 @@ const FIXTURE = {"products":[{"id":"smoked-salmon","category_id":"smoked","categ
 const db = {
   products: FIXTURE.products.map(p => ({ ...p })),
   bundles: FIXTURE.bundles.map(b => ({ ...b, items: b.items.map(i => ({ ...i })) })),
+  extraCategories: [],
   zones: [
     { id: 'baku-city', fee_minor: 0, min_order_minor: 0, is_active: true, sort: 0,
       name: { az: 'Bakı şəhəri', en: 'Baku city', ru: 'Город Баку' } },
@@ -337,7 +338,8 @@ export async function respond (path, method, body) {
       throw new DemoError('Kod yalnız kiçik hərf, rəqəm və defisdən ibarət ola bilər.',
         { id: ['Kod yalnız kiçik hərf, rəqəm və defisdən ibarət ola bilər.'] })
     }
-    const cat = db.products.find(p => p.category_id === body.category_id)?.category ?? {}
+    const cat = db.products.find(p => p.category_id === body.category_id)?.category
+      ?? db.extraCategories.find(c => c.id === body.category_id)?.name ?? {}
     const created = {
       id: body.id,
       category_id: body.category_id,
@@ -521,6 +523,42 @@ export async function respond (path, method, body) {
     }
     if (Object.keys(changes).length) audit('bundle.update', 'bundle', b.id, changes)
     return bundleShape(b)
+  }
+
+  /* categories */
+  const allCategories = () => {
+    const seen = new Map()
+    db.products.forEach(p => seen.set(p.category_id, p.category))
+    const list = [...seen].map(([id, name], i) => ({ id, name, sort: i, is_active: !(db.hiddenCategories ?? []).includes(id),
+      product_count: db.products.filter(p => p.category_id === id).length }))
+    db.extraCategories.forEach((c, i) => list.push({ ...c, sort: list.length + i,
+      product_count: db.products.filter(p => p.category_id === c.id).length }))
+    return list
+  }
+  if (route === '/admin/categories' && method === 'GET') return { data: allCategories() }
+  if (route === '/admin/categories' && method === 'POST') {
+    if (allCategories().some(c => c.id === body.id)) throw new DemoError('Bu kod artıq var.', { id: ['Bu kod artıq var.'] })
+    const c = { id: body.id, is_active: true,
+      name: Object.fromEntries(Object.entries(body.translations).filter(([, v]) => v.name).map(([k, v]) => [k, v.name])) }
+    db.extraCategories.push(c)
+    audit('category.create', 'category', c.id, { 'name:az': { from: null, to: c.name.az } })
+    return { ...c, sort: 99, product_count: 0 }
+  }
+  if (seg[0] === 'admin' && seg[1] === 'categories' && method === 'PATCH') {
+    const extra = db.extraCategories.find(c => c.id === seg[2])
+    if (!extra && body.is_active !== undefined) {
+      db.hiddenCategories = (db.hiddenCategories ?? []).filter(id => id !== seg[2])
+      if (!body.is_active) db.hiddenCategories.push(seg[2])
+    }
+    if (extra) {
+      if (body.is_active !== undefined) extra.is_active = body.is_active
+      for (const [k, v] of Object.entries(body.translations ?? {})) if (v.name) extra.name = { ...extra.name, [k]: v.name }
+    }
+    return { status: 'ok' }
+  }
+  if (seg[0] === 'admin' && seg[1] === 'categories' && method === 'DELETE') {
+    db.extraCategories = db.extraCategories.filter(c => c.id !== seg[2])
+    return { status: 'ok' }
   }
 
   /* zones */

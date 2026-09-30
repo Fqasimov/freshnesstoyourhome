@@ -8,6 +8,7 @@ import Orders from './views/Orders.vue'
 import Products from './views/Products.vue'
 import Bundles from './views/Bundles.vue'
 import Zones from './views/Zones.vue'
+import Categories from './views/Categories.vue'
 import Customers from './views/Customers.vue'
 import Audits from './views/Audits.vue'
 import { api } from './api'
@@ -16,6 +17,7 @@ const TABS = [
   { id: 'dashboard', label: 'Bu gün', is: Dashboard },
   { id: 'orders', label: 'Sifarişlər', is: Orders },
   { id: 'products', label: 'Məhsullar', is: Products },
+  { id: 'categories', label: 'Kateqoriyalar', is: Categories },
   { id: 'bundles', label: 'Aksiyalar', is: Bundles },
   { id: 'zones', label: 'Zonalar', is: Zones },
   { id: 'customers', label: 'Müştərilər', is: Customers },

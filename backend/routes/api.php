@@ -171,7 +171,9 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::delete('products/{id}/photo', [ProductController::class, 'removePhoto']);
 
         Route::get('categories', [CategoryController::class, 'index']);
+        Route::post('categories', [CategoryController::class, 'store']);
         Route::patch('categories/{id}', [CategoryController::class, 'update']);
+        Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
 
         Route::get('bundles', [BundleController::class, 'index']);
         Route::post('bundles', [BundleController::class, 'store']);

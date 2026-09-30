@@ -25,14 +25,81 @@ class CategoryController extends Controller
         $categories = Category::with('translations')->orderBy('sort')->get();
 
         return response()->json([
-            'data' => $categories->map(fn (Category $c) => [
-                'id' => $c->id,
-                'is_active' => $c->is_active,
-                'sort' => $c->sort,
-                'name' => $c->translationMap('name'),
-                'product_count' => (int) ($counts[$c->id] ?? 0),
-            ]),
+            'data' => $categories->map(fn (Category $c) => $this->shape($c, (int) ($counts[$c->id] ?? 0))),
         ]);
+    }
+
+    /**
+     * A new category. It appears on the website and in the app as soon as it
+     * holds a product; until then the catalogue leaves it out, so an empty
+     * shelf is never shown to customers.
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'id' => ['required', 'string', 'min:2', 'max:40', 'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/', 'unique:categories,id'],
+            'translations' => ['required', 'array'],
+            'translations.az.name' => ['required', 'string', 'max:80'],
+            'translations.*.name' => ['sometimes', 'nullable', 'string', 'max:80'],
+        ]);
+
+        $category = DB::transaction(function () use ($data) {
+            $category = Category::create([
+                'id' => $data['id'],
+                'sort' => ((int) Category::max('sort')) + 1,
+                'is_active' => true,
+            ]);
+
+            foreach ($data['translations'] as $locale => $fields) {
+                if (in_array($locale, self::LOCALES, true) && filled($fields['name'] ?? null)) {
+                    CategoryTranslation::create([
+                        'category_id' => $category->id,
+                        'locale' => $locale,
+                        'name' => $fields['name'],
+                    ]);
+                }
+            }
+
+            return $category->load('translations');
+        });
+
+        Audit::record($request->user(), 'category.create', 'category', $category->id, [
+            'name:az' => ['from' => null, 'to' => $data['translations']['az']['name']],
+        ]);
+
+        return response()->json($this->shape($category, 0), 201);
+    }
+
+    /** Only an empty category can go: products must never be left without one. */
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        $category = Category::findOrFail($id);
+
+        if (Product::where('category_id', $category->id)->exists()) {
+            return response()->json([
+                'message' => 'Bu kateqoriyada məhsullar var. Əvvəlcə onları başqa kateqoriyaya keçirin.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($category) {
+            CategoryTranslation::where('category_id', $category->id)->delete();
+            $category->delete();
+        });
+
+        Audit::record($request->user(), 'category.delete', 'category', $id);
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    private function shape(Category $c, int $count): array
+    {
+        return [
+            'id' => $c->id,
+            'is_active' => $c->is_active,
+            'sort' => $c->sort,
+            'name' => $c->translationMap('name'),
+            'product_count' => $count,
+        ];
     }
 
     public function update(Request $request, string $id): JsonResponse

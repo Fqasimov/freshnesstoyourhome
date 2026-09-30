@@ -27,9 +27,13 @@ const editing = ref(null)
    server last said and can show that the field has been touched. */
 const draft = ref({})
 
+/* Every category, empty ones too — a new category has no product to be
+   found through, and this is where the first product gets put into it. */
+const categoryList = ref([])
 const categories = computed(() => {
   const seen = new Map()
-  rows.value.forEach(r => seen.set(r.category_id, r.category?.az ?? r.category_id))
+  categoryList.value.forEach(c => seen.set(c.id, c.name?.az ?? c.id))
+  rows.value.forEach(r => { if (!seen.has(r.category_id)) seen.set(r.category_id, r.category?.az ?? r.category_id) })
   return [...seen].sort((a, b) => a[1].localeCompare(b[1], 'az'))
 })
 
@@ -124,7 +128,10 @@ function added (product) {
   draft.value[product.id] = toAzn(product.price_minor)
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  api('/admin/categories').then(r => { categoryList.value = r.data }).catch(() => {})
+})
 </script>
 
 <template>

@@ -134,4 +134,47 @@ class AdminCreateTest extends TestCase
         $this->postJson('/api/admin/bundles', [])->assertNotFound();
         $this->postJson('/api/admin/zones', [])->assertNotFound();
     }
+
+    public function test_a_new_category_is_created_and_stays_off_the_shelf_until_it_has_products(): void
+    {
+        $this->postJson('/api/admin/categories', [
+            'id' => 'test-salads',
+            'translations' => ['az' => ['name' => 'Salatlar'], 'en' => ['name' => 'Salads'], 'ru' => ['name' => '']],
+        ])->assertCreated()->assertJsonPath('name.az', 'Salatlar')->assertJsonPath('product_count', 0);
+
+        $this->assertTrue(AdminAudit::where('action', 'category.create')->exists());
+
+        $ids = fn () => collect($this->getJson('/api/catalogue')->json('categories'))->pluck('id');
+        $this->assertFalse($ids()->contains('test-salads'));
+
+        $this->postJson('/api/admin/products', [
+            'id' => 'test-greek-salad', 'category_id' => 'test-salads', 'price_minor' => 900,
+            'unit_kind' => 'pc', 'unit_qty' => 1,
+            'translations' => ['az' => ['name' => 'Yunan salatı', 'unit_label' => '1 ədəd']],
+        ])->assertCreated();
+
+        \App\Support\CatalogueCache::flush();
+        $this->assertTrue($ids()->contains('test-salads'));
+    }
+
+    public function test_a_category_needs_an_azerbaijani_name_and_a_fresh_code(): void
+    {
+        $this->postJson('/api/admin/categories', ['id' => 'Bad Code', 'translations' => ['az' => ['name' => '']]])
+            ->assertStatus(422)->assertJsonValidationErrors(['id', 'translations.az.name']);
+
+        $existing = \App\Models\Category::first()->id;
+        $this->postJson('/api/admin/categories', ['id' => $existing, 'translations' => ['az' => ['name' => 'X']]])
+            ->assertStatus(422)->assertJsonValidationErrors(['id']);
+    }
+
+    public function test_only_an_empty_category_can_be_deleted(): void
+    {
+        $used = \App\Models\Product::first()->category_id;
+        $this->deleteJson("/api/admin/categories/{$used}")->assertStatus(422);
+        $this->assertDatabaseHas('categories', ['id' => $used]);
+
+        $this->postJson('/api/admin/categories', ['id' => 'test-empty', 'translations' => ['az' => ['name' => 'Boş']]])->assertCreated();
+        $this->deleteJson('/api/admin/categories/test-empty')->assertOk();
+        $this->assertDatabaseMissing('categories', ['id' => 'test-empty']);
+    }
 }

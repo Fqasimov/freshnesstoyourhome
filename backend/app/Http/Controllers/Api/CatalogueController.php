@@ -128,6 +128,10 @@ class CatalogueController extends Controller
                 ])
                 ->all();
 
+            // A category nobody has put a product in yet stays off the shelf.
+            $stocked = array_flip(array_column($products, 'category_id'));
+            $categories = array_values(array_filter($categories, fn ($c) => isset($stocked[$c['id']])));
+
             return [
                 'categories' => $categories,
                 'products' => $products,
