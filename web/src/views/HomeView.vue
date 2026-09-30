@@ -23,6 +23,7 @@ defineEmits(['add', 'add-set', 'peek'])
   <HeroSection />
   <TickerBar />
   <PromiseGrid />
+  <StorySection />
   <SetsSection @add="$emit('add-set', $event)" />
   <FeaturedSlider @add="$emit('add', $event)" @peek="$emit('peek', $event)" />
 
@@ -30,7 +31,6 @@ defineEmits(['add', 'add-set', 'peek'])
        the two things that make somebody want more of them. -->
   <div class="wrap"><CatalogueCta variant="band" /></div>
 
-  <StorySection />
   <OrderSteps />
   <DeliverySection />
   <ContactSection />
