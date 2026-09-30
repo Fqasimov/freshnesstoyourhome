@@ -4,9 +4,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { reducedMotion } from '../composables/useMotion'
 import { PRODUCTS } from '../data/catalogue'
-import duck from '../assets/products/peking-duck.jpg'
-import camembert from '../assets/products/camembert.jpg'
-import salmon from '../assets/products/salmon-steaks.jpg'
+import salmon from '../assets/hero/salmon-carpaccio.webp'
+import caviar from '../assets/hero/caviar-toast.webp'
+import burrata from '../assets/hero/burrata.webp'
 
 const { t } = useI18n()
 
@@ -21,28 +21,38 @@ onMounted(() => {
   requestAnimationFrame(() => requestAnimationFrame(() => { drawn.value = true }))
 
   if (reducedMotion || !box.value) return
-  let tx = 0, ty = 0, cx = 0, cy = 0, raf = null
-  const loop = () => {
-    cx += (tx - cx) * 0.08; cy += (ty - cy) * 0.08
+
+  /* One loop, one write per frame. Pointer and scroll both feed targets; the
+     photos ease toward them and move by transform alone, so nothing here can
+     trigger layout. The loop sleeps once everything has settled. */
+  let px = 0, py = 0, sy = 0          // targets: pointer x/y (-.5….5), scroll (px)
+  let cx = 0, cy = 0, cs = 0          // eased values
+  let raf = null
+  const paint = () => {
+    cx += (px - cx) * 0.07
+    cy += (py - cy) * 0.07
+    cs += (sy - cs) * 0.1
     figs.value.forEach(f => {
       const d = Number(f.dataset.depth) || 10
-      f.style.transform = `translate(${cx * d}px,${cy * d}px)`
+      f.style.transform =
+        `translate3d(${(cx * d).toFixed(2)}px,${(cy * d - cs * d * 0.012).toFixed(2)}px,0)`
     })
-    raf = (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) ? requestAnimationFrame(loop) : null
+    const idle = Math.abs(px - cx) < 0.0005 && Math.abs(py - cy) < 0.0005 && Math.abs(sy - cs) < 0.05
+    raf = idle ? null : requestAnimationFrame(paint)
   }
+  const wake = () => { if (!raf) raf = requestAnimationFrame(paint) }
+
   const onMove = e => {
+    if (e.pointerType && e.pointerType !== 'mouse') return
     const r = box.value.getBoundingClientRect()
-    tx = (e.clientX - r.left) / r.width - 0.5
-    ty = (e.clientY - r.top) / r.height - 0.5
-    if (!raf) raf = requestAnimationFrame(loop)
+    px = (e.clientX - r.left) / r.width - 0.5
+    py = (e.clientY - r.top) / r.height - 0.5
+    wake()
   }
-  const onLeave = () => { tx = 0; ty = 0; if (!raf) raf = requestAnimationFrame(loop) }
+  const onLeave = () => { px = 0; py = 0; wake() }
   const onScroll = () => {
-    const y = window.scrollY
-    if (y > window.innerHeight) return
-    figs.value.forEach(f => {
-      f.style.marginTop = (y * (Number(f.dataset.depth) || 10) * -0.012) + 'px'
-    })
+    sy = Math.min(window.scrollY, window.innerHeight)
+    wake()
   }
   box.value.addEventListener('pointermove', onMove)
   box.value.addEventListener('pointerleave', onLeave)
@@ -55,12 +65,12 @@ onMounted(() => {
   })
 })
 
-/* One from meat, one from the cheese room, one from the fish counter —
-   the range, rather than a fishmonger's window. */
+/* Three plates from the counter: smoked salmon, red caviar on cream cheese,
+   burrata with roasted tomatoes. */
 const shots = [
-  { src: duck,      cls: 'c1', depth: 18,  alt: 'Peking duck' },
-  { src: camembert, cls: 'c2', depth: -14, alt: 'Camembert' },
-  { src: salmon,    cls: 'c3', depth: 26,  alt: 'Salmon steaks on ice' }
+  { src: salmon,  cls: 'c1', depth: 18,  alt: 'Sliced smoked salmon with capers and dill' },
+  { src: caviar,  cls: 'c2', depth: -14, alt: 'Toast with cream cheese and red caviar' },
+  { src: burrata, cls: 'c3', depth: 26,  alt: 'Burrata with roasted tomatoes and basil' }
 ]
 </script>
 
@@ -173,12 +183,22 @@ const shots = [
   box-shadow:0 26px 60px rgba(0,0,0,.34);
   outline:6px solid var(--paper); outline-offset:-1px;
   will-change:transform;
+  /* A slow drift of its own, on the separate `translate` property so it adds to
+     the pointer and scroll movement (set on `transform`) instead of fighting it. */
+  animation:bob var(--bob,9s) ease-in-out var(--delay,0s) infinite alternate;
 }
-.collage img{ width:100%; height:100%; object-fit:cover; transition:transform 1.4s var(--ease-out); }
-.collage figure:hover img{ transform:scale(1.07); }
-.collage .c1{ width:52%; aspect-ratio:4/5;  left:0;    top:7%;  z-index:3; }
-.collage .c2{ width:42%; aspect-ratio:1/1;  right:0;   top:0;   z-index:2; }
-.collage .c3{ width:46%; aspect-ratio:5/4;  right:1%;  bottom:0; z-index:2; }
+.collage img{ display:block; width:100%; height:100%; object-fit:cover; transition:transform 1.4s var(--ease-out); }
+@media (hover:hover){ .collage figure:hover img{ transform:scale(1.05); } }
+@keyframes bob{
+  from{ translate:0 -7px; }
+  to  { translate:0 7px; }
+}
+.collage .c1{ width:52%; aspect-ratio:4/5;  left:0;    top:7%;  z-index:3; --bob:10s; }
+.collage .c1 img{ object-position:50% 45%; }
+.collage .c2{ width:42%; aspect-ratio:1/1;  right:0;   top:0;   z-index:2; --bob:8s; --delay:-3s; }
+.collage .c2 img{ object-position:50% 30%; }
+.collage .c3{ width:46%; aspect-ratio:5/4;  right:1%;  bottom:0; z-index:2; --bob:11s; --delay:-6s; }
+.collage .c3 img{ object-position:50% 62%; }
 .collage__seal{
   position:absolute; left:34%; bottom:7%; z-index:6;
   width:clamp(96px,10.5vw,128px); aspect-ratio:1; border-radius:50%;
@@ -194,7 +214,7 @@ const shots = [
   animation:spinRing 30s linear infinite;
 }
 @keyframes spinRing{ to{ transform:rotate(360deg); } }
-@media (prefers-reduced-motion: reduce){ .collage__seal::before, .hero__lines{ animation:none; } }
+@media (prefers-reduced-motion: reduce){ .collage__seal::before, .hero__lines, .collage figure{ animation:none; } }
 @media (max-width:1080px){
   .hero__in{ grid-template-columns:1fr; gap:44px; }
   .collage{ max-width:520px; }
