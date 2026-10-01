@@ -5,6 +5,7 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
@@ -17,11 +18,18 @@ class LoginCodeMail extends Mailable
         // Named `lang`, not `locale`: Mailable already declares a
         // `$locale` property and redeclaring it as readonly is a fatal error.
         public readonly string $lang = 'az',
+        // The admin panel's sign-in, as opposed to a customer's in the app: it
+        // goes out from its own sender address and says "panel", so the two
+        // can never be mistaken for each other.
+        public readonly bool $panel = false,
     ) {}
 
     public function envelope(): Envelope
     {
+        $from = $this->panel ? config('freshness.mail.panel_from') : null;
+
         return new Envelope(
+            from: $from ? new Address($from['address'], $from['name']) : null,
             subject: $this->subjectFor($this->lang),
         );
     }
@@ -33,13 +41,21 @@ class LoginCodeMail extends Mailable
             with: [
                 'code' => $this->code,
                 'minutes' => (int) config('freshness.auth.code_ttl_minutes'),
-                'strings' => $this->stringsFor($this->lang),
+                'strings' => $this->stringsFor($this->lang, $this->panel),
             ],
         );
     }
 
     private function subjectFor(string $locale): string
     {
+        if ($this->panel) {
+            return match ($locale) {
+                'ru' => 'Код входа в панель — Freshness To Your Home',
+                'en' => 'Panel sign-in code — Freshness To Your Home',
+                default => 'Panelə giriş kodu — Freshness To Your Home',
+            };
+        }
+
         return match ($locale) {
             'ru' => 'Ваш код входа — Freshness To Your Home',
             'en' => 'Your sign-in code — Freshness To Your Home',
@@ -51,9 +67,9 @@ class LoginCodeMail extends Mailable
      * Azerbaijani is the default because that is the language the shop's
      * customers use, and the app opens in it.
      */
-    private function stringsFor(string $locale): array
+    private function stringsFor(string $locale, bool $panel = false): array
     {
-        return match ($locale) {
+        $strings = match ($locale) {
             'ru' => [
                 'greeting' => 'Здравствуйте!',
                 'intro' => 'Введите этот код в приложении, чтобы войти:',
@@ -76,5 +92,15 @@ class LoginCodeMail extends Mailable
                 'never' => 'Biz bu kodu heç vaxt telefonla və ya mesajla soruşmuruq.',
             ],
         };
+
+        if ($panel) {
+            $strings['intro'] = match ($locale) {
+                'ru' => 'Введите этот код в панели управления, чтобы войти:',
+                'en' => 'Enter this code in the admin panel to sign in:',
+                default => 'Daxil olmaq üçün bu kodu idarəetmə panelində yazın:',
+            };
+        }
+
+        return $strings;
     }
 }

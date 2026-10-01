@@ -125,6 +125,10 @@ install, and deletes itself when told to.
 
 Choices that follow from having no shell, all written into that `.env`:
 
+- **Two senders.** Customers' app codes come from `MAIL_FROM_ADDRESS`; the admin
+  panel's from `PANEL_MAIL_FROM_ADDRESS` (and say "panel" in the subject). Both
+  must be on the domain verified in Resend. Leave the panel one blank to use one
+  sender for both.
 - **`QUEUE_CONNECTION=sync`.** No long-running worker is possible, so sign-in
   mail goes out inside the request. Half a second slower; nothing to babysit.
 - **Mail over the host's own SMTP** (a cPanel email account) rather than

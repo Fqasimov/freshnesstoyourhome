@@ -51,6 +51,17 @@ return [
         'apple' => array_values(array_filter(array_map('trim', explode(',', (string) env('APPLE_CLIENT_IDS', ''))))),
     ],
 
+    'mail' => [
+        // The admin panel's sign-in codes can come from their own address, so
+        // staff and customers each get mail from a sender that fits. Unset, the
+        // panel uses the shop's address (MAIL_FROM_ADDRESS) like everything else.
+        // Must be on the domain verified in Resend.
+        'panel_from' => env('PANEL_MAIL_FROM_ADDRESS') ? [
+            'address' => env('PANEL_MAIL_FROM_ADDRESS'),
+            'name' => env('PANEL_MAIL_FROM_NAME', 'Freshness Panel'),
+        ] : null,
+    ],
+
     'auth' => [
         // Six digits is what customers will tolerate typing. The security
         // comes from the short life and the attempt cap, not the length.

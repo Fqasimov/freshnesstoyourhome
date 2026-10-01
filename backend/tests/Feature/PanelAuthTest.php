@@ -323,4 +323,24 @@ class PanelAuthTest extends TestCase
 
         Mail::assertNothingQueued();
     }
+
+    public function test_panel_and_app_codes_go_out_from_their_own_senders(): void
+    {
+        config([
+            'mail.from' => ['address' => 'hello@freshnesstoyourhome.az', 'name' => 'Freshness'],
+            'freshness.mail.panel_from' => ['address' => 'panel@freshnesstoyourhome.az', 'name' => 'Freshness Panel'],
+        ]);
+        Mail::fake();
+
+        $this->postJson('/api/auth/panel/request-code', ['email' => self::ADMIN])->assertOk();
+        $this->postJson('/api/auth/request-code', ['email' => 'customer@example.com'])->assertOk();
+
+        Mail::assertQueued(LoginCodeMail::class, fn (LoginCodeMail $m) => $m->panel
+            && $m->hasTo(self::ADMIN)
+            && $m->envelope()->from->address === 'panel@freshnesstoyourhome.az');
+
+        Mail::assertQueued(LoginCodeMail::class, fn (LoginCodeMail $m) => ! $m->panel
+            && $m->hasTo('customer@example.com')
+            && $m->envelope()->from === null);
+    }
 }

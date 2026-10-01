@@ -81,7 +81,7 @@ class LoginCodeService
 
         // Queued: sending inline would make the endpoint's response time vary
         // with whether the address exists in our mail provider's records.
-        Mail::to($email)->queue(new LoginCodeMail($code, $locale));
+        Mail::to($email)->queue(new LoginCodeMail($code, $locale, $panel));
 
         return self::SENT;
     }
