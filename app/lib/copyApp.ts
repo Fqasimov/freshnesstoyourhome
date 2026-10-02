@@ -39,6 +39,7 @@ export const APP_COPY: Record<Lang, Record<string, string>> = {
 
     'err.name': 'Adınızı və soyadınızı yazın.',
     'err.email': 'Düzgün e-poçt ünvanı daxil edin.',
+    'err.phone': 'Düzgün telefon nömrəsi daxil edin.',
     'err.dob': 'Doğum tarixinizi seçin.',
     'err.age': 'Hesab açmaq üçün ən azı 13 yaşınız olmalıdır.',
     'err.password': 'Parol bütün tələblərə cavab verməlidir.',
@@ -149,6 +150,7 @@ export const APP_COPY: Record<Lang, Record<string, string>> = {
 
     'err.name': 'Укажите имя и фамилию.',
     'err.email': 'Введите правильный адрес эл. почты.',
+    'err.phone': 'Введите правильный номер телефона.',
     'err.dob': 'Выберите дату рождения.',
     'err.age': 'Чтобы открыть аккаунт, вам должно быть не меньше 13 лет.',
     'err.password': 'Пароль должен отвечать всем требованиям.',
@@ -259,6 +261,7 @@ export const APP_COPY: Record<Lang, Record<string, string>> = {
 
     'err.name': 'Enter your name and surname.',
     'err.email': 'Enter a valid email address.',
+    'err.phone': 'Enter a valid phone number.',
     'err.dob': 'Select your date of birth.',
     'err.age': 'You must be at least 13 to open an account.',
     'err.password': 'The password has to meet every rule.',

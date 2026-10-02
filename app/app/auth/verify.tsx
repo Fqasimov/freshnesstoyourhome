@@ -81,6 +81,12 @@ export default function Verify () {
 
     try {
       await auth.confirm(pending.ticket, pending.email, value)
+      // Sign-up does not take a phone number, so it is saved to the new
+      // profile here. A failure is not worth blocking entry over: checkout asks
+      // for it again if it is missing.
+      if (pending.kind === 'register' && pending.phone) {
+        await auth.updateProfile({ phone: pending.phone }).catch(() => {})
+      }
       setPending(null)
       setDone(true)
       if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})

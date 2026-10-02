@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import { useRouter } from 'expo-router'
+import { useFocusEffect, useRouter } from 'expo-router'
 
 import { api, ApiError, type Address } from '@/lib/api'
 import { useCart } from '@/lib/cart'
@@ -31,19 +31,28 @@ export default function Checkout () {
   const minDate = isoDaysFromNow(lead)
   const maxDate = isoDaysFromNow(14)
 
+  // Ids seen on the previous load, so an address added from here is the one
+  // chosen on coming back.
+  const known = useRef<Set<string> | null>(null)
+  const chosenId = useRef<string | null>(null)
+
   const load = useCallback(async () => {
     try {
       const { data } = await api.addresses()
       setAddresses(data)
 
-      const chosen = data.find(a => a.is_default) ?? data[0]
-      if (chosen) {
-        setAddressId(chosen.id)
-        // The delivery fee depends on the zone, so the basket is re-priced now
-        // that one is known — it was quoted without a zone.
-        cart.setZone(chosen.delivery_zone_id)
-      }
-      setDate(minDate)
+      const added = known.current ? data.find(a => !known.current!.has(a.id)) : undefined
+      known.current = new Set(data.map(a => a.id))
+
+      const chosen = added
+        ?? data.find(a => a.id === chosenId.current)
+        ?? data.find(a => a.is_default) ?? data[0]
+      chosenId.current = chosen?.id ?? null
+      setAddressId(chosenId.current)
+      // The delivery fee depends on the zone, so the basket is re-priced now
+      // that one is known — it was quoted without a zone.
+      if (chosen) cart.setZone(chosen.delivery_zone_id)
+      setDate(d => d || minDate)
     } catch (e) {
       setError((e as ApiError).isOffline ? t('err.offline') : t('err.generic'))
     } finally {
@@ -54,9 +63,11 @@ export default function Checkout () {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [minDate])
 
-  useEffect(() => { load() }, [load])
+  // Reloaded on every return, so an address added on the form shows up here.
+  useFocusEffect(useCallback(() => { load() }, [load]))
 
   function pickAddress (a: Address) {
+    chosenId.current = a.id
     setAddressId(a.id)
     cart.setZone(a.delivery_zone_id)
   }
@@ -139,8 +150,7 @@ export default function Checkout () {
 
         <Button
           title={t('checkout.addAddress')}
-          variant="ghost"
-          onPress={() => router.push('/profile/addresses')}
+          onPress={() => router.push({ pathname: '/profile/addresses', params: { new: '1' } })}
           style={{ marginTop: 12 }}
         />
 

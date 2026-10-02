@@ -260,7 +260,7 @@ function LinkRow ({ icon, label, hint, onPress, last }: {
 }
 
 const s = StyleSheet.create({
-  page: { paddingHorizontal: space.gutter, paddingBottom: 40, maxWidth: 620, width: '100%', alignSelf: 'center' },
+  page: { paddingHorizontal: space.gutter, paddingBottom: 100, maxWidth: 620, width: '100%', alignSelf: 'center' },
   hero: {
     flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, marginBottom: 18,
     borderRadius: space.radiusLg, backgroundColor: color.forest,

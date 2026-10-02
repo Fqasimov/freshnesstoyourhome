@@ -46,5 +46,5 @@ export function ProductGrid ({ products, header, empty }: {
 }
 
 const s = StyleSheet.create({
-  list: { paddingHorizontal: space.gutter, paddingBottom: 40, maxWidth: 620, width: '100%', alignSelf: 'center' },
+  list: { paddingHorizontal: space.gutter, paddingBottom: 110, maxWidth: 620, width: '100%', alignSelf: 'center' },
 })

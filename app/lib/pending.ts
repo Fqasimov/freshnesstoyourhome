@@ -9,7 +9,7 @@ import type { SignUpForm } from './api'
  * can resubmit it; it dies with the app.
  */
 export type Pending =
-  | { kind: 'register'; email: string; ticket: string; form: SignUpForm }
+  | { kind: 'register'; email: string; ticket: string; form: SignUpForm; phone?: string }
   | { kind: 'reset'; email: string; ticket: string; password: string }
 
 let pending: Pending | null = null

@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 
 import { api, ApiError, type Address } from '@/lib/api'
 import { useCatalogue } from '@/lib/catalogue'
 import { pick, t, useLang } from '@/lib/i18n'
 import { AppBar, Body, Button, Empty, Field, Loading, Note, Small, inputStyle } from '@/components/ui'
+import { Icon } from '@/components/Icon'
+import { Sheet } from '@/components/Sheet'
 import { color, font, space } from '@/theme/tokens'
-import { mapsUrl } from '@/lib/brand'
 import { feeText, isRange, zoneById } from '@/lib/zones'
 import { money } from '@/lib/money'
 
@@ -15,34 +17,25 @@ type Draft = {
   label: string
   line: string
   notes: string
-  mapLink: string
   delivery_zone_id: string
 }
 
 export default function Addresses () {
   const catalogue = useCatalogue()
+  const router = useRouter()
+  // Checkout opens this straight onto a new address and expects to be
+  // returned to once it is saved.
+  const { new: openNew } = useLocalSearchParams<{ new?: string }>()
+  const fromCheckout = openNew === '1'
   useLang()
 
   const [addresses, setAddresses] = useState<Address[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [draft, setDraft] = useState<Draft | null>(null)
-  /* Fifty-one areas is too many to scroll past looking for yours. */
-  const [zoneQuery, setZoneQuery] = useState('')
-
-  const zones = useMemo(() => {
-    const needle = zoneQuery.trim().toLowerCase()
-    if (!needle) return catalogue.zones
-    // Matched against all three names, not the displayed one: people type
-    // "Shuvalan" as often as "Şüvəlan", and an Azerbaijani keyboard is not
-    // always what is to hand.
-    return catalogue.zones.filter(z => {
-      const shared = zoneById(z.id)
-      const names = [z.name.az, z.name.ru, z.name.en, shared?.az, shared?.ru, shared?.en]
-      return names.some(n => n?.toLowerCase().includes(needle))
-    })
-  }, [catalogue.zones, zoneQuery])
+  const [draft, setDraft] = useState<Draft | null>(
+    fromCheckout ? { id: null, label: '', line: '', notes: '', delivery_zone_id: '' } : null,
+  )
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -59,38 +52,43 @@ export default function Addresses () {
   useEffect(() => { load() }, [load])
 
   function startNew () {
-    setDraft({
-      id: null, label: '', line: '', notes: '', mapLink: '',
-      delivery_zone_id: catalogue.zones[0]?.id ?? '',
-    })
+    setError(null)
+    setDraft({ id: null, label: '', line: '', notes: '', delivery_zone_id: '' })
   }
 
   function startEdit (a: Address) {
+    setError(null)
     setDraft({
       id: a.id,
       label: a.label ?? '',
       line: a.line,
       notes: a.notes ?? '',
-      mapLink: a.map_link ?? '',
-      delivery_zone_id: a.delivery_zone_id ?? catalogue.zones[0]?.id ?? '',
+      delivery_zone_id: a.delivery_zone_id ?? '',
     })
+  }
+
+  function close () {
+    if (fromCheckout) router.back()
+    else setDraft(null)
   }
 
   async function save () {
     if (!draft || !draft.line.trim() || !draft.delivery_zone_id) return
     setSaving(true); setError(null)
 
+    // map_link is left out rather than cleared, so an address saved with a
+    // link before keeps it. A real map picker will fill it later.
     const body = {
       label: draft.label.trim() || null,
       line: draft.line.trim(),
       notes: draft.notes.trim() || null,
-      map_link: draft.mapLink.trim() || null,
       delivery_zone_id: draft.delivery_zone_id,
     }
 
     try {
       if (draft.id) await api.updateAddress(draft.id, body)
       else await api.createAddress(body)
+      if (fromCheckout) { router.back(); return }
       setDraft(null)
       await load()
     } catch (e) {
@@ -105,108 +103,29 @@ export default function Addresses () {
     catch (e) { setError((e as ApiError).message ?? t('err.generic')) }
   }
 
-  if (loading) return <View style={{ flex: 1 }}><AppBar title={t('profile.addresses')} back /><Loading /></View>
-
   if (draft) {
     return (
-      <View style={{ flex: 1 }}>
-        <AppBar title={t('address.title')} back />
-        <ScrollView contentContainerStyle={{ padding: space.gutter, paddingBottom: 36 }}>
-          <Field label={t('address.label')}>
-            <TextInput style={inputStyle} value={draft.label} maxLength={40}
-              onChangeText={(v) => setDraft({ ...draft, label: v })} />
-          </Field>
-
-          <Field label={t('deliv.addr')}>
-            <TextInput style={inputStyle} value={draft.line} maxLength={300}
-              autoComplete="street-address" textContentType="fullStreetAddress"
-              onChangeText={(v) => setDraft({ ...draft, line: v })} />
-          </Field>
-
-          <Field label={t('address.notes')}>
-            <TextInput style={inputStyle} value={draft.notes} maxLength={200}
-              onChangeText={(v) => setDraft({ ...draft, notes: v })} />
-          </Field>
-
-          {/* The same slot the website's basket carries. A Baku street
-              address and a courier's idea of it are not always the same
-              place, and the link a phone's Share button produces already
-              resolves to an exact point — no Maps key needed. When there is
-              one, the embedded picker goes here and writes into this field. */}
-          <Field label={t('deliv.map')}>
-            <TextInput
-              style={inputStyle}
-              value={draft.mapLink}
-              maxLength={500}
-              placeholder={t('deliv.mapPh')}
-              placeholderTextColor={color.ink3}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-              onChangeText={(v) => setDraft({ ...draft, mapLink: v })}
-            />
-            <Pressable onPress={() => Linking.openURL(mapsUrl())} style={{ marginTop: 8 }}>
-              <Text style={s.action}>{t('deliv.mapOpen')}</Text>
-            </Pressable>
-            <Small style={{ marginTop: 8 }}>{t('deliv.mapHint')}</Small>
-          </Field>
-
-          <Field label={t('deliv.zone')} error={error}>
-            <TextInput
-              style={[inputStyle, { marginBottom: 12 }]}
-              value={zoneQuery}
-              onChangeText={setZoneQuery}
-              placeholder={t('deliv.zoneFind')}
-              placeholderTextColor={color.ink3}
-              autoCorrect={false}
-            />
-
-            <View style={{ gap: 10 }}>
-              {zones.map(z => {
-                /* The fee shown is the shared file's, because the server holds
-                   one integer per area and half of these are quoted as a range
-                   — telling a customer "20" for an area that costs 20 to 25 is
-                   the failure worth writing code to avoid. Where the id is one
-                   the shared file does not know, the server's figure stands. */
-                const shared = zoneById(z.id)
-                const fee = shared
-                  ? `${feeText(shared)} ${catalogue.currency}`
-                  : money(z.fee_minor, catalogue.currency)
-
-                return (
-                  <Pressable
-                    key={z.id}
-                    onPress={() => setDraft({ ...draft, delivery_zone_id: z.id })}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: draft.delivery_zone_id === z.id }}
-                    style={[s.option, draft.delivery_zone_id === z.id && s.optionOn]}
-                  >
-                    <View style={[s.dot, draft.delivery_zone_id === z.id && s.dotOn]} />
-                    <Body style={{ flex: 1 }}>{pick(z.name)}</Body>
-                    <Text style={s.fee}>{fee}</Text>
-                  </Pressable>
-                )
-              })}
-
-              {zones.length === 0 ? <Small>{t('deliv.zoneNone')}</Small> : null}
-            </View>
-
-            {isRange(zoneById(draft.delivery_zone_id))
-              ? <Small style={{ marginTop: 10 }}>{t('deliv.feeRange')}</Small>
-              : null}
-          </Field>
-
-          <Button title={t('address.save')} onPress={save} busy={saving} disabled={!draft.line.trim()} />
-          <Button title={t('cancel')} variant="ghost" onPress={() => setDraft(null)} style={{ marginTop: 10 }} />
-        </ScrollView>
-      </View>
+      <AddressForm
+        draft={draft}
+        setDraft={setDraft}
+        error={error}
+        saving={saving}
+        onSave={save}
+        onCancel={close}
+        currency={catalogue.currency}
+        zones={catalogue.zones}
+      />
     )
   }
+
+  if (loading) return <View style={{ flex: 1 }}><AppBar title={t('profile.addresses')} back /><Loading /></View>
 
   return (
     <View style={{ flex: 1 }}>
       <AppBar title={t('profile.addresses')} back />
       <ScrollView contentContainerStyle={{ padding: space.gutter, paddingBottom: 36 }}>
+        <Button title={t('checkout.addAddress')} onPress={startNew} style={{ marginBottom: 18 }} />
+
         {error ? <View style={{ marginBottom: 14 }}><Note warn>{error}</Note></View> : null}
 
         {addresses.length === 0 ? (
@@ -228,11 +147,149 @@ export default function Addresses () {
             </View>
           </View>
         ))}
-
-        <Button title={t('checkout.addAddress')} onPress={startNew} style={{ marginTop: 8 }} />
       </ScrollView>
     </View>
   )
+}
+
+type Zone = ReturnType<typeof useCatalogue>['zones'][number]
+
+function AddressForm ({ draft, setDraft, error, saving, onSave, onCancel, currency, zones }: {
+  draft: Draft
+  setDraft: (d: Draft) => void
+  error: string | null
+  saving: boolean
+  onSave: () => void
+  onCancel: () => void
+  currency: string
+  zones: Zone[]
+}) {
+  const [picking, setPicking] = useState(false)
+  const chosen = zones.find(z => z.id === draft.delivery_zone_id)
+
+  return (
+    <View style={{ flex: 1 }}>
+      <AppBar title={t('address.title')} back />
+      <ScrollView contentContainerStyle={{ padding: space.gutter, paddingBottom: 36 }} keyboardShouldPersistTaps="handled">
+        <Field label={t('deliv.zone')}>
+          <Pressable
+            onPress={() => setPicking(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t('deliv.zonePick')}
+            style={[s.picker, chosen && { borderColor: color.forest }]}
+          >
+            <Icon name="geo-alt" size={18} color={chosen ? color.forest : color.ink3} />
+            <Text style={[s.pickerText, !chosen && { color: color.ink3 }]} numberOfLines={2}>
+              {chosen ? pick(chosen.name) : t('deliv.zonePick')}
+            </Text>
+            {chosen ? <Text style={s.fee}>{zoneFee(chosen, currency)}</Text> : null}
+            <Icon name="chevron-down" size={14} color={color.ink3} />
+          </Pressable>
+          {isRange(zoneById(draft.delivery_zone_id))
+            ? <Small style={{ marginTop: 8 }}>{t('deliv.feeRange')}</Small>
+            : null}
+        </Field>
+
+        <Field label={t('deliv.addr')}>
+          <TextInput style={inputStyle} value={draft.line} maxLength={300}
+            placeholder={t('deliv.addrPh')} placeholderTextColor={color.ink3}
+            autoComplete="street-address" textContentType="fullStreetAddress"
+            onChangeText={(v) => setDraft({ ...draft, line: v })} />
+        </Field>
+
+        <Field label={t('address.notes')}>
+          <TextInput style={inputStyle} value={draft.notes} maxLength={200}
+            onChangeText={(v) => setDraft({ ...draft, notes: v })} />
+        </Field>
+
+        <Field label={t('address.label')} error={error}>
+          <TextInput style={inputStyle} value={draft.label} maxLength={40}
+            onChangeText={(v) => setDraft({ ...draft, label: v })} />
+        </Field>
+
+        <Button title={t('address.save')} onPress={onSave} busy={saving}
+          disabled={!draft.line.trim() || !draft.delivery_zone_id} />
+        <Button title={t('cancel')} variant="ghost" onPress={onCancel} style={{ marginTop: 10 }} />
+      </ScrollView>
+
+      <ZoneSheet
+        open={picking}
+        zones={zones}
+        currency={currency}
+        selected={draft.delivery_zone_id}
+        onClose={() => setPicking(false)}
+        onPick={(id) => { setDraft({ ...draft, delivery_zone_id: id }); setPicking(false) }}
+      />
+    </View>
+  )
+}
+
+/* Fifty-one areas is too many to scroll past on the form itself, so they live
+   in a sheet with a search box at the top. */
+function ZoneSheet ({ open, zones, currency, selected, onClose, onPick }: {
+  open: boolean
+  zones: Zone[]
+  currency: string
+  selected: string
+  onClose: () => void
+  onPick: (id: string) => void
+}) {
+  const { height } = useWindowDimensions()
+  const [query, setQuery] = useState('')
+
+  useEffect(() => { if (open) setQuery('') }, [open])
+
+  const shown = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return zones
+    // Matched against all three names, not the displayed one: people type
+    // "Shuvalan" as often as "Şüvəlan".
+    return zones.filter(z => {
+      const shared = zoneById(z.id)
+      const names = [z.name.az, z.name.ru, z.name.en, shared?.az, shared?.ru, shared?.en]
+      return names.some(n => n?.toLowerCase().includes(needle))
+    })
+  }, [zones, query])
+
+  return (
+    <Sheet open={open} onClose={onClose}>
+      <Text style={s.sheetTitle}>{t('deliv.zonePick')}</Text>
+      <TextInput
+        style={[inputStyle, { marginBottom: 10 }]}
+        value={query}
+        onChangeText={setQuery}
+        placeholder={t('deliv.zoneFind')}
+        placeholderTextColor={color.ink3}
+        autoCorrect={false}
+      />
+      <ScrollView style={{ maxHeight: Math.min(420, height * 0.5) }} keyboardShouldPersistTaps="handled">
+        {shown.map(z => {
+          const on = selected === z.id
+          return (
+            <Pressable
+              key={z.id}
+              onPress={() => onPick(z.id)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+              style={s.row}
+            >
+              <View style={[s.dot, on && s.dotOn]} />
+              <Body style={{ flex: 1 }}>{pick(z.name)}</Body>
+              <Text style={s.fee}>{zoneFee(z, currency)}</Text>
+            </Pressable>
+          )
+        })}
+        {shown.length === 0 ? <Small style={{ paddingVertical: 14 }}>{t('deliv.zoneNone')}</Small> : null}
+      </ScrollView>
+    </Sheet>
+  )
+}
+
+/* The shared file's fee where it knows the area, because half the areas are
+   quoted as a range and the server holds one integer per area. */
+function zoneFee (z: Zone, currency: string): string {
+  const shared = zoneById(z.id)
+  return shared ? `${feeText(shared)} ${currency}` : money(z.fee_minor, currency)
 }
 
 const s = StyleSheet.create({
@@ -246,12 +303,17 @@ const s = StyleSheet.create({
   badgeText: { fontFamily: font.semi, fontSize: 11, color: color.forest2 },
   actions: { flexDirection: 'row', gap: 18, marginTop: 12 },
   action: { fontFamily: font.semi, fontSize: 14, color: color.forest, textDecorationLine: 'underline' },
-  option: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
+  picker: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: '#fff', borderWidth: 1, borderColor: color.line,
-    borderRadius: space.radius, padding: 14,
+    borderRadius: space.radius, paddingHorizontal: 14, paddingVertical: 14,
   },
-  optionOn: { borderColor: color.forest, borderWidth: 2 },
+  pickerText: { flex: 1, fontFamily: font.medium, fontSize: 16, color: color.ink },
+  sheetTitle: { fontFamily: font.displaySemi, fontSize: 22, color: color.ink, marginBottom: 12 },
+  row: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color.line,
+  },
   fee: { fontFamily: font.semi, fontSize: 13, color: color.ink2 },
   dot: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: color.line },
   dotOn: { borderColor: color.forest, borderWidth: 6 },

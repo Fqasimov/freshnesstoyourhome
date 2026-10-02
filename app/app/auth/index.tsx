@@ -206,13 +206,17 @@ function SignInForm () {
 
 /* ─────────────────────────────── Sign up ─────────────────────────────── */
 
-type Errors = Partial<Record<'name' | 'email' | 'dob' | 'password' | 'password2' | 'form', string>>
+type Errors = Partial<Record<'name' | 'email' | 'phone' | 'dob' | 'password' | 'password2' | 'form', string>>
+
+// The server's rule for a phone number, so the form says so before the server does.
+const PHONE = /^[0-9+()\-\s]{7,24}$/
 
 function SignUpForm () {
   const auth = useAuth()
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [dob, setDob] = useState<string | null>(null)
   const [password, setPassword] = useState('')
   const [password2, setPassword2] = useState('')
@@ -222,6 +226,7 @@ function SignUpForm () {
   const [busy, setBusy] = useState(false)
 
   const emailRef = useRef<TextInput>(null)
+  const phoneRef = useRef<TextInput>(null)
   const pwRef = useRef<TextInput>(null)
   const pw2Ref = useRef<TextInput>(null)
 
@@ -229,6 +234,7 @@ function SignUpForm () {
     const e: Errors = {}
     if (name.trim().length < 2) e.name = t('err.name')
     if (!EMAIL.test(email.trim())) e.email = t('err.email')
+    if (!PHONE.test(phone.trim())) e.phone = t('err.phone')
     if (!dob) e.dob = t('err.dob')
     if (!passwordValid(password)) e.password = t('err.password')
     if (password2 !== password || !password2) e.password2 = t('err.match')
@@ -236,7 +242,7 @@ function SignUpForm () {
   }
 
   // Once they have tried to submit, errors clear as each field is fixed.
-  useEffect(() => { if (tried) setErrors(check()) }, [name, email, dob, password, password2, tried]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tried) setErrors(check()) }, [name, email, phone, dob, password, password2, tried]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function submit () {
     if (busy) return
@@ -255,7 +261,7 @@ function SignUpForm () {
     }
     try {
       const ticket = await auth.register(form)
-      setPending({ kind: 'register', email: form.email, ticket, form })
+      setPending({ kind: 'register', email: form.email, ticket, form, phone: phone.trim() })
       router.push('/auth/verify')
     } catch (err) {
       const x = err as ApiError
@@ -288,7 +294,14 @@ function SignUpForm () {
           ref={emailRef} label={t('f.email')} icon="envelope" value={email} onChangeText={setEmail}
           placeholder={t('ph.email')} keyboardType="email-address" autoCapitalize="none" autoCorrect={false}
           autoComplete="email" textContentType="emailAddress" returnKeyType="next"
-          onSubmitEditing={() => setDobOpen(true)} error={errors.email}
+          onSubmitEditing={() => phoneRef.current?.focus()} error={errors.email}
+        />
+      </Animated.View>
+      <Animated.View entering={enter(1)}>
+        <TextField
+          ref={phoneRef} label={t('profile.phone')} icon="telephone" value={phone} onChangeText={setPhone}
+          placeholder={t('profile.phonePh')} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber"
+          returnKeyType="next" onSubmitEditing={() => setDobOpen(true)} error={errors.phone}
         />
       </Animated.View>
 

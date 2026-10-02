@@ -58,7 +58,7 @@ export default function Orders () {
       <FlatList<Order>
         data={orders}
         keyExtractor={(o) => o.id}
-        contentContainerStyle={{ padding: space.gutter, gap: 11 }}
+        contentContainerStyle={{ padding: space.gutter, paddingBottom: 100, gap: 11 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

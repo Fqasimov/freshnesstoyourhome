@@ -15,6 +15,7 @@ import { refreshPushRegistration } from '@/lib/push'
 import * as Notifications from 'expo-notifications'
 import { color } from '@/theme/tokens'
 import { leaveApp } from '@/lib/nav'
+import { FloatingCart } from '@/components/FloatingCart'
 
 // Held until the app can actually show something, rather than auto-hiding into
 // a blank screen while fonts and the saved language are still loading.
@@ -80,6 +81,7 @@ export default function RootLayout () {
                 <Stack.Screen name="orders/[id]" />
                 <Stack.Screen name="profile/addresses" />
               </Stack>
+              <FloatingCart />
             </CartProvider>
           </CatalogueProvider>
         </AuthProvider>

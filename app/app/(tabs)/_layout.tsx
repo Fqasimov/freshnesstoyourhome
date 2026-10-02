@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
 import { Tabs } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated'
 import { useCart } from '@/lib/cart'
 import { useLang, t } from '@/lib/i18n'
 import { Icon, type IconName } from '@/components/Icon'
+import { TAB_BAR_HEIGHT } from '@/components/FloatingCart'
 import { color, font } from '@/theme/tokens'
 
 /** A tab's icon: outlined at rest, filled and nudged up a touch when chosen. */
@@ -27,6 +29,7 @@ function TabIcon ({ name, focused, tint }: { name: [IconName, IconName]; focused
 
 export default function TabsLayout () {
   const cart = useCart()
+  const insets = useSafeAreaInsets()
 
   // Subscribing to the language here re-renders the labels when it changes;
   // t() is a plain function and would not trigger a render on its own.
@@ -38,11 +41,13 @@ export default function TabsLayout () {
         headerShown: false,
         tabBarActiveTintColor: color.forest,
         tabBarInactiveTintColor: color.ink3,
+        // A fixed height ignores the home indicator, which then covers the labels.
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopColor: color.lineSoft,
-          height: 62,
+          height: TAB_BAR_HEIGHT + insets.bottom,
           paddingTop: 6,
+          paddingBottom: insets.bottom,
         },
         tabBarItemStyle: { paddingBottom: 4 },
         tabBarLabelStyle: { fontFamily: font.semi, fontSize: 11 },
