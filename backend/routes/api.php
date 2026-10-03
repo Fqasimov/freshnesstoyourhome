@@ -97,7 +97,9 @@ Route::prefix('auth')->group(function () {
 
 // ------------------------------------------------------------- signed in ---
 
-Route::middleware(['auth:sanctum', 'blocked'])->group(function () {
+// throttle:api, because nothing else limits these: one free account and a
+// loop could otherwise add addresses or devices without end.
+Route::middleware(['auth:sanctum', 'blocked', 'throttle:api'])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::patch('me', [ProfileController::class, 'update']);
     Route::post('auth/logout', [AuthController::class, 'logout']);

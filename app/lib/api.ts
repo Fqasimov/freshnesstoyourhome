@@ -296,13 +296,15 @@ export type BasketLine = { product_id: string; qty: number }
 
 export const api = {
   requestCode: (email: string, locale: Lang) =>
-    request<{ status: string; message: string }>('auth/request-code', {
+    request<{ status: string; message: string; request?: string }>('auth/request-code', {
       method: 'POST', body: { email, locale }, auth: false,
     }),
 
-  verifyCode: (email: string, code: string, device_name: string) =>
+  // `requestTicket` comes from requestCode: the code is bound to it, so a code
+  // someone else asks for to the same address cannot replace this one.
+  verifyCode: (email: string, code: string, device_name: string, requestTicket?: string | null) =>
     request<{ token: string; expires_at: string; user: User }>('auth/verify-code', {
-      method: 'POST', body: { email, code, device_name }, auth: false,
+      method: 'POST', body: { email, code, device_name, ...(requestTicket ? { request: requestTicket } : {}) }, auth: false,
     }),
 
   register: (form: SignUpForm) =>

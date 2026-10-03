@@ -95,13 +95,15 @@ export async function api (path, { method = 'GET', body, auth = true } = {}) {
  * never a token. `two_factor` is 'enroll' the first time (with the secret
  * to put in the authenticator app) and 'challenge' after that.
  */
-export async function verifyEmailCode (email, code) {
+export async function verifyEmailCode (email, code, request) {
   // The panel's own sign-in: only addresses named in ADMIN_EMAILS on the
   // server get anywhere here, and only its tokens open the admin routes.
+  // `request` is the ticket from asking for the code; the code is bound to
+  // it, so a stranger asking for a code to the same address cannot kill it.
   return api('/auth/panel/verify-code', {
     method: 'POST',
     auth: false,
-    body: { email, code },
+    body: { email, code, request },
   })
 }
 

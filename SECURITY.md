@@ -53,13 +53,30 @@ The code carries most of the weight, and four things hold it:
   answer different attacks: mailbombing one person, harvesting many addresses
   from one client, and an attacker with many IPs, which the first two cannot
   see. Without the global cap this endpoint is a mail cannon pointed at
-  strangers, sent from our domain and charged to our reputation.
-- **Asking for a new code kills the old one.** Otherwise every resend widens
+  strangers, sent from our domain and charged to our reputation. The global
+  budget is kept twice — for addresses with an account and for new ones — so
+  flooding the form with made-up addresses cannot stop existing customers
+  signing in, and a full budget mails the admins (once an hour).
+- **A code belongs to the request that asked for it.** Each request gets a
+  ticket back (the sign-up form's ticket, or `request` from request-code), and
+  the code works only with it. A stranger asking for a code to the same
+  address can therefore neither kill the owner's code nor guess at it. Asking
+  again *with the same ticket* kills the old code, so a resend does not widen
   the window a guesser is shooting into.
 - **The admin panel's codes live apart.** Panel codes are filed under their
   own key with their own budgets. Before, anyone could ask the *shop* for a
   code to the admin's address five times an hour, spend its budget, kill the
-  code just mailed for the panel, and keep the admin out indefinitely.
+  code just mailed for the panel, and keep the admin out indefinitely. Within
+  the panel the address budget and guess limiter are counted per source, with
+  a looser cap from anywhere once the authenticator app is set up — a guessed
+  email code alone reaches only the second factor. Keyed on the (public)
+  address alone, ten requests every ten minutes kept the admin out for good.
+- **What is still a lever.** A customer's own code budget (five an hour) is
+  counted from anywhere, because it is also the bound on guessing: each code
+  is a fresh chance at the account. A stranger can spend it to delay a *new*
+  code for somebody, though not kill one they already hold, and the password
+  sign-in limit works the same way. Closing that needs a CAPTCHA in front of
+  the forms (e.g. Cloudflare Turnstile), not a looser budget.
 
 The response is identical whether the address belongs to a customer, has never
 been seen, or has just run out of budget. Anything more specific makes the
@@ -128,6 +145,14 @@ safe place to keep it.
 Blocking an account revokes its tokens, and `EnsureNotBlocked` re-checks on
 every authenticated request — revocation alone races with a token issued
 moments earlier.
+
+Every signed-in route is rate limited (`throttle:api`), an account holds at
+most 20 addresses and 10 devices for push, and website orders — which need
+no account — have a ceiling for the whole day as well as per source. Past
+it the website still sends the order on WhatsApp, just without a code. A
+request to a protected route without a token is a plain 401: Laravel's
+default redirect to a `login` route that does not exist used to make it a
+500, with a stack trace written to the log before any limit ran.
 
 The admin panel is a browser, which has no keychain. Its token lives in
 `sessionStorage`: scoped to the one tab, gone when it closes, and never shared
@@ -236,8 +261,17 @@ These are outside the code and cannot be closed from here.
   unreadable. Losing `BLIND_INDEX_KEY` makes every customer unfindable by
   email. Back both up before the first real order, and store them somewhere
   that is not the same place as the database backup.
-- **`APP_DEBUG=false` in production.** The app logs a critical error at boot if
-  it is not, but nobody reads a log they are not looking at.
+- **`APP_DEBUG=false` and a real `MAIL_MAILER` in production.** The app logs a
+  critical error at boot for either (the `log` mailer writes sign-in codes
+  into the log file), but nobody reads a log they are not looking at.
+- **Two-factor sign-in on every account that can change this system** —
+  GitHub, Expo (over-the-air updates reach every installed app), cPanel, the
+  domain registrar, and the `info@` mailbox the panel's codes go to. Keep the
+  repository private, and protect the deploy branch: a push to it deploys.
+- **A CAPTCHA on sign-up, sign-in and the website's order form** (e.g.
+  Cloudflare Turnstile). The budgets above bound abuse; only a CAPTCHA tells a
+  person from a script.
+- **PHP 8.3 or newer before 31 December 2026,** when 8.2's security fixes end.
 - **TLS everywhere.** Both mobile platforms block cleartext HTTP by default;
   do not add an exception to work around a certificate problem.
 - **The database must not be reachable from the internet.** The API is the only

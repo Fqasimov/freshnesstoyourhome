@@ -1,5 +1,5 @@
 import {
-  createContext, useCallback, useContext, useEffect, useMemo, useState,
+  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
   type PropsWithChildren,
 } from 'react'
 import { Platform } from 'react-native'
@@ -77,8 +77,11 @@ export function AuthProvider ({ children }: PropsWithChildren) {
     handleSessionExpiry(() => setUser(null))
   }, [])
 
+  // Held in memory only, never in a route param or storage.
+  const codeTicket = useRef<string | null>(null)
+
   const requestCode = useCallback(async (email: string, locale: Lang) => {
-    await api.requestCode(email, locale)
+    codeTicket.current = (await api.requestCode(email, locale)).request ?? null
   }, [])
 
   /** Every way in ends here: keep the token, remember who it was. */
@@ -94,7 +97,7 @@ export function AuthProvider ({ children }: PropsWithChildren) {
   }, [])
 
   const verifyCode = useCallback(async (email: string, code: string) => {
-    return begin(await api.verifyCode(email, code, deviceName()))
+    return begin(await api.verifyCode(email, code, deviceName(), codeTicket.current))
   }, [begin])
 
   const register = useCallback(async (form: SignUpForm) => {

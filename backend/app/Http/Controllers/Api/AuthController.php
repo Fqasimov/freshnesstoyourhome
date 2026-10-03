@@ -9,6 +9,7 @@ use App\Http\Resources\UserResource;
 use App\Services\LoginCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -25,15 +26,22 @@ class AuthController extends Controller
      */
     public function requestCode(RequestLoginCodeRequest $request): JsonResponse
     {
+        // Handed back whatever happens, and the code (if any) is bound to it:
+        // only this caller can redeem it, and a stranger asking for a code to
+        // the same address cannot kill it.
+        $ticket = Str::random(VerifyLoginCodeRequest::REQUEST_LENGTH);
+
         $this->codes->issue(
             $request->string('email')->toString(),
             $request->ip(),
             $request->string('locale', 'az')->toString(),
+            requester: $ticket,
         );
 
         return response()->json([
             'status' => 'ok',
             'message' => 'If that address can receive mail, a sign-in code is on the way.',
+            'request' => $ticket,
         ]);
     }
 
@@ -50,6 +58,7 @@ class AuthController extends Controller
         $user = $this->codes->verify(
             $request->string('email')->toString(),
             $request->string('code')->toString(),
+            requester: $request->input('request'),
         );
 
         if ($user === null) {

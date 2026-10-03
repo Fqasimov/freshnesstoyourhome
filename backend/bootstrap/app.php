@@ -21,6 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Applied to every response, including error responses.
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
+        // Laravel sends a signed-out visitor to a `login` route, and this API
+        // has none: building that redirect threw, so any request to a
+        // protected route without a token — and without Accept: JSON — was a
+        // 500 with a stack trace written to the log, before any rate limit
+        // ran. No redirect means a plain 401.
+        $middleware->redirectGuestsTo(fn () => null);
+
         // The API is stateless and token-authenticated. There is no session
         // cookie, so there is no CSRF surface — and no cookie for a malicious
         // site to ride. Sanctum's stateful domain support is deliberately not

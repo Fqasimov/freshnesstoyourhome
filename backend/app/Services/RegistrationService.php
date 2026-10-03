@@ -56,8 +56,9 @@ class RegistrationService
         ], now()->addMinutes((int) config('freshness.auth.code_ttl_minutes')));
 
         // Throttled inside; a refusal is not reported, for the same reason the
-        // plain sign-in does not report one.
-        $this->codes->issue($email, $ip, $form['locale'] ?? 'az');
+        // plain sign-in does not report one. Bound to this ticket, so a code
+        // somebody else requests for the same address cannot kill this one.
+        $this->codes->issue($email, $ip, $form['locale'] ?? 'az', requester: $ticket);
 
         return $ticket;
     }
@@ -88,7 +89,7 @@ class RegistrationService
             return null;
         }
 
-        if (! $this->codes->consume($pending['email'], $code)) {
+        if (! $this->codes->consume($pending['email'], $code, requester: $ticket)) {
             return null;
         }
 

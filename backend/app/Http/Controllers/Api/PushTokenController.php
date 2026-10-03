@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class PushTokenController extends Controller
 {
+    public const MAX_PER_CUSTOMER = 10;
+
     /**
      * Register this device for order updates.
      *
@@ -47,6 +49,17 @@ class PushTokenController extends Controller
                 'failures' => 0,
                 'last_used_at' => now(),
             ])->save();
+
+            // A customer has a few phones, not hundreds. Past the cap the
+            // devices heard from longest ago go, which is also what a phone
+            // that was sold or reset looks like.
+            $stale = $request->user()->pushTokens()
+                ->orderByDesc('last_used_at')->orderByDesc('id')
+                ->pluck('id')
+                ->slice(self::MAX_PER_CUSTOMER);
+            if ($stale->isNotEmpty()) {
+                PushToken::whereIn('id', $stale)->delete();
+            }
 
             return $row;
         });

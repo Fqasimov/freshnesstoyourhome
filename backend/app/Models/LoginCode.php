@@ -16,6 +16,7 @@ class LoginCode extends Model
 {
     protected $fillable = [
         'email_hash',
+        'requester_hash',
         'email',
         'code_hash',
         'expires_at',
@@ -25,6 +26,7 @@ class LoginCode extends Model
     protected $hidden = [
         'code_hash',
         'email_hash',
+        'requester_hash',
         'request_ip',
     ];
 

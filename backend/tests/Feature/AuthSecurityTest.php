@@ -22,12 +22,15 @@ class AuthSecurityTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** The ticket handed back by the last code request; codes are bound to it. */
+    private ?string $ticket = null;
+
     /** Pull the code out of the mail the service queued. */
     private function issueCodeFor(string $email): string
     {
         Mail::fake();
 
-        $this->postJson('/api/auth/request-code', ['email' => $email])->assertOk();
+        $this->ticket = $this->postJson('/api/auth/request-code', ['email' => $email])->assertOk()->json('request');
 
         $sent = null;
         Mail::assertQueued(\App\Mail\LoginCodeMail::class, function ($mail) use (&$sent) {
@@ -66,6 +69,7 @@ class AuthSecurityTest extends TestCase
         $this->issueCodeFor('customer@example.com');
 
         $this->postJson('/api/auth/verify-code', [
+            'request' => $this->ticket,
             'email' => 'customer@example.com',
             'code' => '000000',
         ])->assertStatus(422);
@@ -80,6 +84,7 @@ class AuthSecurityTest extends TestCase
 
         for ($i = 0; $i < $max; $i++) {
             $this->postJson('/api/auth/verify-code', [
+            'request' => $this->ticket,
                 'email' => 'customer@example.com',
                 'code' => str_pad((string) $i, 6, '9'),
             ])->assertStatus(422);
@@ -87,6 +92,7 @@ class AuthSecurityTest extends TestCase
 
         // The correct code, arriving one guess too late.
         $this->postJson('/api/auth/verify-code', [
+            'request' => $this->ticket,
             'email' => 'customer@example.com',
             'code' => $code,
         ])->assertStatus(422);
@@ -99,11 +105,13 @@ class AuthSecurityTest extends TestCase
         $code = $this->issueCodeFor('customer@example.com');
 
         $this->postJson('/api/auth/verify-code', [
+            'request' => $this->ticket,
             'email' => 'customer@example.com',
             'code' => $code,
         ])->assertOk();
 
         $this->postJson('/api/auth/verify-code', [
+            'request' => $this->ticket,
             'email' => 'customer@example.com',
             'code' => $code,
         ])->assertStatus(422);
@@ -116,27 +124,49 @@ class AuthSecurityTest extends TestCase
         $this->travel((int) config('freshness.auth.code_ttl_minutes') + 1)->minutes();
 
         $this->postJson('/api/auth/verify-code', [
+            'request' => $this->ticket,
             'email' => 'customer@example.com',
             'code' => $code,
         ])->assertStatus(422);
     }
 
-    public function test_asking_for_a_second_code_kills_the_first(): void
+    public function test_another_request_neither_kills_a_code_nor_can_redeem_it(): void
     {
-        $first = $this->issueCodeFor('customer@example.com');
-        $second = $this->issueCodeFor('customer@example.com');
+        $mine = $this->issueCodeFor('customer@example.com');
+        $myTicket = $this->ticket;
 
-        $this->assertNotSame($first, $second);
+        // Somebody else asks for a code to the same address.
+        $theirs = $this->issueCodeFor('customer@example.com');
+        $theirTicket = $this->ticket;
+        $this->assertNotSame($mine, $theirs);
 
+        // Their ticket cannot redeem my code…
         $this->postJson('/api/auth/verify-code', [
-            'email' => 'customer@example.com',
-            'code' => $first,
+            'request' => $theirTicket, 'email' => 'customer@example.com', 'code' => $mine,
         ])->assertStatus(422);
 
+        // …and their request did not kill it.
         $this->postJson('/api/auth/verify-code', [
-            'email' => 'customer@example.com',
-            'code' => $second,
+            'request' => $myTicket, 'email' => 'customer@example.com', 'code' => $mine,
         ])->assertOk();
+    }
+
+    public function test_asking_again_with_the_same_ticket_kills_the_first_code(): void
+    {
+        $first = $this->issueCodeFor('customer@example.com');
+        $ticket = $this->ticket;
+
+        // The same requester resending: issued directly, as the service does
+        // for a sign-up form whose code is sent again.
+        Mail::fake();
+        app(\App\Services\LoginCodeService::class)->issue('customer@example.com', '127.0.0.1', requester: $ticket);
+        $second = null;
+        Mail::assertQueued(\App\Mail\LoginCodeMail::class, function ($m) use (&$second) { $second = $m->code; return true; });
+
+        $this->postJson('/api/auth/verify-code', ['request' => $ticket, 'email' => 'customer@example.com', 'code' => $first])
+            ->assertStatus(422);
+        $this->postJson('/api/auth/verify-code', ['request' => $ticket, 'email' => 'customer@example.com', 'code' => $second])
+            ->assertOk();
     }
 
     public function test_the_response_does_not_reveal_whether_an_account_exists(): void
@@ -150,7 +180,13 @@ class AuthSecurityTest extends TestCase
 
         $known->assertOk();
         $unknown->assertOk();
-        $this->assertSame($known->json(), $unknown->json());
+        // Each carries its own random ticket; everything else is the same.
+        $this->assertSame(array_keys($known->json()), array_keys($unknown->json()));
+        $this->assertSame(strlen($known->json('request')), strlen($unknown->json('request')));
+        $this->assertSame(
+            collect($known->json())->except('request')->all(),
+            collect($unknown->json())->except('request')->all(),
+        );
     }
 
     public function test_a_correct_code_registers_a_new_customer(): void
@@ -158,6 +194,7 @@ class AuthSecurityTest extends TestCase
         $code = $this->issueCodeFor('newcomer@example.com');
 
         $response = $this->postJson('/api/auth/verify-code', [
+            'request' => $this->ticket,
             'email' => 'newcomer@example.com',
             'code' => $code,
         ])->assertOk();
@@ -175,6 +212,7 @@ class AuthSecurityTest extends TestCase
         $code = $this->issueCodeFor('PERSON@Example.COM');
 
         $response = $this->postJson('/api/auth/verify-code', [
+            'request' => $this->ticket,
             'email' => 'person@example.com',
             'code' => $code,
         ])->assertOk();
@@ -190,6 +228,7 @@ class AuthSecurityTest extends TestCase
         $code = $this->issueCodeFor('banned@example.com');
 
         $this->postJson('/api/auth/verify-code', [
+            'request' => $this->ticket,
             'email' => 'banned@example.com',
             'code' => $code,
         ])->assertStatus(422);

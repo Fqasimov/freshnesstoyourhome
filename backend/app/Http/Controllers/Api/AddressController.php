@@ -31,9 +31,19 @@ class AddressController extends Controller
         return response()->json(['data' => $addresses]);
     }
 
+    /** More than any household needs; few enough that a loop cannot fill the disk. */
+    public const MAX_PER_CUSTOMER = 20;
+
     public function store(Request $request): JsonResponse
     {
         $data = $this->validated($request);
+
+        if ($request->user()->addresses()->count() >= self::MAX_PER_CUSTOMER) {
+            return response()->json([
+                'message' => 'You have saved as many addresses as an account can hold. Delete one to add another.',
+                'errors' => ['line' => ['Too many saved addresses.']],
+            ], 422);
+        }
 
         $address = DB::transaction(function () use ($request, $data) {
             $address = $request->user()->addresses()->create($data);

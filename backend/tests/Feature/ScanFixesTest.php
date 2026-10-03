@@ -50,37 +50,54 @@ class ScanFixesTest extends TestCase
 
     public function test_a_code_with_no_attempts_left_refuses_even_the_right_code(): void
     {
-        $this->postJson('/api/auth/request-code', ['email' => 'a@example.com'])->assertOk();
+        $ticket = $this->postJson('/api/auth/request-code', ['email' => 'a@example.com'])->assertOk()->json('request');
         $code = $this->lastCodeTo('a@example.com');
 
         // What a burst of parallel guesses leaves behind: every attempt spent.
         LoginCode::query()->update(['attempts' => (int) config('freshness.auth.max_attempts')]);
 
-        $this->postJson('/api/auth/verify-code', ['email' => 'a@example.com', 'code' => $code])
+        $this->postJson('/api/auth/verify-code', ['request' => $ticket, 'email' => 'a@example.com', 'code' => $code])
             ->assertStatus(422);
     }
 
     public function test_each_guess_is_counted_before_it_is_checked(): void
     {
-        $this->postJson('/api/auth/request-code', ['email' => 'b@example.com'])->assertOk();
+        $ticket = $this->postJson('/api/auth/request-code', ['email' => 'b@example.com'])->assertOk()->json('request');
 
-        $this->postJson('/api/auth/verify-code', ['email' => 'b@example.com', 'code' => '000000']);
+        $this->postJson('/api/auth/verify-code', ['request' => $ticket, 'email' => 'b@example.com', 'code' => '000000']);
 
         $this->assertSame(1, LoginCode::first()->attempts);
     }
 
     public function test_changing_the_letter_case_does_not_buy_more_guesses(): void
     {
-        $this->postJson('/api/auth/request-code', ['email' => 'c@example.com'])->assertOk();
+        $ticket = $this->postJson('/api/auth/request-code', ['email' => 'c@example.com'])->assertOk()->json('request');
+        $code = $this->lastCodeTo('c@example.com');
+        $wrong = $code === '000000' ? '111111' : '000000';
 
-        for ($i = 0; $i < 6; $i++) {
+        // Wrong guesses from many sources, alternating the case of the
+        // address: they all land on the one code's attempt count…
+        for ($i = 0; $i < (int) config('freshness.auth.max_attempts'); $i++) {
             $email = $i % 2 ? 'C@EXAMPLE.COM' : 'c@example.com';
             $this->withServerVariables(['REMOTE_ADDR' => "10.0.0.{$i}"])
-                ->postJson('/api/auth/verify-code', ['email' => $email, 'code' => '000000']);
+                ->postJson('/api/auth/verify-code', ['request' => $ticket, 'email' => $email, 'code' => $wrong])
+                ->assertStatus(422);
         }
 
+        // …so the code is dead, even for the right guess from a fresh source.
         $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.99'])
-            ->postJson('/api/auth/verify-code', ['email' => 'C@example.com', 'code' => '000000'])
+            ->postJson('/api/auth/verify-code', ['request' => $ticket, 'email' => 'C@example.com', 'code' => $code])
+            ->assertStatus(422);
+    }
+
+    public function test_the_guess_limiter_shares_a_bucket_across_letter_case_from_one_source(): void
+    {
+        for ($i = 0; $i < 6; $i++) {
+            $email = $i % 2 ? 'D@EXAMPLE.COM' : 'd@example.com';
+            $this->postJson('/api/auth/verify-code', ['email' => $email, 'code' => '000000']);
+        }
+
+        $this->postJson('/api/auth/verify-code', ['email' => 'D@example.com', 'code' => '000000'])
             ->assertStatus(429);
     }
 
@@ -96,14 +113,14 @@ class ScanFixesTest extends TestCase
 
         // ...and the panel still sends a code, which still works.
         Mail::fake();
-        $this->postJson('/api/auth/panel/request-code', ['email' => self::ADMIN])->assertOk();
+        $ticket = $this->postJson('/api/auth/panel/request-code', ['email' => self::ADMIN])->assertOk()->json('request');
         $code = $this->lastCodeTo(self::ADMIN);
 
         // A shop request after the panel one does not kill it either.
         $this->withServerVariables(['REMOTE_ADDR' => '10.1.1.1'])
             ->postJson('/api/auth/request-code', ['email' => self::ADMIN]);
 
-        $this->postJson('/api/auth/panel/verify-code', ['email' => self::ADMIN, 'code' => $code])
+        $this->postJson('/api/auth/panel/verify-code', ['request' => $ticket, 'email' => self::ADMIN, 'code' => $code])
             ->assertOk()
             ->assertJsonStructure(['ticket']);
     }

@@ -3,11 +3,15 @@
 namespace App\Services;
 
 use App\Mail\LoginCodeMail;
+use App\Mail\SignInBudgetAlarm;
 use App\Models\LoginCode;
 use App\Models\User;
 use App\Support\BlindIndex;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 
@@ -39,6 +43,9 @@ class LoginCodeService
     public const TOO_MANY = 'too_many';
     public const SENT = 'sent';
 
+    private const GLOBAL_KNOWN = 'otp:global:known';
+    private const GLOBAL_NEW = 'otp:global:new';
+
     /**
      * Issue and email a code.
      *
@@ -51,27 +58,31 @@ class LoginCodeService
      * asking the shop for a code to that address — a lock on the panel that
      * costs five requests an hour to keep shut.
      */
-    public function issue(string $email, ?string $ip, string $locale = 'az', bool $panel = false): string
+    public function issue(string $email, ?string $ip, string $locale = 'az', bool $panel = false, ?string $requester = null): string
     {
         $email = BlindIndex::normaliseEmail($email);
         $hash = $this->lane($email, $panel);
 
-        if (! $this->withinLimits($hash, $ip, $panel)) {
+        if (! $this->withinLimits($email, $hash, $ip, $panel)) {
             return self::TOO_MANY;
         }
 
         $code = $this->generateCode();
+        $requesterHash = $this->requesterHash($requester);
 
-        DB::transaction(function () use ($email, $hash, $code, $ip): void {
-            // Only one code may be live at a time. Without this, asking for a
-            // second code leaves the first one valid, and every resend widens
-            // the window an attacker is guessing into.
-            LoginCode::where('email_hash', $hash)
+        DB::transaction(function () use ($email, $hash, $code, $ip, $requesterHash): void {
+            // One live code per requester. Without this, asking for a second
+            // code leaves the first one valid, and every resend widens the
+            // window an attacker is guessing into. Only the same requester's
+            // codes die: a stranger asking for a code to this address must not
+            // be able to kill the one just mailed to its owner, over and over.
+            $this->forRequester(LoginCode::where('email_hash', $hash), $requesterHash)
                 ->whereNull('consumed_at')
                 ->update(['consumed_at' => now()]);
 
             LoginCode::create([
                 'email_hash' => $hash,
+                'requester_hash' => $requesterHash,
                 'email' => $email,
                 'code_hash' => Hash::make($code),
                 'expires_at' => now()->addMinutes((int) config('freshness.auth.code_ttl_minutes')),
@@ -95,11 +106,11 @@ class LoginCodeService
      * "wrong code" from "expired" from "never issued": each of those is a fact
      * about somebody else's account that a guesser should not learn.
      */
-    public function verify(string $email, string $code, bool $panel = false): ?User
+    public function verify(string $email, string $code, bool $panel = false, ?string $requester = null): ?User
     {
         $email = BlindIndex::normaliseEmail($email);
 
-        if (! $this->consume($email, $code, $panel)) {
+        if (! $this->consume($email, $code, $panel, $requester)) {
             return null;
         }
 
@@ -109,16 +120,16 @@ class LoginCodeService
     /**
      * Check and spend a code, without touching any account.
      *
-     * True only for the live code of that address, typed correctly, within
-     * its attempts. Registration uses this directly: the account it creates
-     * carries the details from the sign-up form, which verify() knows nothing
-     * about.
+     * True only for the live code of that address and requester, typed
+     * correctly, within its attempts. Registration uses this directly: the
+     * account it creates carries the details from the sign-up form, which
+     * verify() knows nothing about.
      */
-    public function consume(string $email, string $code, bool $panel = false): bool
+    public function consume(string $email, string $code, bool $panel = false, ?string $requester = null): bool
     {
         $email = BlindIndex::normaliseEmail($email);
 
-        $record = LoginCode::where('email_hash', $this->lane($email, $panel))
+        $record = $this->forRequester(LoginCode::where('email_hash', $this->lane($email, $panel)), $this->requesterHash($requester))
             ->whereNull('consumed_at')
             ->where('expires_at', '>', now())
             ->latest('id')
@@ -182,32 +193,59 @@ class LoginCodeService
     }
 
     /**
-     * Three independent budgets, all of which must have room.
+     * Independent budgets, all of which must have room.
      *
-     * They answer different attacks: the per-address one stops someone
+     * They answer different attacks: the per-address ones stop someone
      * mailbombing a specific person, the per-IP one stops a single client
      * harvesting many addresses, and the global one caps the blast radius when
-     * an attacker has many IPs — the case the first two cannot see.
+     * an attacker has many IPs — the case the others cannot see.
+     *
+     * Every budget is also a lever for keeping someone *out*, so each is cut
+     * as narrowly as its job allows:
+     *
+     *  - A shop address keeps one tight budget from anywhere. It is also the
+     *    bound on guessing: every code is a fresh 1-in-200,000 chance, so more
+     *    codes an hour is more chances at somebody's account. Since codes are
+     *    bound to their requester, a stranger spending it can no longer kill
+     *    a code the owner already holds; it can only delay a new one.
+     *  - The panel's address budget is counted per source, with a looser cap
+     *    from anywhere. More codes buy a guesser nothing there: a right guess
+     *    only reaches the authenticator-app step.
+     *  - The global budget is split between addresses that already have an
+     *    account and those that do not. Filling it with made-up addresses is
+     *    cheap; it must not stop existing customers from signing in.
      */
-    private function withinLimits(string $emailHash, ?string $ip, bool $panel = false): bool
+    private function withinLimits(string $email, string $emailHash, ?string $ip, bool $panel = false): bool
     {
         $limits = config('freshness.auth.throttle');
+        $source = sha1((string) $ip);
 
         // The panel keeps budgets of its own, so nothing the public does can
         // leave the admin without a code — not even filling the global one.
         $budgets = $panel
             ? [
-                ['otp:panel:email:'.$emailHash, (int) $limits['per_email_hourly']],
-                ['otp:panel:ip:'.sha1((string) $ip), (int) $limits['per_ip_hourly']],
+                ['otp:panel:email-ip:'.$emailHash.':'.$source, (int) $limits['per_email_hourly']],
+                // Looser only once the authenticator app is set up. Before
+                // that, a guessed email code leads to enrolment — which is
+                // the whole panel — so it gets the tight budget like any
+                // other address.
+                ['otp:panel:email:'.$emailHash, (User::findByEmail($email)?->hasTwoFactor() ?? false)
+                    ? (int) $limits['panel_per_email_hourly']
+                    : (int) $limits['per_email_hourly']],
+                ['otp:panel:ip:'.$source, (int) $limits['per_ip_hourly']],
             ]
             : [
                 ['otp:email:'.$emailHash, (int) $limits['per_email_hourly']],
-                ['otp:ip:'.sha1((string) $ip), (int) $limits['per_ip_hourly']],
-                ['otp:global', (int) $limits['global_hourly']],
+                ['otp:ip:'.$source, (int) $limits['per_ip_hourly']],
+                [User::findByEmail($email) !== null ? self::GLOBAL_KNOWN : self::GLOBAL_NEW, (int) $limits['global_hourly']],
             ];
 
         foreach ($budgets as [$key, $max]) {
             if (RateLimiter::tooManyAttempts($key, $max)) {
+                if ($key === self::GLOBAL_KNOWN || $key === self::GLOBAL_NEW) {
+                    $this->raiseAlarm($key);
+                }
+
                 return false;
             }
         }
@@ -230,6 +268,47 @@ class LoginCodeService
     private function lane(string $email, bool $panel): string
     {
         return $panel ? BlindIndex::ofProvider('panel', $email) : BlindIndex::ofEmail($email);
+    }
+
+    /** Stored as a hash, so a database copy does not yield usable tickets. */
+    private function requesterHash(?string $requester): ?string
+    {
+        return filled($requester) ? hash('sha256', $requester) : null;
+    }
+
+    private function forRequester(Builder $query, ?string $requesterHash): Builder
+    {
+        return $requesterHash === null
+            ? $query->whereNull('requester_hash')
+            : $query->where('requester_hash', $requesterHash);
+    }
+
+    /**
+     * A full global budget means sign-in codes are being refused to everyone
+     * in that group — an attack, or a broken client in a loop. Either way a
+     * person has to know, and a log line nobody is reading does not count:
+     * the admins are mailed, at most once an hour.
+     */
+    private function raiseAlarm(string $budget): void
+    {
+        if (! Cache::add('otp:alarm:'.$budget, true, now()->addHour())) {
+            return;
+        }
+
+        $which = $budget === self::GLOBAL_KNOWN ? 'existing customers' : 'new addresses';
+
+        Log::critical("Sign-in code budget for {$which} is full; codes are being refused.", ['budget' => $budget]);
+
+        $admins = config('freshness.admin.emails');
+        if ($admins === []) {
+            return;
+        }
+
+        try {
+            Mail::to($admins)->send(new SignInBudgetAlarm($which));
+        } catch (\Throwable $e) {
+            Log::error('Could not mail the sign-in budget alarm.', ['error' => $e->getMessage()]);
+        }
     }
 
     /**

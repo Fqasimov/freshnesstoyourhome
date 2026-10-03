@@ -26,6 +26,12 @@ return [
         'max_lines' => 60,
         'max_qty_per_line' => 99,
 
+        // Website orders need no account, so a per-IP limit is the only brake
+        // per source — and many sources are cheap. This caps the day for
+        // everyone together, so the panel cannot be buried in invented orders.
+        // Past it the website still opens WhatsApp, just without an order code.
+        'web_daily_cap' => env('WEB_ORDERS_DAILY', 150),
+
         /**
          * Weighed goods.
          *
@@ -75,13 +81,20 @@ return [
         'token_ttl_days' => env('AUTH_TOKEN_TTL_DAYS', 60),
 
         'throttle' => [
-            // Per email address, per hour.
+            // Per email address, per hour. Also the bound on guessing: each
+            // code is a fresh chance at the account, so keep this low. (For
+            // the panel it is counted per address and source IP.)
             'per_email_hourly' => env('OTP_PER_EMAIL_HOURLY', 5),
+            // The panel's ceiling per address from anywhere. Higher, because
+            // locking the admin out costs the shop its orders, and a guessed
+            // panel code only reaches the authenticator-app step.
+            'panel_per_email_hourly' => env('OTP_PANEL_PER_EMAIL_HOURLY', 60),
             // Per client IP, per hour.
             'per_ip_hourly' => env('OTP_PER_IP_HOURLY', 15),
-            // Whole system, per hour. The backstop against someone using the
-            // signup endpoint to send mail on our behalf; if this trips, it is
-            // an incident, not a busy day.
+            // Whole system, per hour — counted separately for addresses with
+            // an account and for new ones. The backstop against someone using
+            // the signup endpoint to send mail on our behalf; if this trips,
+            // the admins are mailed: it is an incident, not a busy day.
             'global_hourly' => env('OTP_GLOBAL_HOURLY', 500),
         ],
     ],

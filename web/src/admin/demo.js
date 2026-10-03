@@ -299,7 +299,7 @@ export async function respond (path, method, body) {
   const seg = route.split('/').filter(Boolean)
 
   /* auth */
-  if (route === '/auth/panel/request-code') return { status: 'ok' }
+  if (route === '/auth/panel/request-code') return { status: 'ok', request: 'p'.repeat(40) }
   if (route === '/auth/panel/verify-code') return { two_factor: 'challenge', ticket: 'preview' }
   if (route === '/auth/panel/two-factor') {
     return { token: 'preview', expires_at: iso(30), user: { data: ME } }

@@ -18,6 +18,8 @@ const busy = ref(false)
 const error = ref('')
 
 const ticket = ref('')
+// Handed back with the emailed code's request; the code works only with it.
+const request = ref('')
 const secret = ref('')
 const qr = ref('')
 const recoveryCodes = ref([])
@@ -32,11 +34,12 @@ async function requestCode () {
   busy.value = true
   error.value = ''
   try {
-    await api('/auth/panel/request-code', {
+    const sent = await api('/auth/panel/request-code', {
       method: 'POST',
       auth: false,
       body: { email: email.value.trim(), locale: 'az' },
     })
+    request.value = sent.request ?? ''
     stage.value = 'code'
     focus()
   } catch (e) {
@@ -53,7 +56,7 @@ async function verifyEmail () {
   busy.value = true
   error.value = ''
   try {
-    const step = await verifyEmailCode(email.value.trim(), code.value.trim())
+    const step = await verifyEmailCode(email.value.trim(), code.value.trim(), request.value)
     ticket.value = step.ticket
 
     if (step.two_factor === 'enroll') {

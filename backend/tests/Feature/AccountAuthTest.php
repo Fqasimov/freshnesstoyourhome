@@ -42,16 +42,22 @@ class AccountAuthTest extends TestCase
     /** The last code mailed to an address. */
     private function mailedCode(string $email): string
     {
-        $code = null;
-        Mail::assertQueued(LoginCodeMail::class, function (LoginCodeMail $m) use ($email, &$code) {
+        return last($this->mailedCodes($email));
+    }
+
+    /** Every code mailed to an address, oldest first. */
+    private function mailedCodes(string $email): array
+    {
+        $codes = [];
+        Mail::assertQueued(LoginCodeMail::class, function (LoginCodeMail $m) use ($email, &$codes) {
             if ($m->hasTo($email)) {
-                $code = $m->code;
+                $codes[] = $m->code;
             }
 
             return true;
         });
 
-        return $code;
+        return $codes;
     }
 
     private function signUp(array $overrides = []): array
@@ -102,14 +108,21 @@ class AccountAuthTest extends TestCase
         // your address with their own password.
         [$form, $mine] = $this->signUp();
         $this->signUp(['password' => 'Attacker-1x', 'password_confirmation' => 'Attacker-1x']);
-        $code = $this->mailedCode($form['email']);
+        // Both codes land in your inbox; each belongs to the form that asked
+        // for it, so theirs did not kill yours.
+        [$code, $theirs] = $this->mailedCodes($form['email']);
 
         // A made-up ticket gets nowhere, code or not.
         $this->postJson('/api/auth/confirm', ['ticket' => str_repeat('x', 48), 'email' => $form['email'], 'code' => $code])
             ->assertStatus(422);
         $this->assertSame(0, User::count());
 
-        // You type the code on your own phone: your form is the one confirmed.
+        // The code mailed for their form does not confirm yours either.
+        $this->postJson('/api/auth/confirm', ['ticket' => $mine, 'email' => $form['email'], 'code' => $theirs])
+            ->assertStatus(422);
+        $this->assertSame(0, User::count());
+
+        // You type your code on your own phone: your form is the one confirmed.
         $this->postJson('/api/auth/confirm', ['ticket' => $mine, 'email' => $form['email'], 'code' => $code])
             ->assertCreated();
 

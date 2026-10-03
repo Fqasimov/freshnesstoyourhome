@@ -54,6 +54,17 @@ class AppServiceProvider extends ServiceProvider
             );
         }
 
+        // The log mailer writes every message, sign-in codes included, into
+        // the log file in plain text — fine on a laptop, and on a server a
+        // file that signs its reader in as anybody.
+        if (config('mail.default') === 'log') {
+            Log::critical(
+                'MAIL_MAILER is "log" in production. Sign-in codes are being '.
+                'written to the log file instead of being emailed. Set a real '.
+                'mailer immediately.'
+            );
+        }
+
         // A relation loaded one row at a time is a bug on a laptop and an
         // outage in production — but throwing over it in production would turn
         // a slow page into a broken one. Logged instead, loudly.
@@ -86,18 +97,23 @@ class AppServiceProvider extends ServiceProvider
             Limit::perHour(20)->by($r->ip()),
         ]);
 
-        // Guessing a code. Keyed on the email being guessed as well as the
-        // source, so an attacker cannot spread attempts against one victim
-        // across many addresses of their own.
+        // Guessing a code. Per source, and per address-and-source. Not per
+        // address alone: anyone could then spend that budget and stop the
+        // owner typing in their own code. Spreading guesses over many IPs buys
+        // nothing anyway — every code is bound to the ticket of the request
+        // that asked for it, and dies after max_attempts wrong tries.
         RateLimiter::for('otp-verify', fn (Request $r) => [
             Limit::perMinute(6)->by($r->ip()),
-            Limit::perMinute(6)->by('email:'.sha1(\App\Support\BlindIndex::normaliseEmail((string) $r->input('email')))),
+            Limit::perMinute(6)->by('email:'.sha1(\App\Support\BlindIndex::normaliseEmail((string) $r->input('email'))).':'.$r->ip()),
         ]);
 
-        // Website orders need no account, so the only brake is the source.
+        // Website orders need no account, so the brakes are the source and,
+        // because sources are cheap, a cap on the whole day. Past it the
+        // website still opens WhatsApp with the order, just without a code.
         RateLimiter::for('web-order', fn (Request $r) => [
             Limit::perMinute(3)->by($r->ip()),
             Limit::perDay(30)->by($r->ip()),
+            Limit::perDay((int) config('freshness.order.web_daily_cap'))->by('web-order:all'),
         ]);
 
         RateLimiter::for('register', fn (Request $r) => [
@@ -122,13 +138,16 @@ class AppServiceProvider extends ServiceProvider
 
         // The admin panel's sign-in. One person uses it, a few times a day;
         // anything past this is somebody else.
-        // Keyed on the address too, so spreading guesses over many IPs does
-        // not buy more tries against the admin's own inbox.
+        // The address limit is per source as well. The admin's address is
+        // public, and keyed on the address alone anyone sending ten requests
+        // every ten minutes kept the admin out of the panel for good. Guessing
+        // across many IPs gains nothing: a code works only with the ticket of
+        // the browser that asked for it, and dies after max_attempts tries.
         RateLimiter::for('panel-auth', fn (Request $r) => array_values(array_filter([
             Limit::perMinutes(10, 10)->by('panel:'.$r->ip()),
             Limit::perHour(30)->by('panel:'.$r->ip()),
             $r->filled('email')
-                ? Limit::perMinutes(10, 10)->by('panel-email:'.sha1(strtolower(trim((string) $r->input('email')))))
+                ? Limit::perMinutes(10, 10)->by('panel-email:'.sha1(strtolower(trim((string) $r->input('email')))).':'.$r->ip())
                 : null,
         ])));
 

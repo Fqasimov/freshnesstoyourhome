@@ -33,9 +33,12 @@ class PanelAuthTest extends TestCase
         Mail::fake();
     }
 
+    /** The ticket from the last code request; the code works only with it. */
+    private ?string $request = null;
+
     private function codeFor(string $email, string $endpoint = '/api/auth/panel/request-code'): ?string
     {
-        $this->postJson($endpoint, ['email' => $email])->assertOk();
+        $this->request = $this->postJson($endpoint, ['email' => $email])->assertOk()->json('request');
 
         $code = null;
         Mail::assertQueued(LoginCodeMail::class, function (LoginCodeMail $mail) use (&$code, $email) {
@@ -54,7 +57,7 @@ class PanelAuthTest extends TestCase
     {
         $code = $this->codeFor(self::ADMIN);
 
-        return $this->postJson('/api/auth/panel/verify-code', ['email' => self::ADMIN, 'code' => $code])
+        return $this->postJson('/api/auth/panel/verify-code', ['request' => $this->request, 'email' => self::ADMIN, 'code' => $code])
             ->assertOk()
             ->json();
     }
@@ -93,7 +96,10 @@ class PanelAuthTest extends TestCase
         $named = $this->postJson('/api/auth/panel/request-code', ['email' => self::ADMIN])->assertOk()->json();
         $stranger = $this->postJson('/api/auth/panel/request-code', ['email' => 'someone@example.com'])->assertOk()->json();
 
-        // Same answer, so the panel does not reveal which address is the admin's.
+        // Same answer, so the panel does not reveal which address is the
+        // admin's: each carries a random ticket, and nothing else differs.
+        $this->assertSame(strlen($named['request']), strlen($stranger['request']));
+        unset($named['request'], $stranger['request']);
         $this->assertSame($named, $stranger);
 
         // …but no mail, no code and no account for the stranger.
@@ -267,7 +273,7 @@ class PanelAuthTest extends TestCase
         $this->fresh();
 
         $code = $this->codeFor(self::ADMIN, '/api/auth/request-code');
-        $shop = $this->postJson('/api/auth/verify-code', ['email' => self::ADMIN, 'code' => $code])
+        $shop = $this->postJson('/api/auth/verify-code', ['request' => $this->request, 'email' => self::ADMIN, 'code' => $code])
             ->assertOk()
             ->json('token');
 
@@ -291,7 +297,7 @@ class PanelAuthTest extends TestCase
     {
         $code = $this->codeFor('someone@example.com', '/api/auth/request-code');
 
-        $this->postJson('/api/auth/panel/verify-code', ['email' => 'someone@example.com', 'code' => $code])
+        $this->postJson('/api/auth/panel/verify-code', ['request' => $this->request, 'email' => 'someone@example.com', 'code' => $code])
             ->assertStatus(422);
 
         // Not spent, not promoted, not given anything.
@@ -310,7 +316,7 @@ class PanelAuthTest extends TestCase
     public function test_shop_tokens_are_never_wildcards(): void
     {
         $code = $this->codeFor('someone@example.com', '/api/auth/request-code');
-        $this->postJson('/api/auth/verify-code', ['email' => 'someone@example.com', 'code' => $code])->assertOk();
+        $this->postJson('/api/auth/verify-code', ['request' => $this->request, 'email' => 'someone@example.com', 'code' => $code])->assertOk();
 
         $this->assertSame(['customer'], User::findByEmail('someone@example.com')->tokens()->first()->abilities);
     }

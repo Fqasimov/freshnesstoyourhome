@@ -44,25 +44,38 @@ class PanelAuthController extends Controller
         private readonly TwoFactor $twoFactor,
     ) {}
 
+    /**
+     * The code is bound to a ticket handed back to this browser. The admin's
+     * address is no secret, and without the binding anyone could ask for a
+     * code to it every minute: each request killed the code just mailed to
+     * the admin, and the panel stayed shut for as long as they kept going.
+     * Now a stranger's request makes a code only they could redeem — and they
+     * never see it.
+     */
     public function requestCode(RequestLoginCodeRequest $request): JsonResponse
     {
         $email = $request->string('email')->toString();
+        $ticket = Str::random(VerifyLoginCodeRequest::REQUEST_LENGTH);
 
         if (AdminAccess::isNamed($email)) {
-            $this->codes->issue($email, $request->ip(), 'az', panel: true);
+            $this->codes->issue($email, $request->ip(), 'az', panel: true, requester: $ticket);
         }
 
+        // A ticket for every address, named or not, so the answer still does
+        // not say which address is the admin's.
         return response()->json([
             'status' => 'ok',
             'message' => 'If that address may use the panel, a sign-in code is on the way.',
+            'request' => $ticket,
         ]);
     }
 
     public function verifyCode(VerifyLoginCodeRequest $request): JsonResponse
     {
         $email = $request->string('email')->toString();
+        $requester = (string) $request->input('request');
 
-        if (! AdminAccess::isNamed($email)) {
+        if (strlen($requester) !== VerifyLoginCodeRequest::REQUEST_LENGTH || ! AdminAccess::isNamed($email)) {
             // Spend what a real check costs, so the answer for an unnamed
             // address does not come back measurably faster than a wrong code.
             Hash::check($request->string('code')->toString(), Hash::make('not-a-code'));
@@ -70,7 +83,7 @@ class PanelAuthController extends Controller
             return $this->refused();
         }
 
-        $user = $this->codes->verify($email, $request->string('code')->toString(), panel: true);
+        $user = $this->codes->verify($email, $request->string('code')->toString(), panel: true, requester: $requester);
 
         if ($user === null) {
             return $this->refused();
