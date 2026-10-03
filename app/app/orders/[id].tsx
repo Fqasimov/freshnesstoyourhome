@@ -5,6 +5,7 @@ import { useLocalSearchParams } from 'expo-router'
 import { api, ApiError, type Order } from '@/lib/api'
 import { t, useLang } from '@/lib/i18n'
 import { money } from '@/lib/money'
+import { sendOrderToWhatsApp } from '@/lib/whatsapp'
 import { AppBar, Body, Button, Loading, Note, Row, Small } from '@/components/ui'
 import { enablePush, hasBeenAsked } from '@/lib/push'
 import { color, font, space } from '@/theme/tokens'
@@ -89,7 +90,11 @@ export default function OrderDetail () {
 
       <ScrollView contentContainerStyle={{ padding: space.gutter, paddingBottom: 36 }}>
         {placed === '1' ? (
-          <View style={{ marginBottom: 18 }}><Note>✓ {t('status.placed')}</Note></View>
+          <View style={{ marginBottom: 18, gap: 12 }}>
+            <Note>✓ {t('status.placed')}</Note>
+            <Small muted>{t('wa.note')}</Small>
+            <Button title={t('wa.again')} variant="ghost" onPress={() => sendOrderToWhatsApp(order)} />
+          </View>
         ) : null}
 
         {offerPush ? (

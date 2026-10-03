@@ -8,6 +8,7 @@ import { useCatalogue } from '@/lib/catalogue'
 import { useAuth } from '@/lib/auth'
 import { t, useLang } from '@/lib/i18n'
 import { money } from '@/lib/money'
+import { sendOrderToWhatsApp } from '@/lib/whatsapp'
 import { AppBar, Body, Button, Field, Loading, Note, Row, Small, inputStyle } from '@/components/ui'
 import { color, font, space } from '@/theme/tokens'
 
@@ -91,7 +92,10 @@ export default function Checkout () {
       })
 
       await cart.clear()
+      // Tracking first, so that is where the customer lands on coming back
+      // from WhatsApp, which is where the shop confirms time and weights.
       router.replace({ pathname: '/orders/[id]', params: { id: order.id, placed: '1' } })
+      await sendOrderToWhatsApp(order)
     } catch (e) {
       const err = e as ApiError
       const unavailable = err.payload?.unavailable_product_ids as string[] | undefined
