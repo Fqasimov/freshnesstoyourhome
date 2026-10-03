@@ -436,6 +436,53 @@ On Windows PowerShell use `curl.exe` instead of `curl`.
    It is a layer, not the lock: on shared hosting the server's own IP still
    answers requests that skip Cloudflare, and the panel's own two factors are
    what hold there.
+6. **Bot Fight Mode:** Security → Bots → on. Free, and stops the commonest
+   scripted traffic before it is counted anywhere.
+7. **One rate-limiting rule** (the free plan allows one): Security → WAF →
+   Rate limiting rules → Create. *If* URI Path starts with `/server/api/`;
+   *counting* by IP; *when* more than **30 requests per 10 seconds**; *then*
+   Block for 10 seconds. That is below the server's own flood guard (40 per
+   10 s), so the edge refuses a flood before it ever reaches hostinq.az.
+8. **Let the edge serve the catalogue:** Caching → Cache Rules → Create.
+   *If* URI Path equals `/server/api/catalogue` → *Eligible for cache*, Edge
+   TTL "use cache-control header". The API marks it public for 60 seconds, so
+   during a flood on the busiest public endpoint Cloudflare answers and the
+   server sees about one request a minute. (Prices shown can be up to a minute
+   old; every basket and order is priced again on the server.)
+9. **During an attack:** Security → Settings → Security Level → *I'm Under
+   Attack*. Every browser gets a short check before reaching the site. The
+   mobile app cannot pass a browser check, so first add a Configuration Rule
+   (Rules → Configuration Rules) for URI Path starts with `/server/api/` with
+   Security Level *Essentially Off* — the API keeps its own limits — and turn
+   Under Attack off again when it is over.
+
+### Floods: what holds, and where
+
+Three layers, cheapest first. A flood has to get through each one.
+
+1. **Cloudflare** (steps 6–9 above). The only layer that can stop a flood
+   spread over thousands of addresses, because it sees them before your
+   server does. Without it, a determined botnet can still fill the server's
+   PHP workers even when every request is refused.
+2. **The flood guard** (`App\Support\FloodGuard`, called from
+   `public/index.php` and `deploy/split-index.php`). Before Laravel boots, each
+   client address gets **40 requests per 10 seconds and 120 a minute** across
+   the whole API; past either, it is answered `429` with `Retry-After` for **5
+   minutes**. Refusing costs a locked file read — no framework, no database —
+   so the server keeps answering everyone else: 2,000 requests from one source
+   in a local test, 40 served and 1,960 refused at well over 1,000 a second.
+   Behind Cloudflare it counts the visitor (`CF-Connecting-IP`, believed only
+   from Cloudflare's own addresses). Counters live in
+   `storage/framework/flood/`; to let a blocked address in at once, delete the
+   files there. Limits are the constants at the top of the class.
+3. **Per-route limits in Laravel** (`AppServiceProvider`): sign-in codes,
+   passwords, orders, uploads, website orders (with a daily ceiling for all of
+   them together) and 60 a minute for anything signed in. These protect what
+   each request *does* — mail sent, rows written — rather than the server.
+
+If the shop is ever under a flood: turn on Under Attack (step 9), check
+cPanel → Metrics → Resource Usage, and if one address shows up in the access
+log, block it in Cloudflare → Security → WAF → Tools → IP Access Rules.
 
 ### Considered and left out, on purpose
 

@@ -151,6 +151,12 @@ class CatalogueController extends Controller
             ];
         });
 
-        return response()->json($payload);
+        // The same for every visitor, so anything between here and the phone —
+        // Cloudflare, a browser — may keep it for a minute. That is what lets
+        // the edge absorb a flood on the busiest public endpoint without it
+        // reaching this server. Prices in it are for display: every basket and
+        // order is priced again here, so a minute-old figure cannot be charged.
+        return response()->json($payload)
+            ->header('Cache-Control', 'public, max-age=60, s-maxage=60');
     }
 }

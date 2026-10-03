@@ -29,6 +29,10 @@ if (file_exists($maintenance = $backend.'/storage/framework/maintenance.php')) {
 
 require $backend.'/vendor/autoload.php';
 
+// Turn away a client sending far more than any person could, before the
+// framework or the database is touched. See App\Support\FloodGuard.
+\App\Support\FloodGuard::enforce($_SERVER, $backend.'/storage/framework/flood');
+
 /** @var Application $app */
 $app = require_once $backend.'/bootstrap/app.php';
 

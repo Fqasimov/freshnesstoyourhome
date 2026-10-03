@@ -68,6 +68,7 @@ tar -C "$ROOT/backend" \
   --exclude=./.env --exclude='./.env.*' --exclude=./vendor --exclude=./node_modules \
   --exclude=./tests --exclude='./storage/logs/*' --exclude='./storage/framework/cache/data/*' \
   --exclude='./storage/framework/sessions/*' --exclude='./storage/framework/views/*' \
+  --exclude='./storage/framework/flood/*' \
   --exclude='./storage/app/public/*' --exclude='./bootstrap/cache/*.php' \
   --exclude=./public/storage --exclude='./.phpunit*' --exclude='./database/*.sqlite' \
   -cf - . | tar -C "$STAGE/freshness/backend" -xf -
@@ -102,7 +103,7 @@ elif [ "${INSTALL:-0}" = "1" ]; then
 fi
 [ -z "${STAGE_OUT:-}" ] && cp "$ROOT/deploy/upgrade.php" "$API_DIR/upgrade-$TOKEN.php"
 # Empty directories Laravel needs to exist; zip drops empty ones otherwise.
-for d in storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
+for d in storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/flood storage/logs bootstrap/cache; do
   # Not empty: hostinq.az's FTPS server rejects a zero-byte upload with a TLS
   # "decode error", which stopped the first automatic deploy.
   mkdir -p "$STAGE/freshness/backend/$d" && printf 'keep\n' > "$STAGE/freshness/backend/$d/.keep"

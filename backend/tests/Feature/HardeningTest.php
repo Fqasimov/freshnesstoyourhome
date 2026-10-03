@@ -246,6 +246,17 @@ class HardeningTest extends TestCase
 
     // ------------------------------------------------------- the server ---
 
+    public function test_the_catalogue_may_be_kept_by_the_edge_for_a_minute(): void
+    {
+        $this->seedCatalogue();
+
+        $cache = $this->getJson('/api/catalogue')->assertOk()->headers->get('Cache-Control');
+
+        $this->assertStringContainsString('public', $cache);
+        $this->assertStringContainsString('s-maxage=60', $cache);
+        $this->assertStringNotContainsString('private', $cache);
+    }
+
     public function test_a_protected_route_without_a_token_is_a_401_not_a_crash(): void
     {
         // No Accept: application/json, as a browser or a scanner sends it.

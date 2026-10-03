@@ -154,6 +154,13 @@ request to a protected route without a token is a plain 401: Laravel's
 default redirect to a `login` route that does not exist used to make it a
 500, with a stack trace written to the log before any limit ran.
 
+Before any of that, `App\Support\FloodGuard` counts every client address in
+a locked file before Laravel boots — 40 requests per 10 seconds, 120 a
+minute — and turns a flood away with a 429 for five minutes. A refusal
+inside Laravel costs a boot and a database write, so enough of them take a
+shared server down by themselves; this one costs a file read. A flood spread
+over many addresses is Cloudflare's job (DEPLOY.md, "Floods").
+
 The admin panel is a browser, which has no keychain. Its token lives in
 `sessionStorage`: scoped to the one tab, gone when it closes, and never shared
 with another tab on a machine in the shop. `localStorage` would outlive the
