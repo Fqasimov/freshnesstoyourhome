@@ -76,6 +76,7 @@ const OWN = {
 
     'foot.privacy':'Məxfilik siyasəti',
     'foot.note':'Qiymətlər AZN ilə, göstərilən vahidə görədir, dərc olunduğu tarixə aiddir və bazara uyğun dəyişə bilər. “1 kq” kimi göstərilən çəkilər çatdırılma zamanı faktiki çəkiyə görə dəqiqləşdirilir.',
+    'foot.tags':'Axtarılan məhsullar',
 
     'cart.t':'Səbətiniz','cart.sub':'Təxmini məbləğ',
     'cart.note':'Onlayn heç bir ödəniş alınmır. Səbəti göndərdikdə WhatsApp siyahınızla açılır — dəqiq çəki və yekun məbləği çatdırılmadan əvvəl təsdiqləyirik.',
@@ -190,6 +191,7 @@ const OWN = {
 
     'foot.privacy':'Политика конфиденциальности',
     'foot.note':'Цены в манатах, за указанную единицу, действительны на момент публикации и могут меняться вслед за рынком. Вес, указанный как «1 кг», уточняется при доставке по фактически отпущенному весу.',
+    'foot.tags':'Часто ищут',
 
     'cart.t':'Ваша корзина','cart.sub':'Примерная сумма',
     'cart.note':'Онлайн ничего не списывается. Отправка корзины откроет WhatsApp с готовым списком — точный вес и итоговую сумму подтверждаем до доставки.',
@@ -304,6 +306,7 @@ const OWN = {
 
     'foot.privacy':'Privacy policy',
     'foot.note':'Prices in AZN, per the unit shown, current at the time of publication and subject to change with the market. Weights marked “1 kg” are settled on delivery against the actual weight supplied.',
+    'foot.tags':'Popular searches',
 
     'cart.t':'Your basket','cart.sub':'Estimated total',
     'cart.note':'Nothing is charged online. Sending the basket opens WhatsApp with your list ready — we confirm exact weights and the final total before delivery.',

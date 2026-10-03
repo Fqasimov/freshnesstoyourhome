@@ -11,6 +11,21 @@ const year = new Date().getFullYear()
    plain href="#sets" replaces the whole route with "sets", matches nothing
    and lands the visitor back at the top of the home page — these five links
    had all stopped working when the catalogue moved to its own page. */
+/* What people look for, as tags that open the catalogue already searching. The
+   shown word and the search word differ where a hashtag is written without
+   spaces. */
+const TAGS = [
+  ['#skumbriya', 'skumbriya'],
+  ['#hisəverilmişbalıq', 'hisə'],
+  ['#smokedmackerel', 'mackerel'],
+  ['#копчёнаяскумбрия', 'скумбрия'],
+  ['#premiumbalıq', 'balıq'],
+  ['#dənizməhsulları', 'dəniz'],
+  ['#seafoodbaku', 'seafood'],
+  ['#qırmızıkürü', 'kürü'],
+  ['#pendir', 'pendir'],
+  ['#fishdeliverybaku', 'fish'],
+]
 const links = computed(() => [
   [{ path: '/', hash: '#story' }, 'nav.story'],
   // Same reason as the header: no active set, no link to one.
@@ -41,6 +56,10 @@ const links = computed(() => [
              they have read everything and still want the price list. -->
         <div class="foot__cta"><CatalogueCta variant="ghost" /></div>
       </div>
+      <div class="foot__tags" :aria-label="t('foot.tags')">
+        <span>{{ t('foot.tags') }}</span>
+        <RouterLink v-for="[label, q] in TAGS" :key="label" :to="{ path: '/kataloq', query: { q } }">{{ label }}</RouterLink>
+      </div>
       <div class="foot__bot">
         <p>{{ t('foot.note') }}</p>
         <p>© {{ year }} Freshness To Your Home · <a href="/privacy/">{{ t('foot.privacy') }}</a></p>
@@ -66,6 +85,9 @@ const links = computed(() => [
 .foot__brand span{ font-family:var(--wordmark); font-size:.82rem; letter-spacing:.01em; }
 .foot__nav{ display:flex; gap:clamp(18px,3vw,44px); flex-wrap:wrap; font-size:.86rem; }
 .foot__nav a:hover{ color:var(--paper); }
+.foot__tags{ display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline; padding:22px 0; border-bottom:1px solid var(--line-inv); font-size:.8rem; }
+.foot__tags span{ text-transform:uppercase; letter-spacing:.12em; font-size:.68rem; opacity:.7; margin-right:4px; }
+.foot__tags a:hover{ color:var(--paper); }
 .foot__bot{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; padding-top:24px; font-size:.76rem; }
 .foot__bot p{ margin:0; max-width:60ch; line-height:1.6; }
 .foot__bot a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
