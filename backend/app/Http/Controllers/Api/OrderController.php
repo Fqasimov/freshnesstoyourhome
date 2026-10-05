@@ -101,16 +101,26 @@ class OrderController extends Controller
         $lead = (int) config('freshness.order.lead_days');
         $maxAhead = (int) config('freshness.order.max_days_ahead');
 
+        // A page loaded before the name was split in two still sends one field.
+        if (! $request->filled('contact_first_name') && is_string($request->input('contact_name'))) {
+            $parts = preg_split('/\s+/u', trim($request->input('contact_name')), 2) ?: [];
+            $request->merge(['contact_first_name' => $parts[0] ?? '', 'contact_last_name' => $parts[1] ?? '']);
+        }
+
         $data = $request->validate([
             'lines' => ['required', 'array', 'min:1', 'max:'.config('freshness.order.max_lines')],
             'lines.*.product_id' => ['required', 'string', 'max:60', 'distinct', Rule::exists('products', 'id')],
             'lines.*.qty' => ['required', 'numeric', 'min:0.001', 'max:'.config('freshness.order.max_qty_per_line')],
 
             'zone_id' => ['required', 'string', Rule::exists('delivery_zones', 'id')->where('is_active', true)],
-            'contact_name' => ['required', 'string', 'min:2', 'max:80'],
+            // First name and surname, both required, letters only (plus space,
+            // hyphen, apostrophe and full stop): no digits, links or markup.
+            'contact_first_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L}\s'’.-]*$/u"],
+            'contact_last_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L}\s'’.-]*$/u"],
             // Digits, spaces, dashes, brackets and an optional leading +.
             'contact_phone' => ['required', 'string', 'regex:/^\+?[0-9 ()-]{7,20}$/'],
-            'address_line' => ['required', 'string', 'min:5', 'max:300'],
+            // The address as plain typed text. A map link alone is not an address.
+            'address_line' => ['required', 'string', 'min:5', 'max:300', 'regex:/\p{L}/u', 'not_regex:/[<>]|https?:\/\//i'],
             'address_notes' => ['sometimes', 'nullable', 'string', 'max:200'],
             'map_link' => [
                 'sometimes', 'nullable', 'string', 'max:500',
@@ -132,6 +142,8 @@ class OrderController extends Controller
                 throw \Illuminate\Validation\ValidationException::withMessages(["lines.{$i}.qty" => 'This item is sold in whole units.']);
             }
         }
+
+        $data['contact_name'] = trim($data['contact_first_name'].' '.$data['contact_last_name']);
 
         $order = $this->orders->placeFromWebsite($data);
 

@@ -21,7 +21,7 @@ export const SHARED_COPY = {
   'deliv.mapPh': 'Xəritə linkini yapışdırın',
   'deliv.mapHint': 'İstəyə bağlı. Telefonunuzda Google Maps-də yerinizi seçib «Paylaş» ilə linki köçürün — kuryer dəqiq ünvanı tapır.',
   'deliv.feeRange': 'Bu ərazidə haqq məsafədən asılıdır. Dəqiq məbləği sifarişi təsdiqləyərkən bildiririk.',
-  'deliv.needAddr': 'Göndərmək üçün ad, telefon, ərazi və ünvan lazımdır.',
+  'deliv.needAddr': 'Göndərmək üçün ad, soyad, telefon, ərazi və ünvan lazımdır.',
   },
   ru: {
   'deliv.h': 'Доставка',
@@ -36,7 +36,7 @@ export const SHARED_COPY = {
   'deliv.mapPh': 'Вставьте ссылку на карту',
   'deliv.mapHint': 'Необязательно. Откройте своё место в Google Maps, нажмите «Поделиться» и вставьте ссылку — курьер найдёт вас точно.',
   'deliv.feeRange': 'В этом районе стоимость зависит от расстояния. Точную сумму сообщим при подтверждении заказа.',
-  'deliv.needAddr': 'Укажите имя, телефон, район и адрес, чтобы отправить.',
+  'deliv.needAddr': 'Укажите имя, фамилию, телефон, район и адрес, чтобы отправить.',
   },
   en: {
   'deliv.h': 'Delivery',
@@ -51,6 +51,6 @@ export const SHARED_COPY = {
   'deliv.mapPh': 'Paste a map link',
   'deliv.mapHint': 'Optional. Drop a pin in Google Maps, tap Share and paste the link — it puts the courier on the exact spot.',
   'deliv.feeRange': 'In this area the fee depends on the distance. We confirm the exact amount when we confirm the order.',
-  'deliv.needAddr': 'Add your name, phone, area and address to send.',
+  'deliv.needAddr': 'Add your first name, surname, phone, area and address to send.',
   },
 }

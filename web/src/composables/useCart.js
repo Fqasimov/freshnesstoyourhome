@@ -23,11 +23,15 @@ const saved = readDelivery()
 const zoneId  = ref(saved.zoneId || '')
 const address = ref(saved.address || '')
 const mapLink = ref(saved.mapLink || '')
-const name    = ref(saved.name || '')
+/* First name and surname are asked separately; a name saved by the older single
+   field is split on its first space so a returning customer is not asked twice. */
+const legacy    = String(saved.name || '').trim().split(/\s+/)
+const firstName = ref(saved.firstName ?? legacy[0] ?? '')
+const lastName  = ref(saved.lastName ?? legacy.slice(1).join(' '))
 const phone   = ref(saved.phone || '')
 
-watch([zoneId, address, mapLink, name, phone], ([z, a, m, n, p]) => {
-  try { localStorage.setItem('fth.delivery', JSON.stringify({ zoneId: z, address: a, mapLink: m, name: n, phone: p })) }
+watch([zoneId, address, mapLink, firstName, lastName, phone], ([z, a, m, f, l, p]) => {
+  try { localStorage.setItem('fth.delivery', JSON.stringify({ zoneId: z, address: a, mapLink: m, firstName: f, lastName: l, phone: p })) }
   catch (e) {}
 })
 
@@ -184,9 +188,12 @@ export function useCart () {
   const deliveryText = computed(() => (zone.value ? `${feeText(zone.value)} AZN` : ''))
 
   /* Nowhere to send it is as incomplete a basket as nothing in it. */
-  const canSend = computed(() => Boolean(
-    zone.value && address.value.trim() && name.value.trim().length >= 2 &&
-    /^\+?[0-9 ()-]{7,20}$/.test(phone.value.trim())))
+  const NAME_OK = /^\p{L}[\p{L}\s'’.-]*$/u
+const nameOk = v => v.trim().length >= 2 && NAME_OK.test(v.trim())
+const phoneOk = computed(() => /^\+?[0-9 ()-]{7,20}$/.test(phone.value.trim()))
+const canSend = computed(() => Boolean(
+    zone.value && address.value.trim().length >= 5 &&
+    nameOk(firstName.value) && nameOk(lastName.value) && phoneOk.value))
 
   const messageFor = code => {
     let msg = t('ui.waIntro') + '\n\n'
@@ -204,7 +211,7 @@ export function useCart () {
     if (address.value.trim()) msg += `\n${t('ui.waAddr')}: ${address.value.trim()}`
     if (mapLink.value.trim()) msg += `\n${t('ui.waMap')}: ${mapLink.value.trim()}`
 
-    if (name.value.trim()) msg += `\n${t('deliv.name')}: ${name.value.trim()}`
+    msg += `\n${t('deliv.fullName')}: ${firstName.value.trim()} ${lastName.value.trim()}`
     if (phone.value.trim()) msg += `\n${t('deliv.phone')}: ${phone.value.trim()}`
 
     msg += `\n\n${t('ui.waOutro')}`
@@ -255,7 +262,8 @@ export function useCart () {
           body: JSON.stringify({
             lines: orderLines(),
             zone_id: zoneId.value,
-            contact_name: name.value.trim(),
+            contact_first_name: firstName.value.trim(),
+            contact_last_name: lastName.value.trim(),
             contact_phone: phone.value.trim(),
             address_line: address.value.trim(),
             map_link: mapLink.value.trim() || null,
@@ -284,6 +292,6 @@ export function useCart () {
     add, setQty, remove, whatsapp, qtyOf, step,
     quote, quoting, weighed, ceiling,
     zoneId, address, mapLink, zone, deliveryText, canSend,
-    name, phone, send, sending, placedCode,
+    firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode,
   }
 }

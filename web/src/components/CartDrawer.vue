@@ -11,7 +11,7 @@ const { t, nm } = useI18n()
 const {
   lines, count, total, open, setQty, remove, whatsapp, weighed, ceiling,
   zoneId, address, mapLink, zone, deliveryText, canSend,
-  name, phone, send, sending, placedCode,
+  firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode,
 } = useCart()
 
 const countLabel = computed(() =>
@@ -100,15 +100,27 @@ const MAPS_URL = mapsUrl()
       <div class="deliv">
         <p class="deliv__h">{{ t('deliv.h') }}</p>
 
-        <label class="deliv__l" for="cart-name">{{ t('deliv.name') }}</label>
-        <input id="cart-name" class="deliv__in" autocomplete="name"
-               :placeholder="t('deliv.namePh')" v-model="name">
+        <div class="deliv__pair">
+          <div>
+            <label class="deliv__l" for="cart-first"><span>{{ t('deliv.first') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
+            <input id="cart-first" class="deliv__in" autocomplete="given-name" required aria-required="true"
+                   :class="{ 'deliv__in--bad': firstName && !nameOk(firstName) }"
+                   :placeholder="t('deliv.firstPh')" v-model="firstName">
+          </div>
+          <div>
+            <label class="deliv__l" for="cart-last"><span>{{ t('deliv.last') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
+            <input id="cart-last" class="deliv__in" autocomplete="family-name" required aria-required="true"
+                   :class="{ 'deliv__in--bad': lastName && !nameOk(lastName) }"
+                   :placeholder="t('deliv.lastPh')" v-model="lastName">
+          </div>
+        </div>
 
-        <label class="deliv__l" for="cart-phone">{{ t('deliv.phone') }}</label>
-        <input id="cart-phone" class="deliv__in" type="tel" inputmode="tel" autocomplete="tel"
+        <label class="deliv__l" for="cart-phone"><span>{{ t('deliv.phone') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
+        <input id="cart-phone" class="deliv__in" type="tel" inputmode="tel" autocomplete="tel" required aria-required="true"
+               :class="{ 'deliv__in--bad': phone && !phoneOk }"
                :placeholder="t('deliv.phonePh')" v-model="phone">
 
-        <label class="deliv__l" for="cart-zone">{{ t('deliv.zone') }}</label>
+        <label class="deliv__l" for="cart-zone"><span>{{ t('deliv.zone') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
         <select id="cart-zone" class="deliv__in" v-model="zoneId">
           <option value="">{{ t('deliv.zonePick') }}</option>
           <option v-for="z in ZONES" :key="z.id" :value="z.id">
@@ -116,8 +128,8 @@ const MAPS_URL = mapsUrl()
           </option>
         </select>
 
-        <label class="deliv__l" for="cart-addr">{{ t('deliv.addr') }}</label>
-        <textarea id="cart-addr" class="deliv__in" rows="2"
+        <label class="deliv__l" for="cart-addr"><span>{{ t('deliv.addr') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
+        <textarea id="cart-addr" class="deliv__in" rows="2" required aria-required="true"
                   :placeholder="t('deliv.addrPh')" v-model="address"></textarea>
 
         <!-- The embedded picker goes here once there is a Maps key. -->
@@ -214,6 +226,10 @@ const MAPS_URL = mapsUrl()
   margin:0 0 10px; font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
   color:var(--ink-3);
 }
+.deliv__pair{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.deliv__pair > div{ min-width:0; }
+.deliv__req{ color:var(--brick); font-weight:700; }
+.deliv__in--bad{ border-color:var(--brick); }
 .deliv__l{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:.72rem; color:var(--ink-3); margin:0 0 4px; }
 .deliv__open{ display:inline-flex; align-items:center; gap:4px; color:var(--logo); border-bottom:1px solid transparent; }
 .deliv__open:hover{ border-color:currentColor; }

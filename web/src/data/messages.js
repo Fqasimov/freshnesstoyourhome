@@ -81,6 +81,7 @@ const OWN = {
     'cart.t':'Səbətiniz','cart.sub':'Təxmini məbləğ',
     'cart.note':'Onlayn heç bir ödəniş alınmır. Səbəti göndərdikdə WhatsApp siyahınızla açılır — dəqiq çəki və yekun məbləği çatdırılmadan əvvəl təsdiqləyirik.',
     'cart.send':'Səbəti WhatsApp-a göndər',
+    'deliv.first':'Ad','deliv.firstPh':'Adınız','deliv.last':'Soyad','deliv.lastPh':'Soyadınız','deliv.fullName':'Ad, soyad',
     'deliv.name':'Adınız','deliv.namePh':'Adınızı daxil edin','deliv.phone':'Telefon','deliv.phonePh':'Telefon nömrənizi daxil edin',
     'ui.waCode':'Sifariş kodu','cart.placed':'Sifarişiniz qəbul edildi','cart.placedP':'WhatsApp-da çatdırılma vaxtını və çəkini təsdiqləyəcəyik.','cart.placedWa':'WhatsApp-ı yenidən aç',
 
@@ -196,6 +197,7 @@ const OWN = {
     'cart.t':'Ваша корзина','cart.sub':'Примерная сумма',
     'cart.note':'Онлайн ничего не списывается. Отправка корзины откроет WhatsApp с готовым списком — точный вес и итоговую сумму подтверждаем до доставки.',
     'cart.send':'Отправить корзину в WhatsApp',
+    'deliv.first':'Имя','deliv.firstPh':'Ваше имя','deliv.last':'Фамилия','deliv.lastPh':'Ваша фамилия','deliv.fullName':'Имя, фамилия',
     'deliv.name':'Ваше имя','deliv.namePh':'Введите ваше имя','deliv.phone':'Телефон','deliv.phonePh':'Введите номер телефона',
     'ui.waCode':'Код заказа','cart.placed':'Заказ принят','cart.placedP':'Мы подтвердим время доставки и вес в WhatsApp.','cart.placedWa':'Открыть WhatsApp снова',
 
@@ -311,6 +313,7 @@ const OWN = {
     'cart.t':'Your basket','cart.sub':'Estimated total',
     'cart.note':'Nothing is charged online. Sending the basket opens WhatsApp with your list ready — we confirm exact weights and the final total before delivery.',
     'cart.send':'Send basket on WhatsApp',
+    'deliv.first':'First name','deliv.firstPh':'Your first name','deliv.last':'Surname','deliv.lastPh':'Your surname','deliv.fullName':'Name',
     'deliv.name':'Your name','deliv.namePh':'Enter your name','deliv.phone':'Phone','deliv.phonePh':'Enter your phone number',
     'ui.waCode':'Order code','cart.placed':'Order received','cart.placedP':'We will confirm the delivery time and weights on WhatsApp.','cart.placedWa':'Open WhatsApp again',
 
