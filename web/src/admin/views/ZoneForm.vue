@@ -10,7 +10,7 @@ import { say, complain } from '../toast'
  * typed straight into the row; this is for what the table has no room for.
  */
 const props = defineProps({ zone: { type: Object, default: null } })
-const emit = defineEmits(['close', 'saved'])
+const emit = defineEmits(['close', 'saved', 'deleted'])
 
 const LANGS = [
   { id: 'az', label: 'Azərbaycanca', required: true },
@@ -43,6 +43,21 @@ const idOk = computed(() => !isNew || (/^[a-z0-9]+(-[a-z0-9]+)*$/.test(form.valu
 const ready = computed(() => idOk.value && form.value.az.trim()
   && Number.isFinite(feeMinor.value) && feeMinor.value >= 0
   && Number.isFinite(minMinor.value) && minMinor.value >= 0)
+
+async function destroy () {
+  const name = z.name?.az ?? z.id
+  if (!window.confirm(`“${name}” zonası həmişəlik silinsin?\n\nKeçmiş sifarişlər dəyişməyəcək. Bu əməliyyatı geri qaytarmaq olmur.`)) return
+  busy.value = true
+  try {
+    await api(`/admin/zones/${z.id}`, { method: 'DELETE' })
+    say(`${name} silindi`)
+    emit('deleted', z.id)
+  } catch (e) {
+    complain(e)
+  } finally {
+    busy.value = false
+  }
+}
 
 async function save () {
   if (!ready.value) return
@@ -118,6 +133,7 @@ async function save () {
         {{ busy ? '…' : (isNew ? 'Zonanı əlavə et' : 'Yadda saxla') }}
       </button>
       <button class="a-btn a-btn--ghost" :disabled="busy" @click="emit('close')">Ləğv et</button>
+      <button v-if="!isNew" class="a-btn a-btn--danger" style="margin-left:auto" :disabled="busy" @click="destroy">Zonanı sil</button>
     </div>
   </aside>
 </template>

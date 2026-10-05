@@ -119,8 +119,10 @@ class OrderController extends Controller
             'contact_last_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L}\s'’.-]*$/u"],
             // Digits, spaces, dashes, brackets and an optional leading +.
             'contact_phone' => ['required', 'string', 'regex:/^\+?[0-9 ()-]{7,20}$/'],
-            // The address as plain typed text. A map link alone is not an address.
-            'address_line' => ['required', 'string', 'min:5', 'max:300', 'regex:/\p{L}/u', 'not_regex:/[<>]|https?:\/\//i'],
+            // Optional: the shop phones for the address if it is missing. When it
+            // is given it is plain typed text — a link or a string of numbers
+            // is not an address (the map link has its own field).
+            'address_line' => ['sometimes', 'nullable', 'string', 'min:5', 'max:300', 'regex:/\p{L}/u', 'not_regex:/[<>]|https?:\/\//i'],
             'address_notes' => ['sometimes', 'nullable', 'string', 'max:200'],
             'map_link' => [
                 'sometimes', 'nullable', 'string', 'max:500',

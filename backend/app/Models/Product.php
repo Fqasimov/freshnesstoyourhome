@@ -71,6 +71,22 @@ class Product extends Model
         return $this->hasMany(ProductTranslation::class);
     }
 
+    /** The extra photographs, in the order they are shown. */
+    public function gallery(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /** @return list<array{id:int,image_url:string,thumb_url:string}> */
+    public function galleryPayload(): array
+    {
+        return $this->gallery->map(fn (ProductImage $i) => [
+            'id' => $i->id,
+            'image_url' => $i->url(),
+            'thumb_url' => $i->thumbUrl(),
+        ])->all();
+    }
+
     /**
      * Sold by weight, so the price at checkout can only be an estimate.
      *

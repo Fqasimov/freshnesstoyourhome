@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductTranslation;
+use App\Models\BundleItem;
 use App\Support\Audit;
 use App\Support\StoredImage;
 use Illuminate\Http\JsonResponse;
@@ -38,7 +40,7 @@ class ProductController extends Controller
             'category_id' => ['sometimes', 'nullable', 'string', 'max:40'],
         ]);
 
-        $products = Product::with(['translations', 'category.translations'])
+        $products = Product::with(['translations', 'category.translations', 'gallery'])
             ->when($filters['category_id'] ?? null, fn ($q, $id) => $q->where('category_id', $id))
             ->orderBy('category_id')
             ->orderBy('sort')
@@ -139,7 +141,7 @@ class ProductController extends Controller
         ]);
 
         return response()->json(
-            $this->shape($product->fresh(['translations', 'category.translations'])),
+            $this->shape($product->fresh(['translations', 'category.translations', 'gallery'])),
             201,
         );
     }
@@ -168,7 +170,7 @@ class ProductController extends Controller
             'photo.max' => 'Şəkil 8 MB-dan böyük olmamalıdır.',
         ]);
 
-        $product = Product::with(['translations', 'category.translations'])->findOrFail($id);
+        $product = Product::with(['translations', 'category.translations', 'gallery'])->findOrFail($id);
         $was = $product->image_file;
 
         try {
@@ -190,13 +192,13 @@ class ProductController extends Controller
             'image_file' => ['from' => $was, 'to' => $stored],
         ]);
 
-        return response()->json($this->shape($product->fresh(['translations', 'category.translations'])));
+        return response()->json($this->shape($product->fresh(['translations', 'category.translations', 'gallery'])));
     }
 
     /** Take the photograph off; the bundled picture, if any, comes back. */
     public function removePhoto(Request $request, string $id): JsonResponse
     {
-        $product = Product::with(['translations', 'category.translations'])->findOrFail($id);
+        $product = Product::with(['translations', 'category.translations', 'gallery'])->findOrFail($id);
         $was = $product->image_file;
 
         if ($was === null) {
@@ -210,7 +212,110 @@ class ProductController extends Controller
             'image_file' => ['from' => $was, 'to' => null],
         ]);
 
-        return response()->json($this->shape($product->fresh(['translations', 'category.translations'])));
+        return response()->json($this->shape($product->fresh(['translations', 'category.translations', 'gallery'])));
+    }
+
+    /** How many extra photographs one product may carry. */
+    private const GALLERY_MAX = 8;
+
+    /**
+     * Add one more photograph to a product's gallery.
+     *
+     * Same rules as the main photograph: decoded and re-encoded, never stored
+     * as it arrived.
+     */
+    public function addGalleryPhoto(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'photo' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
+        ], [
+            'photo.required' => 'Şəkil seçilməyib.',
+            'photo.image' => 'Bu fayl şəkil deyil. JPEG, PNG və ya WebP seçin.',
+            'photo.mimes' => 'Yalnız JPEG, PNG və ya WebP qəbul olunur.',
+            'photo.max' => 'Şəkil 8 MB-dan böyük olmamalıdır.',
+        ]);
+
+        $product = Product::with(['translations', 'category.translations', 'gallery'])->findOrFail($id);
+
+        if ($product->gallery->count() >= self::GALLERY_MAX) {
+            throw ValidationException::withMessages([
+                'photo' => 'Bir məhsula ən çox '.self::GALLERY_MAX.' əlavə şəkil qoymaq olar.',
+            ]);
+        }
+
+        try {
+            $stored = StoredImage::store($request->file('photo'), 'products');
+        } catch (RuntimeException $e) {
+            throw ValidationException::withMessages(['photo' => $e->getMessage()]);
+        }
+
+        $image = new ProductImage();
+        $image->product_id = $product->id;
+        $image->file = $stored;
+        $image->sort = (int) $product->gallery->max('sort') + 1;
+        $image->save();
+
+        Audit::record($request->user(), 'product.gallery.add', 'product', $product->id, [
+            'gallery' => ['from' => $product->gallery->count(), 'to' => $product->gallery->count() + 1],
+        ]);
+
+        return response()->json($this->shape($product->fresh(['translations', 'category.translations', 'gallery'])), 201);
+    }
+
+    public function removeGalleryPhoto(Request $request, string $id, int $imageId): JsonResponse
+    {
+        $image = ProductImage::where('product_id', $id)->findOrFail($imageId);
+        $file = $image->file;
+        $image->delete();
+        StoredImage::forget($file);
+
+        Audit::record($request->user(), 'product.gallery.remove', 'product', $id, [
+            'file' => ['from' => $file, 'to' => null],
+        ]);
+
+        $product = Product::with(['translations', 'category.translations', 'gallery'])->findOrFail($id);
+
+        return response()->json($this->shape($product));
+    }
+
+    /**
+     * Delete a product for good.
+     *
+     * Past orders keep their own copy of the name and price, so they stay
+     * readable. A set that contained it loses that line; a set left with
+     * nothing is switched off rather than left empty.
+     */
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        $product = Product::with(['translations', 'gallery'])->findOrFail($id);
+        $name = $product->nameIn('az');
+
+        $files = $product->gallery->pluck('file')->push($product->image_file)->filter()->all();
+
+        DB::transaction(function () use ($product) {
+            $setIds = BundleItem::where('product_id', $product->id)->pluck('bundle_id')->unique();
+
+            BundleItem::where('product_id', $product->id)->delete();
+            foreach ($setIds as $setId) {
+                if (! BundleItem::where('bundle_id', $setId)->exists()) {
+                    \App\Models\Bundle::whereKey($setId)->update(['is_active' => false]);
+                }
+            }
+
+            ProductImage::where('product_id', $product->id)->delete();
+            ProductTranslation::where('product_id', $product->id)->delete();
+            $product->delete();
+        });
+
+        foreach ($files as $file) {
+            StoredImage::forget($file);
+        }
+
+        Audit::record($request->user(), 'product.delete', 'product', $id, [
+            'name' => ['from' => $name, 'to' => null],
+        ]);
+
+        return response()->json(['status' => 'ok']);
     }
 
     public function update(Request $request, string $id): JsonResponse
@@ -231,7 +336,7 @@ class ProductController extends Controller
             'translations.*.unit_label' => ['sometimes', 'nullable', 'string', 'max:40'],
         ]);
 
-        $product = Product::with('translations')->findOrFail($id);
+        $product = Product::with(['translations', 'gallery'])->findOrFail($id);
 
         $changes = DB::transaction(function () use ($product, $data) {
             $product->fill(collect($data)->except('translations')->all());
@@ -272,7 +377,7 @@ class ProductController extends Controller
             Audit::record($request->user(), 'product.update', 'product', $product->id, $changes);
         }
 
-        return response()->json($this->shape($product->fresh(['translations', 'category.translations'])));
+        return response()->json($this->shape($product->fresh(['translations', 'category.translations', 'gallery'])));
     }
 
     /**
@@ -326,6 +431,7 @@ class ProductController extends Controller
             'image_url' => $p->imageUrl(),
             'thumb_url' => $p->thumbUrl(),
             'has_upload' => $p->image_file !== null,
+            'gallery' => $p->galleryPayload(),
             'sort' => $p->sort,
             'name' => $p->translationMap('name'),
             'description' => $p->translationMap('description'),

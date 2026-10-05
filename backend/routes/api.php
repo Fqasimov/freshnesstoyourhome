@@ -169,6 +169,11 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::post('products/{id}/photo', [ProductController::class, 'photo'])
             ->middleware('throttle:admin-upload');
         Route::delete('products/{id}/photo', [ProductController::class, 'removePhoto']);
+        Route::post('products/{id}/gallery', [ProductController::class, 'addGalleryPhoto'])
+            ->middleware('throttle:admin-upload');
+        Route::delete('products/{id}/gallery/{imageId}', [ProductController::class, 'removeGalleryPhoto'])
+            ->whereNumber('imageId');
+        Route::delete('products/{id}', [ProductController::class, 'destroy']);
 
         Route::get('categories', [CategoryController::class, 'index']);
         Route::post('categories', [CategoryController::class, 'store']);
@@ -178,6 +183,7 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::get('bundles', [BundleController::class, 'index']);
         Route::post('bundles', [BundleController::class, 'store']);
         Route::patch('bundles/{id}', [BundleController::class, 'update']);
+        Route::delete('bundles/{id}', [BundleController::class, 'destroy']);
         Route::post('bundles/{id}/photo', [BundleController::class, 'photo'])
             ->middleware('throttle:admin-upload');
         Route::delete('bundles/{id}/photo', [BundleController::class, 'removePhoto']);
@@ -185,6 +191,7 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::get('zones', [DeliveryZoneController::class, 'index']);
         Route::post('zones', [DeliveryZoneController::class, 'store']);
         Route::patch('zones/{id}', [DeliveryZoneController::class, 'update']);
+        Route::delete('zones/{id}', [DeliveryZoneController::class, 'destroy']);
 
         Route::get('customers', [CustomerController::class, 'index']);
         Route::get('customers/{id}', [CustomerController::class, 'show']);

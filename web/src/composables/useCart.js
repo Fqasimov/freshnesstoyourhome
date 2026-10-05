@@ -105,6 +105,17 @@ async function refreshQuote () {
 watch(items, refreshQuote, { deep: true, immediate: true })
 watch(zoneId, refreshQuote)
 
+/* Goods sold by the kilo can be ordered in any weight, so their quantity is typed
+   (or stepped by half a kilo) rather than counted. A product whose "kilo" unit is
+   something else — a 1.5 kg pack — is still counted in packs. */
+const isWeighed = id => {
+  const p = PRODUCTS.find(x => x.id === id)
+  return Boolean(p && p.unit?.kind === 'kg' && (p.unit.qty ?? 1) === 1)
+}
+const WEIGH_MIN = 0.1
+const MAX_QTY = 99
+const round2 = v => Math.round(v * 100) / 100
+
 export function useCart () {
   const { t, nm, unitOf } = useI18n()
 
@@ -128,7 +139,8 @@ export function useCart () {
     return {
       key: it.key, qty: it.qty, product: p,
       price: v ? v.price : p.price,
-      unit:  unitOf(p, v)
+      unit:  unitOf(p, v),
+      weighed: !v && isWeighed(p.id)
     }
   }
 
@@ -159,15 +171,30 @@ export function useCart () {
   function add (id, v = null, qty = 1, kind = 'product') {
     const key = keyOf(id, v, kind)
     const hit = items.value.find(c => c.key === key)
-    if (hit) hit.qty += qty
+    if (hit) hit.qty = round2(Math.min(MAX_QTY, hit.qty + qty))
     else items.value.push({ key, id, v, qty, kind })
   }
 
   function setQty (key, delta) {
     const it = items.value.find(c => c.key === key)
     if (!it) return
-    it.qty += delta
-    if (it.qty <= 0) remove(key)
+    const weighed = it.kind !== 'set' && isWeighed(it.id)
+    it.qty = round2(Math.min(MAX_QTY, it.qty + delta * (weighed ? 0.5 : 1)))
+    if (it.qty < (weighed ? WEIGH_MIN : 1)) remove(key)
+  }
+
+  /* A typed quantity. Anything that is not a sensible number is ignored, so a
+     half-typed "1," does not empty the basket; the field shows the stored
+     value again when it loses focus. */
+  function setQtyTo (key, raw) {
+    const it = items.value.find(c => c.key === key)
+    if (!it) return
+    const weighed = it.kind !== 'set' && isWeighed(it.id)
+    const n = Number(String(raw).trim().replace(',', '.'))
+    if (!Number.isFinite(n)) return
+    const next = weighed ? round2(n) : Math.round(n)
+    if (next < (weighed ? WEIGH_MIN : 1) || next > MAX_QTY) return
+    it.qty = next
   }
 
   const remove = key => { items.value = items.value.filter(c => c.key !== key) }
@@ -192,7 +219,8 @@ export function useCart () {
 const nameOk = v => v.trim().length >= 2 && NAME_OK.test(v.trim())
 const phoneOk = computed(() => /^\+?[0-9 ()-]{7,20}$/.test(phone.value.trim()))
 const canSend = computed(() => Boolean(
-    zone.value && address.value.trim().length >= 5 &&
+    zone.value &&
+    (!address.value.trim() || address.value.trim().length >= 5) &&
     nameOk(firstName.value) && nameOk(lastName.value) && phoneOk.value))
 
   const messageFor = code => {
@@ -265,7 +293,7 @@ const canSend = computed(() => Boolean(
             contact_first_name: firstName.value.trim(),
             contact_last_name: lastName.value.trim(),
             contact_phone: phone.value.trim(),
-            address_line: address.value.trim(),
+            address_line: address.value.trim() || null,
             map_link: mapLink.value.trim() || null,
           }),
         })
@@ -289,7 +317,7 @@ const canSend = computed(() => Boolean(
 
   return {
     items, lines, count, total, localTotal, open,
-    add, setQty, remove, whatsapp, qtyOf, step,
+    add, setQty, setQtyTo, remove, whatsapp, qtyOf, step,
     quote, quoting, weighed, ceiling,
     zoneId, address, mapLink, zone, deliveryText, canSend,
     firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode,

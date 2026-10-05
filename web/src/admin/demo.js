@@ -413,6 +413,47 @@ export async function respond (path, method, body) {
     return { ...p }
   }
 
+  /* extra photographs, and deleting for good */
+  if (seg[0] === 'admin' && seg[1] === 'products' && seg[3] === 'gallery') {
+    const p = db.products.find(x => x.id === seg[2])
+    p.gallery = p.gallery ?? []
+    if (method === 'POST') {
+      const file = body instanceof FormData ? body.get('photo') : null
+      if (!file || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        throw new DemoError('Yalnız JPEG, PNG və ya WebP.', { photo: ['Yalnız JPEG, PNG və ya WebP.'] })
+      }
+      if (p.gallery.length >= 8) throw new DemoError('Ən çox 8 əlavə şəkil.', { photo: ['Ən çox 8 əlavə şəkil.'] })
+      const url = URL.createObjectURL(file)
+      p.gallery.push({ id: Date.now() + p.gallery.length, image_url: url, thumb_url: url })
+      audit('product.gallery.add', 'product', p.id, { gallery: { from: p.gallery.length - 1, to: p.gallery.length } })
+      return { ...p }
+    }
+    if (method === 'DELETE') {
+      p.gallery = p.gallery.filter(g => String(g.id) !== seg[4])
+      audit('product.gallery.remove', 'product', p.id, { file: { from: seg[4], to: null } })
+      return { ...p }
+    }
+  }
+  if (seg[0] === 'admin' && seg[1] === 'products' && seg.length === 3 && method === 'DELETE') {
+    const p = db.products.find(x => x.id === seg[2])
+    db.products = db.products.filter(x => x.id !== seg[2])
+    db.bundles.forEach(b => { b.items = b.items.filter(i => i.product_id !== seg[2]); if (!b.items.length) b.is_active = false })
+    audit('product.delete', 'product', seg[2], { name: { from: p?.name?.az, to: null } })
+    return { status: 'ok' }
+  }
+  if (seg[0] === 'admin' && seg[1] === 'bundles' && seg.length === 3 && method === 'DELETE') {
+    const b = db.bundles.find(x => x.id === seg[2])
+    db.bundles = db.bundles.filter(x => x.id !== seg[2])
+    audit('bundle.delete', 'bundle', seg[2], { name: { from: b?.name?.az, to: null } })
+    return { status: 'ok' }
+  }
+  if (seg[0] === 'admin' && seg[1] === 'zones' && seg.length === 3 && method === 'DELETE') {
+    const z = db.zones.find(x => x.id === seg[2])
+    db.zones = db.zones.filter(x => x.id !== seg[2])
+    audit('zone.delete', 'zone', seg[2], { name: { from: z?.name?.az, to: null } })
+    return { status: 'ok' }
+  }
+
   if (route === '/admin/products/stock' && method === 'POST') {
     const touched = []
     db.products.forEach(p => {

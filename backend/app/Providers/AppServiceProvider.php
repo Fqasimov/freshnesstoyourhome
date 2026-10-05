@@ -166,6 +166,7 @@ class AppServiceProvider extends ServiceProvider
         $models = [
             \App\Models\Product::class,
             \App\Models\ProductTranslation::class,
+            \App\Models\ProductImage::class,
             \App\Models\Category::class,
             \App\Models\CategoryTranslation::class,
             \App\Models\DeliveryZone::class,

@@ -134,4 +134,33 @@ class DeliveryZoneController extends Controller
             'name' => $z->translationMap('name'),
         ];
     }
+
+    /**
+     * Delete a delivery area.
+     *
+     * Refused while customers have saved addresses in it: deleting the area
+     * would delete those addresses with it. Switch it off instead. Past orders
+     * keep their address text and simply lose the link to the area.
+     */
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        $zone = DeliveryZone::with('translations')->findOrFail($id);
+
+        if (\App\Models\Address::where('delivery_zone_id', $zone->id)->exists()) {
+            return response()->json([
+                'message' => 'Bu zonada müştərilərin saxlanmış ünvanları var. Silmək əvəzinə zonanı deaktiv edin.',
+            ], 422);
+        }
+
+        $name = $zone->nameIn('az');
+
+        DB::transaction(function () use ($zone) {
+            DeliveryZoneTranslation::where('delivery_zone_id', $zone->id)->delete();
+            $zone->delete();
+        });
+
+        Audit::record($request->user(), 'zone.delete', 'zone', $id, ['name' => ['from' => $name, 'to' => null]]);
+
+        return response()->json(['status' => 'ok']);
+    }
 }

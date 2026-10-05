@@ -11,7 +11,7 @@ import { say, complain } from '../toast'
  * at today's prices, and turning it on is a separate, deliberate tap.
  */
 const props = defineProps({ bundle: { type: Object, default: null } })
-const emit = defineEmits(['close', 'saved'])
+const emit = defineEmits(['close', 'saved', 'deleted'])
 
 const LANGS = [
   { id: 'az', label: 'Azərbaycanca', required: true },
@@ -69,6 +69,21 @@ const ready = computed(() => idOk.value && form.value.az.name.trim() && chosen.v
 
 const addItem = () => form.value.items.push({ product_id: '', qty: 1 })
 const removeItem = i => form.value.items.splice(i, 1)
+
+async function destroy () {
+  const name = props.bundle?.name?.az ?? props.bundle?.id
+  if (!window.confirm(`“${name}” aksiyası həmişəlik silinsin?\n\nİçindəki məhsullar silinmir. Bu əməliyyatı geri qaytarmaq olmur.`)) return
+  busy.value = true
+  try {
+    await api(`/admin/bundles/${props.bundle.id}`, { method: 'DELETE' })
+    say(`${name} silindi`)
+    emit('deleted', props.bundle.id)
+  } catch (e) {
+    complain(e)
+  } finally {
+    busy.value = false
+  }
+}
 
 async function save () {
   if (!ready.value) return
@@ -174,6 +189,7 @@ async function save () {
         {{ busy ? '…' : (isNew ? 'Seti yarat' : 'Yadda saxla') }}
       </button>
       <button class="a-btn a-btn--ghost" :disabled="busy" @click="emit('close')">Ləğv et</button>
+      <button v-if="!isNew" class="a-btn a-btn--danger" style="margin-left:auto" :disabled="busy" @click="destroy">Aksiyanı sil</button>
     </div>
   </aside>
 </template>

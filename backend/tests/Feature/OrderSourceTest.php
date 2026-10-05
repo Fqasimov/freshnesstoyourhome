@@ -51,8 +51,8 @@ class OrderSourceTest extends TestCase
     public function test_a_website_order_needs_a_name_phone_address_and_active_zone(): void
     {
         $this->postJson('/api/orders/web', $this->webOrder([
-            'contact_first_name' => '', 'contact_last_name' => '', 'contact_phone' => 'call me', 'address_line' => '', 'zone_id' => 'nowhere',
-        ]))->assertStatus(422)->assertJsonValidationErrors(['contact_first_name', 'contact_last_name', 'contact_phone', 'address_line', 'zone_id']);
+            'contact_first_name' => '', 'contact_last_name' => '', 'contact_phone' => 'call me', 'zone_id' => 'nowhere',
+        ]))->assertStatus(422)->assertJsonValidationErrors(['contact_first_name', 'contact_last_name', 'contact_phone', 'zone_id']);
 
         $this->assertSame(0, Order::count());
     }
@@ -121,7 +121,16 @@ class OrderSourceTest extends TestCase
         }
     }
 
-    public function test_the_address_must_be_typed_text_not_a_link_or_digits(): void
+    public function test_the_address_and_map_link_are_optional(): void
+    {
+        $order = $this->webOrder();
+        unset($order['address_line']);
+
+        $res = $this->postJson('/api/orders/web', $order)->assertCreated()->json();
+        $this->assertNull(Order::findOrFail($res['id'])->address_line);
+    }
+
+    public function test_an_address_that_is_given_must_be_typed_text_not_a_link_or_digits(): void
     {
         // Several posts in one test; the per-address brake has its own test.
         $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);

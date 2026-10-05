@@ -222,6 +222,25 @@ class BundleController extends Controller
     }
 
     /** Take it off; the website goes back to the strip of product pictures. */
+    /** Delete a set for good. The products inside it are not touched. */
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        $bundle = Bundle::with('translations')->findOrFail($id);
+        $name = $bundle->nameIn('az');
+        $file = $bundle->image_file;
+
+        DB::transaction(function () use ($bundle) {
+            BundleItem::where('bundle_id', $bundle->id)->delete();
+            BundleTranslation::where('bundle_id', $bundle->id)->delete();
+            $bundle->delete();
+        });
+
+        StoredImage::forget($file);
+        Audit::record($request->user(), 'bundle.delete', 'bundle', $id, ['name' => ['from' => $name, 'to' => null]]);
+
+        return response()->json(['status' => 'ok']);
+    }
+
     public function removePhoto(Request $request, string $id): JsonResponse
     {
         $bundle = Bundle::with(['translations', 'items.product.translations'])->findOrFail($id);

@@ -117,7 +117,7 @@ const OWN = {
     'shop.showAll':'Bütün məhsulları göstər','shop.showCounters':'Bölmələrə qayıt',
     'shop.results':'Axtarış nəticələri','shop.noresults':'Heç nə tapılmadı. Başqa söz yoxlayın.',
     'shop.clear':'Təmizlə',
-    'ui.waWeighed':'ən çox','ui.weighedFlag':'Çəkiyə görə','ui.weighedNote':'Çəkiyə görə satılan məhsullar kuryerdə ölçülür — yekun məbləğ bir az dəyişə bilər.',
+    'ui.waWeighed':'ən çox','ui.weighedFlag':'Çəkiyə görə','ui.weightVaries':'Çəki miqdarı verdiyiniz sifarişlə fərqlənə bilər','ui.kgAmount':'Çəki (kq)','ui.kgShort':'kq','deliv.optional':'məcburi deyil','ui.weighedNote':'Çəkiyə görə satılan məhsullar kuryerdə ölçülür — yekun məbləğ bir az dəyişə bilər.',
     'ui.waTotal':'Təxmini məbləğ','ui.waOutro':'Zəhmət olmasa mövcudluğu və çatdırılma vaxtını təsdiqləyin. Təşəkkürlər!',
         'ui.waDeliv':'Çatdırılma','ui.waAddr':'Ünvan','ui.waMap':'Xəritə',
     'ui.waPlain':'Salam! Məhsullarınız barədə sualım var.'
@@ -233,7 +233,7 @@ const OWN = {
     'shop.showAll':'Показать все товары','shop.showCounters':'Вернуться к разделам',
     'shop.results':'Результаты поиска','shop.noresults':'Ничего не найдено. Попробуйте другое слово.',
     'shop.clear':'Очистить',
-    'ui.waWeighed':'не более','ui.weighedFlag':'На вес','ui.weighedNote':'Товары на вес взвешиваются курьером — итоговая сумма может немного отличаться.',
+    'ui.waWeighed':'не более','ui.weighedFlag':'На вес','ui.weightVaries':'Вес может отличаться от заказанного','ui.kgAmount':'Вес (кг)','ui.kgShort':'кг','deliv.optional':'необязательно','ui.weighedNote':'Товары на вес взвешиваются курьером — итоговая сумма может немного отличаться.',
     'ui.waTotal':'Примерная сумма','ui.waOutro':'Пожалуйста, подтвердите наличие и время доставки. Спасибо!',
         'ui.waDeliv':'Доставка','ui.waAddr':'Адрес','ui.waMap':'Карта',
     'ui.waPlain':'Здравствуйте! У меня вопрос по вашим товарам.'
@@ -349,7 +349,7 @@ const OWN = {
     'shop.showAll':'Show every product','shop.showCounters':'Back to the counters',
     'shop.results':'Search results','shop.noresults':'Nothing found. Try another word.',
     'shop.clear':'Clear',
-    'ui.waWeighed':'at most','ui.weighedFlag':'By weight','ui.weighedNote':'Anything sold by weight is measured by the courier — the final amount may vary slightly.',
+    'ui.waWeighed':'at most','ui.weighedFlag':'By weight','ui.weightVaries':'The weight may differ from what you ordered','ui.kgAmount':'Weight (kg)','ui.kgShort':'kg','deliv.optional':'optional','ui.weighedNote':'Anything sold by weight is measured by the courier — the final amount may vary slightly.',
     'ui.waTotal':'Estimated total','ui.waOutro':'Please confirm availability and delivery time. Thank you!',
         'ui.waDeliv':'Delivery','ui.waAddr':'Address','ui.waMap':'Map',
     'ui.waPlain':'Hello! I have a question about your products.'

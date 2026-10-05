@@ -129,6 +129,8 @@ function adaptProduct (p) {
        has no bundled picture at all — shows the one that was uploaded with
        it. */
     img: p.image_url ?? PHOTOS[`../assets/products/${p.image ?? p.id + '.jpg'}`] ?? null,
+    /* Extra photographs, in order; shown as small pictures under the main one. */
+    gallery: (p.gallery ?? []).map(g => ({ url: g.image_url, thumb: g.thumb_url ?? g.image_url })),
   }
 }
 

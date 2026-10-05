@@ -48,7 +48,7 @@ class OrderService
         return $this->write(null, $input, Order::SOURCE_WEB, [
             'contact_name' => $input['contact_name'],
             'contact_phone' => $input['contact_phone'],
-            'address_line' => $input['address_line'],
+            'address_line' => $input['address_line'] ?? null,
             'address_notes' => $input['address_notes'] ?? null,
             'address_map_link' => $input['map_link'] ?? null,
             'delivery_zone_id' => $input['zone_id'],

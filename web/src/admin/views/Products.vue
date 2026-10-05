@@ -122,6 +122,11 @@ function edited (updated) {
   editing.value = null
 }
 
+function removed (id) {
+  rows.value = rows.value.filter(r => r.id !== id)
+  editing.value = null
+}
+
 function added (product) {
   adding.value = false
   rows.value.unshift(product)
@@ -233,6 +238,6 @@ onMounted(() => {
   </div>
 
   <EditProduct v-if="editing" :product="editing" :categories="categories"
-               @close="editing = null" @saved="edited" />
+               @close="editing = null" @saved="edited" @changed="replaceRow" @deleted="removed" />
   <NewProduct v-if="adding" :categories="categories" @close="adding = false" @created="added" />
 </template>

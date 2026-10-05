@@ -9,7 +9,7 @@ import { useCart } from '../composables/useCart'
 
 const { t, nm } = useI18n()
 const {
-  lines, count, total, open, setQty, remove, whatsapp, weighed, ceiling,
+  lines, count, total, open, setQty, setQtyTo, remove, whatsapp, weighed, ceiling,
   zoneId, address, mapLink, zone, deliveryText, canSend,
   firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode,
 } = useCart()
@@ -60,11 +60,21 @@ const MAPS_URL = mapsUrl()
             <b>{{ nm(l.product) }}</b>
             <span>{{ l.unit }} · {{ l.price }} AZN</span>
             <em>{{ money(l.price * l.qty) }} AZN</em>
+            <small v-if="l.weighed" class="line__w">{{ t('ui.weightVaries') }}</small>
           </div>
           <div class="line__r">
-            <div class="qty">
+            <div class="qty" :class="{ 'qty--kg': l.weighed }">
               <button @click="setQty(l.key, -1)" aria-label="−">−</button>
-              <span>{{ l.qty }}</span>
+              <!-- By the kilo the amount is typed: 0.7, 1.5, 2.25 — whatever
+                   the customer wants. -->
+              <label v-if="l.weighed" class="qty__kg">
+                <input type="text" inputmode="decimal" autocomplete="off"
+                       :value="l.qty" :aria-label="t('ui.kgAmount')"
+                       @change="setQtyTo(l.key, $event.target.value); $event.target.value = l.qty"
+                       @keydown.enter.prevent="$event.target.blur()">
+                <i>{{ t('ui.kgShort') }}</i>
+              </label>
+              <span v-else>{{ l.qty }}</span>
               <button @click="setQty(l.key, 1)" aria-label="+">+</button>
             </div>
             <button class="rm" @click="remove(l.key)">{{ t('ui.remove') }}</button>
@@ -128,13 +138,13 @@ const MAPS_URL = mapsUrl()
           </option>
         </select>
 
-        <label class="deliv__l" for="cart-addr"><span>{{ t('deliv.addr') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
-        <textarea id="cart-addr" class="deliv__in" rows="2" required aria-required="true"
+        <label class="deliv__l" for="cart-addr"><span>{{ t('deliv.addr') }}</span><span class="deliv__opt">{{ t('deliv.optional') }}</span></label>
+        <textarea id="cart-addr" class="deliv__in" rows="2"
                   :placeholder="t('deliv.addrPh')" v-model="address"></textarea>
 
         <!-- The embedded picker goes here once there is a Maps key. -->
         <label class="deliv__l" for="cart-map">
-          {{ t('deliv.map') }}
+          <span>{{ t('deliv.map') }}<span class="deliv__opt"> · {{ t('deliv.optional') }}</span></span>
           <a class="deliv__open" :href="MAPS_URL" target="_blank" rel="noopener">
             <BIcon name="geo-alt" :size="11" /> {{ t('deliv.mapOpen') }}
           </a>
@@ -226,6 +236,15 @@ const MAPS_URL = mapsUrl()
   margin:0 0 10px; font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
   color:var(--ink-3);
 }
+.line__w{ display:block; margin-top:3px; font-size:.7rem; line-height:1.35; color:var(--ink-3); }
+.qty--kg .qty__kg{ display:flex; align-items:baseline; gap:2px; padding:0 2px; }
+.qty--kg .qty__kg input{
+  width:3.6em; text-align:center; border:0; background:transparent; outline:0; padding:0;
+  font:inherit; font-size:.82rem; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink);
+}
+.qty--kg .qty__kg input:focus-visible{ outline:2px solid var(--leaf); outline-offset:2px; border-radius:6px; }
+.qty--kg .qty__kg i{ font-style:normal; font-size:.7rem; color:var(--ink-3); }
+.deliv__opt{ font-weight:400; opacity:.75; }
 .deliv__pair{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .deliv__pair > div{ min-width:0; }
 .deliv__req{ color:var(--brick); font-weight:700; }

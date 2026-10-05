@@ -11,10 +11,36 @@ const { t, nm, alt, dsc, catName, unitOf } = useI18n()
 const variant = ref(null)
 const qty = ref(1)
 
+/* By the kilo the amount is typed, in kilos, as many as the customer wants. */
+const weighed = computed(() => props.product?.unit?.kind === 'kg' && (props.product.unit.qty ?? 1) === 1
+  && !props.product.variants)
+const typed = ref('1')
+watch(qty, v => { typed.value = String(v) })
+function setTyped (raw) {
+  const n = Number(String(raw).trim().replace(',', '.'))
+  if (Number.isFinite(n) && n >= 0.1 && n <= 99) qty.value = Math.round(n * 100) / 100
+  typed.value = String(qty.value)
+}
+function stepQty (dir) {
+  const step = weighed.value ? 0.5 : 1
+  const next = Math.round((qty.value + dir * step) * 100) / 100
+  qty.value = Math.min(99, Math.max(weighed.value ? 0.1 : 1, next))
+}
+
+/* The main photograph and the extras, as one strip to look through. */
+const shown = ref(null)
+const pictures = computed(() => {
+  const p = props.product
+  if (!p) return []
+  return [p.img, ...(p.gallery ?? []).map(g => g.url)].filter(Boolean)
+})
+
 /* Reset the picker each time a different product is opened. */
 watch(() => props.product, p => {
   variant.value = p && p.variants ? 0 : null
   qty.value = 1
+  typed.value = '1'
+  shown.value = null
 })
 
 const chosen = computed(() =>
@@ -38,9 +64,17 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
     <div v-if="product" class="modal" role="dialog" aria-modal="true" @click.self="emit('close')">
       <div class="modal__box">
         <div class="modal__img" ref="img">
-          <img :src="product.img" :alt="nm(product)">
+          <img :src="shown ?? product.img" :alt="nm(product)">
           <button class="x modal__x" aria-label="Close" @click="emit('close')">
             <BIcon name="x-lg" :size="14" />
+          </button>
+        </div>
+
+        <div v-if="pictures.length > 1" class="modal__thumbs">
+          <button v-for="(src, i) in pictures" :key="src" type="button"
+                  :class="{ on: (shown ?? product.img) === src }" :aria-label="`${nm(product)} ${i + 1}`"
+                  @click="shown = src">
+            <img :src="src" alt="" loading="lazy">
           </button>
         </div>
 
@@ -65,15 +99,22 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
           </dl>
 
           <div class="modal__buy">
-            <div class="qty">
-              <button @click="qty = Math.max(1, qty - 1)" aria-label="−">−</button>
-              <span>{{ qty }}</span>
-              <button @click="qty++" aria-label="+">+</button>
+            <div class="qty" :class="{ 'qty--kg': weighed }">
+              <button @click="stepQty(-1)" aria-label="−">−</button>
+              <label v-if="weighed" class="qty__kg">
+                <input type="text" inputmode="decimal" autocomplete="off" v-model="typed"
+                       :aria-label="t('ui.kgAmount')" @change="setTyped(typed)"
+                       @keydown.enter.prevent="$event.target.blur()">
+                <i>{{ t('ui.kgShort') }}</i>
+              </label>
+              <span v-else>{{ qty }}</span>
+              <button @click="stepQty(1)" aria-label="+">+</button>
             </div>
             <button class="btn" @click="confirm">
               <span>{{ t('ui.add') }} · {{ money(price * qty) }} AZN</span>
             </button>
           </div>
+          <p v-if="weighed" class="modal__vary">{{ t('ui.weightVaries') }}</p>
         </div>
       </div>
     </div>
@@ -109,6 +150,14 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
 }
 .variants button.on{ background:var(--forest); border-color:var(--forest); color:var(--paper); }
 .modal__buy{ display:flex; gap:10px; align-items:center; margin-top:auto; padding-top:26px; }
+.modal__vary{ margin:12px 0 0; font-size:.78rem; line-height:1.45; color:var(--ink-3); }
+.modal__thumbs{ display:flex; gap:8px; padding:10px 20px 0; overflow-x:auto; }
+.modal__thumbs button{ flex:0 0 auto; width:56px; height:56px; padding:0; border-radius:10px; overflow:hidden; border:2px solid transparent; opacity:.75; transition:opacity .2s var(--ease), border-color .2s var(--ease); }
+.modal__thumbs button.on{ border-color:var(--forest); opacity:1; }
+.modal__thumbs img{ width:100%; height:100%; object-fit:cover; display:block; }
+.modal__buy .qty--kg .qty__kg{ display:flex; align-items:baseline; gap:2px; padding:0 2px; }
+.modal__buy .qty--kg .qty__kg input{ width:3.8em; text-align:center; border:0; background:transparent; outline:0; padding:0; font:inherit; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); }
+.modal__buy .qty--kg .qty__kg i{ font-style:normal; font-size:.78rem; color:var(--ink-3); }
 .modal__buy .qty{ height:48px; padding:0 4px; }
 .modal__buy .qty button{ width:34px; height:34px; }
 .modal__buy .btn{ flex:1; justify-content:center; white-space:nowrap; padding-inline:16px; font-size:.82rem; }

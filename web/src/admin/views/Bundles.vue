@@ -65,6 +65,11 @@ function saveDiscount (b) {
   patch(b, { discount_percent: Math.round(value) }, `Endirim ${Math.round(value)}%`)
 }
 
+function removed (id) {
+  rows.value = rows.value.filter(b => b.id !== id)
+  editing.value = null
+}
+
 function saved (bundle) {
   const card = rows.value.find(b => b.id === bundle.id)
   if (card) Object.assign(card, bundle)
@@ -151,5 +156,5 @@ onMounted(load)
   </div>
 
   <BundleForm v-if="editing" :bundle="editing === 'new' ? null : editing"
-              @close="editing = null" @saved="saved" />
+              @close="editing = null" @saved="saved" @deleted="removed" />
 </template>
