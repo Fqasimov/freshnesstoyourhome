@@ -136,6 +136,11 @@ class OrderController extends Controller
             'map_link' => [
                 'sometimes', 'nullable', 'string', 'max:500',
                 'regex:#^https://(maps\.app\.goo\.gl/[A-Za-z0-9_-]+|goo\.gl/maps/[A-Za-z0-9_-]+|(www\.)?google\.(com|az)/maps(/|\?)|maps\.google\.(com|az)/(maps)?(/|\?))#i',
+                // A browser resolves `/maps/../url?q=…` to Google's redirector
+                // before it fetches anything, which walks straight out of the
+                // allow-list above. No dot segments, encoded or not, and no
+                // backslashes or spaces, which some browsers read as `/`.
+                'not_regex:#(/|%2f)(\.|%2e){1,2}(/|%2f|\?|\#|$)|\\\\|%5c|\s#i',
             ],
             'delivery_date' => [
                 'sometimes', 'nullable', 'date_format:Y-m-d',

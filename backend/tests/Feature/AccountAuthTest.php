@@ -238,7 +238,7 @@ class AccountAuthTest extends TestCase
         $this->provider('google', 'web-client.apps.googleusercontent.com');
         $token = $this->idToken([
             'iss' => 'https://accounts.google.com', 'aud' => 'web-client.apps.googleusercontent.com',
-            'sub' => '1234567890', 'email' => 'g@example.com', 'email_verified' => true, 'name' => 'Faiq Fərid',
+            'sub' => '1234567890', 'email' => 'g@gmail.com', 'email_verified' => true, 'name' => 'Faiq Fərid',
         ]);
 
         $this->postJson('/api/auth/social/google', ['id_token' => $token])->assertCreated()

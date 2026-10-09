@@ -5,6 +5,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { api, type BasketLine, type Quote } from './api'
 import { useLang } from './i18n'
+import { useAuth } from './auth'
 import { round3 } from './money'
 
 /**
@@ -56,6 +57,22 @@ export function CartProvider ({ children }: PropsWithChildren) {
       setHydrated(true)
     })()
   }, [])
+
+  /* One person's basket is not the next person's. When the signed-in account
+     changes — signing out, or someone else signing in on a shared phone — the
+     basket and its saved copy are emptied. The first value is only noted:
+     opening the app signed in must not lose the basket. */
+  const { user } = useAuth()
+  const owner = useRef<string | null | undefined>(undefined)
+  useEffect(() => {
+    const id = user?.id ?? null
+    if (owner.current !== undefined && owner.current !== null && owner.current !== id) {
+      setLines([])
+      setQuote(null)
+      AsyncStorage.removeItem(CART_KEY).catch(() => {})
+    }
+    if (id !== null || owner.current !== undefined) owner.current = id
+  }, [user?.id])
 
   useEffect(() => {
     if (!hydrated) return

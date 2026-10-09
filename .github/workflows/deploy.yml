@@ -29,7 +29,9 @@ permissions:
 
 jobs:
   deploy:
-    if: vars.DEPLOY_ENABLED == 'true'
+    # Only from the release branch. "Run workflow" lets anyone with write
+    # access pick any branch; that must not be a way to ship unreviewed code.
+    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/claude/photo-analysis-bgp25f'
     runs-on: ubuntu-latest
     # The first run sends ~13,800 files (vendor/) one at a time over FTP;
     # later runs send only what changed and take a few minutes.

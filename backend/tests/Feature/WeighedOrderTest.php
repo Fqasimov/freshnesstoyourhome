@@ -202,6 +202,13 @@ class WeighedOrderTest extends TestCase
             $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => $status])->assertOk();
         }
 
+        // Out of a courier's reach once closed; refused for an admin too.
+        $this->postJson("/api/staff/orders/{$order->id}/weights", [
+            'weights' => [(string) $item->id => 5.0],
+        ])->assertNotFound();
+
+        $this->signInAs(User::factory()->admin()->create()->fresh());
+
         $this->postJson("/api/staff/orders/{$order->id}/weights", [
             'weights' => [(string) $item->id => 5.0],
         ])->assertStatus(422);

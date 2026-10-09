@@ -39,6 +39,9 @@ class StoreOrderRequest extends FormRequest
                 // rounding do something interesting.
                 'min:0.001',
                 'max:'.config('freshness.order.max_qty_per_line'),
+                // Priced at the precision it is stored at, so the line on the
+                // order and the line that was charged are the same number.
+                'decimal:0,3',
             ],
 
             // The shop takes orders a day ahead, so today is not offered.
@@ -47,7 +50,9 @@ class StoreOrderRequest extends FormRequest
                 'after_or_equal:'.now()->addDays($lead)->toDateString(),
                 'before_or_equal:'.now()->addDays($maxAhead)->toDateString(),
             ],
-            'delivery_slot' => ['sometimes', 'nullable', 'string', 'max:20'],
+            // A time or a range of times ("14:00", "14:00-16:00"); not a place
+            // for free text that staff then read as an instruction.
+            'delivery_slot' => ['sometimes', 'nullable', 'string', 'max:20', 'regex:/^\d{1,2}:\d{2}(\s?[-–]\s?\d{1,2}:\d{2})?$/u'],
 
             // Nothing is charged online. Both of these are settled at the door,
             // which is what keeps this system out of PCI scope entirely.

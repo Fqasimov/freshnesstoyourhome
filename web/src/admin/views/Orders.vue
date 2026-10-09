@@ -119,10 +119,20 @@ defineExpose({ load })
    Google's map hosts — checked here as well as when it was saved, so a row
    written by an older rule, or by anything else, cannot become any other link. */
 const MAP_HOSTS = new Set(['www.google.com', 'google.com', 'www.google.az', 'google.az', 'maps.google.com', 'maps.google.az', 'maps.app.goo.gl', 'goo.gl'])
+/* The path too, read after the browser has resolved any `..` in it: a link
+   that starts at /maps and climbs out ends at Google's redirector, which is
+   a way to anywhere. */
+function mapPath (u) {
+  const p = u.pathname
+  if (u.hostname === 'maps.app.goo.gl') return /^\/[A-Za-z0-9_-]+$/.test(p)
+  if (u.hostname === 'goo.gl') return /^\/maps\/[A-Za-z0-9_-]+$/.test(p)
+  if (u.hostname.startsWith('maps.')) return p === '/' || p === '/maps' || p.startsWith('/maps/')
+  return p === '/maps' || p.startsWith('/maps/')
+}
 function safeMap (value) {
   try {
     const u = new URL(String(value))
-    return u.protocol === 'https:' && !u.username && !u.password && MAP_HOSTS.has(u.hostname) ? u.href : ''
+    return u.protocol === 'https:' && !u.username && !u.password && MAP_HOSTS.has(u.hostname) && mapPath(u) ? u.href : ''
   } catch {
     return ''
   }

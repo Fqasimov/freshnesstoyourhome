@@ -100,6 +100,9 @@ class Product extends Model
 
     public function scopeOrderable(Builder $query): Builder
     {
-        return $query->where('is_active', true)->where('in_stock', true);
+        // A category switched off in the panel takes its products off sale
+        // with it, not merely off the shelf.
+        return $query->where('is_active', true)->where('in_stock', true)
+            ->whereHas('category', fn (Builder $q) => $q->where('is_active', true));
     }
 }

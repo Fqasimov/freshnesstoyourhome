@@ -302,6 +302,21 @@ class OrderService
                 ));
             }
 
+            // The tolerance runs both ways. Less than the estimate by more than
+            // it is a real possibility — a smaller fish — but it is also how a
+            // courier's token would bill 5 kg of salmon at a few qəpik. So
+            // only the admin, whose session needs the second factor, may
+            // record a weight that far under.
+            $floor = $weighedEstimate - (int) floor($weighedEstimate * $tolerance / 100);
+
+            if ($weighedFinal < $floor && ! $actor->isAdmin()) {
+                throw new OrderRejected(sprintf(
+                    'The weighed goods come to %s, less than the %s the order allows. Weigh again, or ask the shop to record it.',
+                    Money::format($weighedFinal),
+                    Money::format($floor),
+                ));
+            }
+
             $finalTotal = $subtotal + $fresh->delivery_fee_minor - $fresh->discount_minor;
 
             $fresh->forceFill([

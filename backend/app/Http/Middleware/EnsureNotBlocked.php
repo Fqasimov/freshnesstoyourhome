@@ -21,6 +21,7 @@ class EnsureNotBlocked
 
         if ($user !== null && ($user->isBlocked() || $user->anonymised_at !== null)) {
             $user->tokens()->delete();
+            $user->pushTokens()->delete();
 
             return response()->json(['message' => 'This account is no longer active.'], 401);
         }

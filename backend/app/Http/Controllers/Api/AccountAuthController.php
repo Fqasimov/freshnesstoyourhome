@@ -141,17 +141,31 @@ class AccountAuthController extends Controller
             }
 
             // Same address as an existing account. Joined silently only when
-            // the provider owns the address itself (Apple, a Gmail account, a
-            // Google Workspace domain): for any other address, Google's
-            // "verified" only means it was verified once, and a mailbox that
-            // has since changed hands would open the account that uses it now.
-            // Staff accounts are never joined this way.
+            // the provider owns the address itself (an Apple relay or iCloud
+            // address, a Gmail account, a Google Workspace domain): for any
+            // other address "verified" only means it was verified once, and a
+            // mailbox that has since changed hands would open the account that
+            // uses it now. Staff accounts are never joined this way.
             $existing = User::findByEmail($claims['email']);
 
             if ($existing !== null && (! $claims['authoritative'] || $existing->role !== User::ROLE_CUSTOMER)) {
                 return response()->json([
                     'message' => 'An account with this email already exists. Sign in with your password or an emailed code first.',
                     'code' => 'account_exists',
+                ], 409);
+            }
+
+            // Nor is a new account opened on such an address. Whoever held the
+            // provider account could otherwise claim the address first, and
+            // when its real owner later signed up, set a password or asked for
+            // a code, the provider link would still be on the account — a
+            // standing way back in. They sign up with an emailed code instead;
+            // the provider can be used once that account exists and its link
+            // is made from inside it.
+            if ($existing === null && ! $claims['authoritative']) {
+                return response()->json([
+                    'message' => 'Sign up with your email first. You can use this sign-in option afterwards.',
+                    'code' => 'email_signup_required',
                 ], 409);
             }
 

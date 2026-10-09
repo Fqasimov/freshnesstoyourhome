@@ -251,6 +251,62 @@ erase who moved or weighed an order.
   the `bundles` row and is applied per unit (`PricingService::bundleUnitMinor`).
   A switched-off set is refused like an unavailable product.
 
+## The mobile app
+
+Reviewed in October 2026 together with the API it calls. What holds now:
+
+- **The session token is in the Keychain / Keystore**, readable only while the
+  phone is unlocked and never copied into a backup or onto another device
+  (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`). Tokens saved by older builds are moved to
+  that setting the first time they are read.
+- **Ids from the server or a notification are encoded** before they go into a
+  URL path, and a notification opens an order only when its id is a UUID, so a
+  crafted `../` cannot point a request at another endpoint.
+- **The basket belongs to an account.** Signing in as somebody else on the same
+  phone empties it.
+- **Notifications stop with the session.** Signing out everywhere, a password
+  reset, blocking an account, or a blocked account's next request all delete the
+  phone's push tokens, so a lost phone stops receiving order updates.
+- **Google and Apple sign-in** open or join an account only for an address the
+  provider owns: Gmail, a Google Workspace domain, an Apple relay or iCloud
+  address. For any other address the person signs up by emailed code first —
+  otherwise whoever once held a Google account on that address could claim the
+  account before its owner and keep a way back in. A password reset removes any
+  Google or Apple link. These sign-ins have their own rate limit; they used to
+  share the password limiter's empty-address bucket, where ten requests from
+  anywhere would have locked everybody out.
+- **Every limiter counts an IPv6 network as one source** (its /64), and the
+  email keys in limiter counters are keyed hashes, not plain sha1.
+- **A pending sign-up in the cache is encrypted**, so the cache table is not a
+  list of names and birthdays.
+- **Couriers reach open orders only.** A delivered or cancelled order answers
+  404 to a courier; replies to a courier's status change or weighing carry no
+  contact details; and a courier cannot weigh a line far below what was
+  ordered (the same tolerance that caps it above). Admins are not limited.
+- **Order fields have a shape**: at most three decimals of quantity, a time
+  range for the slot, map links without dot segments (a `/maps/../url` link
+  resolves to Google's redirector), and nothing from a hidden category.
+- **Unknown API paths answer like a missing record**, so routes cannot be
+  enumerated by their status codes.
+- **Builds and over-the-air updates run only from the deploy branch**, even when
+  the workflow is started by hand from another one.
+
+Still open on the app side:
+
+- **Over-the-air updates are not code-signed (medium).** Anyone holding the
+  Expo account or the `EXPO_TOKEN` secret can push JavaScript to every
+  installed app. Turn on `expo-updates` code signing (`npx expo-updates
+  codesigning:generate`, keep the private key off GitHub), put `EXPO_TOKEN` in a
+  GitHub Environment that needs approval, and protect the deploy branch. Code
+  signing is a native change: it needs a new store build, and only reaches
+  phones that install it.
+- **`decode-uri-component` 0.2.x inside expo-router** has a published
+  denial-of-service advisory (low: a malformed link can crash the screen it
+  opens). It is fixed by the next Expo SDK upgrade; the other advisories
+  `npm audit` reports are in build-time tools, not in the app.
+- **Social sign-in has no nonce (low).** A Google or Apple token stolen from
+  the phone could be replayed against the API until it expires (an hour).
+
 ## Known gaps, found in the October review and not closed in code
 
 Each of these is a decision or a change of behaviour for the shop, not a quiet

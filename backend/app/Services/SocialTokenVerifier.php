@@ -32,6 +32,12 @@ class SocialTokenVerifier
         ],
     ];
 
+    /**
+     * Addresses Apple hosts itself, plus Gmail: Google never hands a Gmail
+     * address to someone new, so one Apple verified stays with its owner.
+     */
+    private const APPLE_DOMAINS = ['privaterelay.appleid.com', 'icloud.com', 'me.com', 'mac.com', 'gmail.com'];
+
     public function enabled(string $provider): bool
     {
         return $this->audiences($provider) !== [];
@@ -71,13 +77,24 @@ class SocialTokenVerifier
             'email' => $email,
             'email_verified' => $verified,
             // Whether the provider owns the mailbox, not merely checked it
-            // once: Apple for the addresses it issues or verifies, Google
-            // for Gmail and for Workspace domains (the `hd` claim).
-            'authoritative' => $verified && ($provider === 'apple'
-                || ($email !== null && str_ends_with(strtolower($email), '@gmail.com'))
-                || is_string($claims['hd'] ?? null)),
+            // once. Apple: its relay addresses, its own domains and Gmail — for
+            // anything else it, like Google, verified the address at some
+            // point, and a mailbox that has since changed hands would open
+            // the account that uses it now. Google: Gmail, and Workspace
+            // domains (the `hd` claim).
+            'authoritative' => $verified && $email !== null && match ($provider) {
+                'apple' => filter_var($claims['is_private_email'] ?? false, FILTER_VALIDATE_BOOLEAN)
+                    || in_array(self::domain($email), self::APPLE_DOMAINS, true),
+                'google' => self::domain($email) === 'gmail.com' || is_string($claims['hd'] ?? null),
+                default => false,
+            },
             'name' => is_string($claims['name'] ?? null) ? $claims['name'] : null,
         ];
+    }
+
+    private static function domain(string $email): string
+    {
+        return strtolower(substr(strrchr($email, '@') ?: '', 1));
     }
 
     private function decode(string $provider, string $url, string $idToken): ?array

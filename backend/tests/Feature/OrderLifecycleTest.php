@@ -55,6 +55,13 @@ class OrderLifecycleTest extends TestCase
             $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => $status])->assertOk();
         }
 
+        // A courier no longer reaches a closed order at all; an admin does,
+        // and the lifecycle still refuses to move it.
+        $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => 'cancelled'])
+            ->assertNotFound();
+
+        $this->signInAs(User::factory()->admin()->create()->fresh());
+
         foreach (['preparing', 'cancelled', 'placed'] as $status) {
             $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => $status])
                 ->assertStatus(422);

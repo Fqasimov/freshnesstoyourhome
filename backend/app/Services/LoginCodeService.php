@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Mail\LoginCodeMail;
 use App\Models\LoginCode;
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use App\Support\BlindIndex;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -207,11 +208,11 @@ class LoginCodeService
         $budgets = $panel
             ? [
                 ['otp:panel:email:'.$emailHash, (int) $limits['per_email_hourly']],
-                ['otp:panel:ip:'.sha1((string) $ip), (int) $limits['per_ip_hourly']],
+                ['otp:panel:ip:'.AppServiceProvider::sourceKey($ip), (int) $limits['per_ip_hourly']],
             ]
             : [
                 ['otp:email:'.$emailHash, (int) $limits['per_email_hourly']],
-                ['otp:ip:'.sha1((string) $ip), (int) $limits['per_ip_hourly']],
+                ['otp:ip:'.AppServiceProvider::sourceKey($ip), (int) $limits['per_ip_hourly']],
                 ['otp:global', (int) $limits['global_hourly']],
             ];
 

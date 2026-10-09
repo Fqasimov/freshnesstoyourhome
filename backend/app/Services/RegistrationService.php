@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Support\BlindIndex;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -45,7 +47,10 @@ class RegistrationService
         $email = BlindIndex::normaliseEmail($email);
         $ticket = Str::random(48);
 
-        Cache::put($this->key($ticket), [
+        // Encrypted, like the columns the form ends up in: the cache is a
+        // database table, and a copy of it should not be a list of who is
+        // signing up, with their names and birthdays.
+        Cache::put($this->key($ticket), Crypt::encrypt([
             'purpose' => $purpose,
             'email' => $email,
             'name' => $form['name'] ?? null,
@@ -53,7 +58,7 @@ class RegistrationService
             // Hashed now, so the plain password never rests anywhere.
             'password' => Hash::make($form['password']),
             'locale' => $form['locale'] ?? 'az',
-        ], now()->addMinutes((int) config('freshness.auth.code_ttl_minutes')));
+        ]), now()->addMinutes((int) config('freshness.auth.code_ttl_minutes')));
 
         // Throttled inside; a refusal is not reported, for the same reason the
         // plain sign-in does not report one.
@@ -70,7 +75,7 @@ class RegistrationService
     public function confirm(string $ticket, string $email, string $code): ?array
     {
         $key = $this->key($ticket);
-        $pending = Cache::get($key);
+        $pending = $this->pending($key);
 
         if (! is_array($pending) || ! hash_equals($pending['email'], BlindIndex::normaliseEmail($email))) {
             return null;
@@ -123,8 +128,17 @@ class RegistrationService
             $user->save();
 
             if (! $created) {
-                // A new password ends every session the old one opened.
+                // A new password ends every session the old one opened — and
+                // the order notifications going to those phones with them.
                 $user->tokens()->delete();
+                $user->pushTokens()->delete();
+
+                // And any Google or Apple link with them. Proving the mailbox
+                // is what makes this the owner; a link made before that could
+                // be someone else's, set up while they held the address, and
+                // would stay a way in that no password change closes. A Gmail
+                // or Apple address links itself again on the next sign-in.
+                $user->forceFill(['google_id_hash' => null, 'apple_id_hash' => null])->save();
             }
 
             return ['user' => $user, 'created' => $created];
@@ -154,6 +168,24 @@ class RegistrationService
         $user->forceFill(['last_login_at' => now()])->save();
 
         return $user;
+    }
+
+    /** The pending form, or null when it is missing, expired or unreadable. */
+    private function pending(string $key): ?array
+    {
+        $stored = Cache::get($key);
+
+        if (! is_string($stored)) {
+            return null;
+        }
+
+        try {
+            $pending = Crypt::decrypt($stored);
+        } catch (DecryptException) {
+            return null;
+        }
+
+        return is_array($pending) ? $pending : null;
     }
 
     private function key(string $ticket): string

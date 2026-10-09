@@ -46,7 +46,8 @@ export function SocialButtons ({ onError }: { onError: (msg: string | null) => v
         ? t('social.off')
         // An account already uses this address: the owner signs in the way
         // they did before, so a mailbox that changed hands opens nothing.
-        : err?.status === 409 ? t('social.exists')
+        : err?.status === 409
+          ? t(err.payload?.code === 'email_signup_required' ? 'social.signup' : 'social.exists')
         : err?.isOffline ? t('err.offline') : t('err.generic'))
     } finally {
       setBusy(null)

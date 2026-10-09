@@ -83,7 +83,7 @@ Route::prefix('auth')->group(function () {
         ->middleware('throttle:password-login');
     Route::post('social/{provider}', [AccountAuthController::class, 'social'])
         ->whereIn('provider', ['google', 'apple'])
-        ->middleware('throttle:password-login');
+        ->middleware('throttle:social-login');
 
     // The admin panel's own door. Only addresses in ADMIN_EMAILS get a code
     // or a token here, and the token it issues is the only kind the admin

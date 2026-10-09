@@ -66,6 +66,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'Something went wrong.'], 500);
             }
 
+            // A route that is not there, a route that is there but not for
+            // you, a record that belongs to somebody else, a wrong verb: all
+            // the same answer, so none of them maps the API for a stranger.
+            if (in_array($response->getStatusCode(), [404, 405], true)) {
+                return response()->json(['message' => 'Not found.'], 404);
+            }
+
             return $response;
         });
     })->create();
