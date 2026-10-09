@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import { glideTo } from './composables/glide'
+import { LANDING } from './data/landing'
 
 /**
  * Two pages, at real addresses: freshnesstoyourhome.az/ and /kataloq.
@@ -32,6 +33,12 @@ export const router = createRouter({
       // card, and somebody who only reads the front page should not download it.
       component: () => import('./views/CatalogueView.vue'),
     },
+    // One page per search phrase worth having a page for — see data/landing.js.
+    ...LANDING.map(p => ({
+      path: p.path,
+      name: p.name,
+      component: () => import('./views/LandingView.vue'),
+    })),
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 
@@ -63,8 +70,21 @@ const PAGES = {
     desc: 'Freshness To Your Home kataloqu: təzə balıq, hisə verilmiş skumbriya və skumbriya filesi, dəniz məhsulları, kürü, pendir, ət və şirniyyat. Qiymətlər AZN ilə, Bakıya çatdırılma.',
   },
 }
+for (const p of LANDING) PAGES[p.name] = { title: p.title, desc: p.desc }
+
+/* Each page's own address as canonical, and in the share cards, so the search
+   engine files it under that address rather than under the front page. */
+const setMeta = (sel, attr, value) => document.querySelector(sel)?.setAttribute(attr, value)
 router.afterEach(to => {
   const page = PAGES[to.name]
-  document.title = page?.title ?? HOME_TITLE
-  metaDesc?.setAttribute('content', page?.desc ?? HOME_DESC)
+  const title = page?.title ?? HOME_TITLE
+  const desc = page?.desc ?? HOME_DESC
+  document.title = title
+  metaDesc?.setAttribute('content', desc)
+  if (SINGLE) return
+  const url = location.origin + (to.path === '/' ? '/' : to.path)
+  setMeta('link[rel="canonical"]', 'href', url)
+  setMeta('meta[property="og:url"]', 'content', url)
+  setMeta('meta[property="og:title"]', 'content', title)
+  setMeta('meta[property="og:description"]', 'content', desc)
 })
