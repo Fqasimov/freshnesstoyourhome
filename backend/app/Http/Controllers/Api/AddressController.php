@@ -98,7 +98,7 @@ class AddressController extends Controller
                `maps.app.goo.gl@evil.test` would pass as a prefix. */
             'map_link' => [
                 'sometimes', 'nullable', 'string', 'max:500',
-                'regex:#^https://(maps\.app\.goo\.gl/|goo\.gl/maps|maps\.google\.(com|az)/|(www\.)?google\.(com|az)/maps)#i',
+                'regex:#^https://(maps\.app\.goo\.gl/[A-Za-z0-9_-]+|goo\.gl/maps/[A-Za-z0-9_-]+|(www\.)?google\.(com|az)/maps(/|\?)|maps\.google\.(com|az)/(maps)?(/|\?))#i',
             ],
             'lat' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
             'lng' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],

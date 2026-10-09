@@ -124,10 +124,10 @@ class OrderController extends Controller
             'zone_id' => ['required', 'string', Rule::exists('delivery_zones', 'id')->where('is_active', true)],
             // First name and surname, both required, letters only (plus space,
             // hyphen, apostrophe and full stop): no digits, links or markup.
-            'contact_first_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L}\s'’.-]*$/u"],
-            'contact_last_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L}\s'’.-]*$/u"],
+            'contact_first_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L} '’.-]*\z/u"],
+            'contact_last_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L} '’.-]*\z/u"],
             // Digits, spaces, dashes, brackets and an optional leading +.
-            'contact_phone' => ['required', 'string', 'regex:/^\+?[0-9 ()-]{7,20}$/'],
+            'contact_phone' => ['required', 'string', 'regex:/^\+?[0-9 ()-]{7,20}\z/'],
             // Optional: the shop phones for the address if it is missing. When it
             // is given it is plain typed text — a link or a string of numbers
             // is not an address (the map link has its own field).
@@ -135,7 +135,7 @@ class OrderController extends Controller
             'address_notes' => ['sometimes', 'nullable', 'string', 'max:200'],
             'map_link' => [
                 'sometimes', 'nullable', 'string', 'max:500',
-                'regex:#^https://(maps\.app\.goo\.gl/|goo\.gl/maps|maps\.google\.(com|az)/|(www\.)?google\.(com|az)/maps)#i',
+                'regex:#^https://(maps\.app\.goo\.gl/[A-Za-z0-9_-]+|goo\.gl/maps/[A-Za-z0-9_-]+|(www\.)?google\.(com|az)/maps(/|\?)|maps\.google\.(com|az)/(maps)?(/|\?))#i',
             ],
             'delivery_date' => [
                 'sometimes', 'nullable', 'date_format:Y-m-d',

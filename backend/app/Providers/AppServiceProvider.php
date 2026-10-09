@@ -95,10 +95,18 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         // Website orders need no account, so the only brake is the source.
-        RateLimiter::for('web-order', fn (Request $r) => [
-            Limit::perMinute(3)->by($r->ip()),
-            Limit::perDay(30)->by($r->ip()),
-        ]);
+        // The source is an IPv4 address or, for IPv6, the /64 it belongs to:
+        // a single home connection is handed 2^64 addresses, and counting each
+        // one separately would be no limit at all. A phone number is a second
+        // key — one household does not place more than a handful in a day, and
+        // it stops one number being used to make the shop ring a stranger.
+        RateLimiter::for('web-order', fn (Request $r) => array_values(array_filter([
+            Limit::perMinute(3)->by(self::sourceKey($r->ip())),
+            Limit::perDay(30)->by(self::sourceKey($r->ip())),
+            strlen(preg_replace('/\D+/', '', (string) $r->input('contact_phone'))) >= 7
+                ? Limit::perDay(6)->by('phone:'.sha1(preg_replace('/\D+/', '', (string) $r->input('contact_phone'))))
+                : null,
+        ])));
 
         RateLimiter::for('register', fn (Request $r) => [
             Limit::perMinute(10)->by($r->ip()),
@@ -152,6 +160,20 @@ class AppServiceProvider extends ServiceProvider
 
         // Laravel's default for everything else.
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(60)->by($r->user()?->id ?: $r->ip()));
+    }
+
+    /** The address a limiter counts: IPv4 as it is, IPv6 reduced to its /64. */
+    public static function sourceKey(?string $ip): string
+    {
+        $ip = (string) $ip;
+
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $packed = inet_pton($ip);
+
+            return $packed === false ? $ip : bin2hex(substr($packed, 0, 8)).'::/64';
+        }
+
+        return $ip;
     }
 
     /**

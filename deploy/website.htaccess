@@ -22,7 +22,7 @@ Options -Indexes -MultiViews
   # Nothing from a code checkout belongs on a website, even by accident.
   RewriteRule (^|/)(vendor|node_modules|storage|bootstrap|database|tests)(/|$) - [F,L,NC]
   RewriteRule (^|/)(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml)$ - [F,L,NC]
-  RewriteRule \.(env|ini|log|sql|sqlite|bak|old|orig|swp|dist|sh|ya?ml)$ - [F,L,NC]
+  RewriteRule \.(env|ini|log|sql|sqlite|bak|old|orig|swp|dist|sh|ya?ml|zip|tar|t?gz|7z|rar|map)$ - [F,L,NC]
 
   # The shop's pages (/, /kataloq) are one app: any path that is not a real
   # file or folder is answered by index.html, and the app shows the page.

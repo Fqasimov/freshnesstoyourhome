@@ -115,6 +115,18 @@ onUnmounted(() => {
   document.removeEventListener('visibilitychange', tick)
 })
 defineExpose({ load })
+/* The customer's map link is shown as a link only if it is https and on one of
+   Google's map hosts — checked here as well as when it was saved, so a row
+   written by an older rule, or by anything else, cannot become any other link. */
+const MAP_HOSTS = new Set(['www.google.com', 'google.com', 'www.google.az', 'google.az', 'maps.google.com', 'maps.google.az', 'maps.app.goo.gl', 'goo.gl'])
+function safeMap (value) {
+  try {
+    const u = new URL(String(value))
+    return u.protocol === 'https:' && !u.username && !u.password && MAP_HOSTS.has(u.hostname) ? u.href : ''
+  } catch {
+    return ''
+  }
+}
 </script>
 
 <template>
@@ -193,7 +205,8 @@ defineExpose({ load })
              noreferrer" keeps the panel out of the opened tab regardless. -->
         <dt v-if="open.address_map_link">Xəritə</dt>
         <dd v-if="open.address_map_link">
-          <a :href="open.address_map_link" target="_blank" rel="noopener noreferrer">Xəritədə aç</a>
+          <a v-if="safeMap(open.address_map_link)" :href="safeMap(open.address_map_link)" target="_blank" rel="noopener noreferrer">Xəritədə aç</a>
+          <span v-else class="a-muted">(link göstərilmir)</span>
         </dd>
         <dt>Çatdırılma</dt><dd>{{ open.delivery_date }} · {{ open.delivery_slot }}</dd>
         <dt>Ödəniş</dt><dd>{{ open.payment_method }}</dd>

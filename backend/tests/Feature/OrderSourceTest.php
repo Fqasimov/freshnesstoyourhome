@@ -193,6 +193,10 @@ class OrderSourceTest extends TestCase
 
         foreach ([
             'https://www.google.com/url?q=https://evil.test',
+            'https://maps.google.com/url?q=https://evil.test',
+            'https://www.google.com/mapsevil',
+            'https://goo.gl/maps',
+            'https://goo.gl/mapsXYZ',
             'https://google.com.evil.test/maps',
             'https://www.google.com@evil.test/maps',
             'http://www.google.com/maps?q=1,1',
@@ -201,5 +205,39 @@ class OrderSourceTest extends TestCase
             $this->postJson('/api/orders/web', $this->webOrder(['map_link' => $bad]))
                 ->assertStatus(422)->assertJsonValidationErrors(['map_link']);
         }
+    }
+
+    public function test_a_phone_number_or_name_with_a_line_break_is_refused(): void
+    {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+
+        $this->postJson('/api/orders/web', $this->webOrder(['contact_phone' => "+99450\n1112233"]))
+            ->assertStatus(422)->assertJsonValidationErrors(['contact_phone']);
+        $this->postJson('/api/orders/web', $this->webOrder(['contact_first_name' => "Aysel\nMəmmədova"]))
+            ->assertStatus(422)->assertJsonValidationErrors(['contact_first_name']);
+    }
+
+    public function test_one_phone_number_cannot_be_used_for_more_than_a_few_orders_a_day(): void
+    {
+        // Different sources, same number: the per-source limit never trips.
+        $statuses = [];
+        for ($i = 1; $i <= 7; $i++) {
+            $statuses[] = $this->withServerVariables(['REMOTE_ADDR' => "203.0.113.$i"])
+                ->postJson('/api/orders/web', $this->webOrder())->status();
+        }
+
+        $this->assertSame(array_fill(0, 6, 201), array_slice($statuses, 0, 6));
+        $this->assertSame(429, $statuses[6]);
+    }
+
+    public function test_an_ipv6_source_is_counted_by_its_slash_64(): void
+    {
+        $a = \App\Providers\AppServiceProvider::sourceKey('2001:db8:1:2:aaaa:bbbb:cccc:dddd');
+        $b = \App\Providers\AppServiceProvider::sourceKey('2001:db8:1:2:1111:2222:3333:4444');
+        $c = \App\Providers\AppServiceProvider::sourceKey('2001:db8:1:3::1');
+
+        $this->assertSame($a, $b);
+        $this->assertNotSame($a, $c);
+        $this->assertSame('203.0.113.9', \App\Providers\AppServiceProvider::sourceKey('203.0.113.9'));
     }
 }

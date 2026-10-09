@@ -5,6 +5,14 @@ Options -Indexes -MultiViews
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # HTTPS only, as for the site itself: this folder is not covered by the
+    # site's own rules, and a token or a code sent over http is readable on
+    # the way. /.well-known stays reachable for certificate renewal.
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteCond %{REQUEST_URI} !/\.well-known/
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
     # Dotfiles (.env, .git, .htaccess) are never served.
     RewriteRule (^|/)\. - [F,L]
 
