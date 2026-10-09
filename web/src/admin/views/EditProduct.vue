@@ -24,6 +24,9 @@ const LANGS = [
 const p = props.product
 const form = ref({
   category_id: p.category_id,
+  code: p.id,
+  unit_kind: p.unit_kind,
+  unit_qty: String(p.unit_qty ?? 1),
   ...Object.fromEntries(LANGS.map(l => [l.id, {
     name: p.name?.[l.id] ?? '',
     description: p.description?.[l.id] ?? '',
@@ -89,7 +92,11 @@ async function destroy () {
   }
 }
 
-const ready = computed(() => form.value.az.name.trim().length > 0)
+const CODE = /^[a-z0-9]+(-[a-z0-9]+)*$/
+const codeOk = computed(() => form.value.code === p.id || (CODE.test(form.value.code) && form.value.code.length >= 3))
+const qtyNum = computed(() => Number(String(form.value.unit_qty).replace(',', '.')))
+const qtyOk = computed(() => Number.isFinite(qtyNum.value) && qtyNum.value >= 0.001 && qtyNum.value <= 9999)
+const ready = computed(() => form.value.az.name.trim().length > 0 && codeOk.value && qtyOk.value)
 
 async function save () {
   if (!ready.value) return
@@ -103,12 +110,16 @@ async function save () {
       unit_label: form.value[l.id].unit_label.trim() || null,
     }]))
 
-    const updated = await api(`/admin/products/${p.id}`, {
-      method: 'PATCH',
-      body: { category_id: form.value.category_id, translations },
-    })
+    const body = { category_id: form.value.category_id, translations }
+    // Only what was touched is sent: a code or unit nobody changed must not
+    // ride along and be mistaken for an edit.
+    if (form.value.code !== p.id) body.new_id = form.value.code
+    if (form.value.unit_kind !== p.unit_kind) body.unit_kind = form.value.unit_kind
+    if (qtyNum.value !== Number(p.unit_qty ?? 1)) body.unit_qty = qtyNum.value
+
+    const updated = await api(`/admin/products/${p.id}`, { method: 'PATCH', body })
     say(`${updated.name?.az ?? updated.id} yadda saxlanıldı`)
-    emit('saved', updated)
+    emit('saved', updated, p.id)
   } catch (e) {
     complain(e)
   } finally {
@@ -133,6 +144,32 @@ async function save () {
       <select v-model="form.category_id" class="a-in">
         <option v-for="[id, name] in categories" :key="id" :value="id">{{ name }}</option>
       </select>
+    </div>
+
+    <div class="a-sec">
+      <h3>Kod</h3>
+      <input v-model.trim="form.code" class="a-in a-mono" maxlength="60" aria-label="Məhsul kodu"
+             :class="{ 'a-in--dirty': !codeOk }" autocapitalize="off" spellcheck="false">
+      <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
+        Kiçik latın hərfləri, rəqəmlər və tire (məs. <span class="a-mono">hise-qizil-baliq</span>).
+        Kod dəyişəndə keçmiş sifarişlər, aksiyalar və şəkillər yeni koda keçir.
+      </p>
+    </div>
+
+    <div class="a-sec">
+      <h3>Vahidin növü</h3>
+      <div class="a-row">
+        <select v-model="form.unit_kind" class="a-in" style="max-width:200px" aria-label="Vahidin növü">
+          <option value="kg">Çəki ilə (kq)</option>
+          <option value="pc">Ədəd ilə</option>
+        </select>
+        <input v-model="form.unit_qty" class="a-in a-in--num" style="width:90px" inputmode="decimal"
+               :class="{ 'a-in--dirty': !qtyOk }" aria-label="Vahidin miqdarı">
+        <span class="a-muted" style="font-size:.8rem">{{ form.unit_kind === 'kg' ? 'kq' : 'ədəd' }} — qiymət bu miqdara aiddir</span>
+      </div>
+      <p v-if="form.unit_kind !== p.unit_kind" class="a-muted" style="font-size:.76rem; margin:8px 0 0">
+        Növü dəyişəndə qiymətin nəyə aid olduğunu da yoxlayın. Artıq verilmiş sifarişlər dəyişmir.
+      </p>
     </div>
 
     <div class="a-sec">

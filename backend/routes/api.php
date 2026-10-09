@@ -163,6 +163,7 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::post('products', [ProductController::class, 'store']);
         Route::patch('products/{id}', [ProductController::class, 'update']);
         Route::post('products/stock', [ProductController::class, 'stock']);
+        Route::post('products/order', [ProductController::class, 'reorder']);
 
         // Separate limiter: an upload costs disk and a few hundred milliseconds
         // of image decoding, where the rest of this group costs a query.
@@ -177,6 +178,7 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
 
         Route::get('categories', [CategoryController::class, 'index']);
         Route::post('categories', [CategoryController::class, 'store']);
+        Route::post('categories/order', [CategoryController::class, 'reorder']);
         Route::patch('categories/{id}', [CategoryController::class, 'update']);
         Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
 

@@ -53,14 +53,18 @@ class OrderController extends Controller
     public function quote(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'lines' => ['required', 'array', 'min:1', 'max:'.config('freshness.order.max_lines')],
+            'lines' => ['required_without:bundles', 'array', 'max:'.config('freshness.order.max_lines')],
             'lines.*.product_id' => ['required', 'string', 'max:60'],
             'lines.*.qty' => ['required', 'numeric', 'min:0.001', 'max:'.config('freshness.order.max_qty_per_line')],
+            // Sets, bought whole: the server prices them, discount included.
+            'bundles' => ['sometimes', 'array', 'max:20'],
+            'bundles.*.id' => ['required', 'string', 'max:40', 'distinct'],
+            'bundles.*.qty' => ['required', 'integer', 'min:1', 'max:20'],
             'zone_id' => ['sometimes', 'nullable', 'string', 'max:40'],
             'locale' => ['sometimes', Rule::in(['az', 'ru', 'en'])],
         ]);
 
-        $basket = $this->pricing->quote($data['lines'], $data['zone_id'] ?? null);
+        $basket = $this->pricing->quote($data['lines'] ?? [], $data['zone_id'] ?? null, $data['bundles'] ?? []);
 
         // The language comes from the request, not from the account. This
         // endpoint is public, so there may be no account at all — and a
@@ -108,9 +112,14 @@ class OrderController extends Controller
         }
 
         $data = $request->validate([
-            'lines' => ['required', 'array', 'min:1', 'max:'.config('freshness.order.max_lines')],
+            'lines' => ['required_without:bundles', 'array', 'max:'.config('freshness.order.max_lines')],
             'lines.*.product_id' => ['required', 'string', 'max:60', 'distinct', Rule::exists('products', 'id')],
             'lines.*.qty' => ['required', 'numeric', 'min:0.001', 'max:'.config('freshness.order.max_qty_per_line')],
+            // A set is sent as itself, not as its products, so the server can
+            // apply the set's discount to them.
+            'bundles' => ['sometimes', 'array', 'max:20'],
+            'bundles.*.id' => ['required', 'string', 'max:40', 'distinct', Rule::exists('bundles', 'id')],
+            'bundles.*.qty' => ['required', 'integer', 'min:1', 'max:20'],
 
             'zone_id' => ['required', 'string', Rule::exists('delivery_zones', 'id')->where('is_active', true)],
             // First name and surname, both required, letters only (plus space,
@@ -137,8 +146,8 @@ class OrderController extends Controller
         ]);
 
         // Whole units only for things sold by the piece, as in the app.
-        $kinds = \App\Models\Product::whereIn('id', array_column($data['lines'], 'product_id'))->pluck('unit_kind', 'id');
-        foreach ($data['lines'] as $i => $line) {
+        $kinds = \App\Models\Product::whereIn('id', array_column($data['lines'] ?? [], 'product_id'))->pluck('unit_kind', 'id');
+        foreach ($data['lines'] ?? [] as $i => $line) {
             $qty = (float) $line['qty'];
             if (($kinds[$line['product_id']] ?? null) !== \App\Models\Product::UNIT_KG && floor($qty) !== $qty) {
                 throw \Illuminate\Validation\ValidationException::withMessages(["lines.{$i}.qty" => 'This item is sold in whole units.']);

@@ -63,16 +63,24 @@ export const money = n => {
 
 /* A per-kilo reference price, but only where it tells the customer
    something — a 400 gr tin is worth comparing, a single fish is not. */
-/* What a set costs, before and after its discount. */
+/* What a set costs, before and after its discount.
+
+   The same arithmetic the server uses to write the order: each product is
+   discounted on its own and rounded to the qəpik, then multiplied by how many
+   are in the set. Rounding the total to a whole manat instead made the card
+   say "−10%" over a price that was really 8% or 12% off, and a price that
+   differed from the one on the order. */
 export function setPricing (set) {
   const items = set.items.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean)
   /* Bundles from the API carry a quantity per line — two loaves, one tin. The
      bundled fallback sets have none, so the default keeps their arithmetic
      exactly as it was. */
   const qty = id => set.qty?.[id] ?? 1
-  const full = items.reduce((sum, p) => sum + p.price * qty(p.id), 0)
-  const price = Math.round(full * (1 - set.off / 100))
-  return { items, full, price, saving: full - price }
+  const minor = p => p.priceMinor ?? Math.round(p.price * 100)
+  const fullMinor = items.reduce((sum, p) => sum + Math.round(minor(p) * qty(p.id)), 0)
+  const priceMinor = items.reduce((sum, p) =>
+    sum + Math.round(Math.round(minor(p) * (100 - set.off) / 100) * qty(p.id)), 0)
+  return { items, full: fullMinor / 100, price: priceMinor / 100, saving: (fullMinor - priceMinor) / 100 }
 }
 
 export function perKg (p) {

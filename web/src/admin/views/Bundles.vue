@@ -60,8 +60,14 @@ const toggle = b =>
     `${b.name?.az ?? b.id} ${b.is_active ? 'söndürüldü' : 'yandırıldı'}`)
 
 function saveDiscount (b) {
-  const value = Number(draft.value[b.id])
-  if (!Number.isFinite(value) || value === b.discount_percent) return
+  const raw = String(draft.value[b.id] ?? '').trim().replace(',', '.').replace(/%$/, '')
+  const value = Number(raw)
+  if (raw === '' || !Number.isFinite(value) || value < 0 || value > 60) {
+    complain({ message: 'Endirim 0 ilə 60 arasında tam rəqəm olmalıdır.' })
+    draft.value[b.id] = b.discount_percent
+    return
+  }
+  if (Math.round(value) === b.discount_percent) { draft.value[b.id] = b.discount_percent; return }
   patch(b, { discount_percent: Math.round(value) }, `Endirim ${Math.round(value)}%`)
 }
 

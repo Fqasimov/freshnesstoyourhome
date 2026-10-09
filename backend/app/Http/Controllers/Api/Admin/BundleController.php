@@ -7,7 +7,9 @@ use App\Models\Bundle;
 use App\Models\BundleItem;
 use App\Models\BundleTranslation;
 use App\Models\Product;
+use App\Services\PricingService;
 use App\Support\Audit;
+use App\Support\Money;
 use App\Support\StoredImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -283,7 +285,10 @@ class BundleController extends Controller
         // the discount. Computed here so the panel never has to do money
         // arithmetic of its own — the same rule the website follows.
         $full = $items->sum(fn ($i) => (int) ($i['price_minor'] ?? 0) * $i['qty']);
-        $price = (int) round($full * (100 - $b->discount_percent) / 100);
+        $price = (int) $items->sum(fn ($i) => Money::line(
+            PricingService::bundleUnitMinor((int) ($i['price_minor'] ?? 0), $b->discount_percent),
+            (float) $i['qty'],
+        ));
 
         return [
             'id' => $b->id,

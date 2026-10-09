@@ -75,7 +75,7 @@ class OrderService
             throw new OrderRejected('We no longer deliver to this area. Please update the address.');
         }
 
-        $basket = $this->pricing->quote($input['lines'], $zoneId);
+        $basket = $this->pricing->quote($input['lines'] ?? [], $zoneId, $input['bundles'] ?? []);
 
         $this->assertPlaceable($basket);
 

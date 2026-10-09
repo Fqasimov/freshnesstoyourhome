@@ -31,6 +31,7 @@ class ProductController extends Controller
     /** Fields whose changes are worth a line in the audit trail. */
     private const AUDITED = [
         'price_minor', 'in_stock', 'is_active', 'is_popular', 'category_id', 'sort',
+        'unit_kind', 'unit_qty',
     ];
 
     public function index(Request $request): JsonResponse
@@ -329,6 +330,14 @@ class ProductController extends Controller
             'is_popular' => ['sometimes', 'boolean'],
             'sort' => ['sometimes', 'integer', 'min:0', 'max:9999'],
             'category_id' => ['sometimes', 'string', Rule::exists('categories', 'id')],
+            'unit_kind' => ['sometimes', Rule::in([Product::UNIT_KG, Product::UNIT_PIECE])],
+            'unit_qty' => ['sometimes', 'numeric', 'min:0.001', 'max:9999'],
+            // The product's code. Same shape as when it was created.
+            'new_id' => [
+                'sometimes', 'string', 'min:3', 'max:60',
+                'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/',
+                Rule::unique('products', 'id')->ignore($id, 'id'),
+            ],
 
             'translations' => ['sometimes', 'array'],
             'translations.*.name' => ['sometimes', 'nullable', 'string', 'max:120'],
@@ -337,9 +346,15 @@ class ProductController extends Controller
         ]);
 
         $product = Product::with(['translations', 'gallery'])->findOrFail($id);
+        $renamed = null;
 
-        $changes = DB::transaction(function () use ($product, $data) {
-            $product->fill(collect($data)->except('translations')->all());
+        $changes = DB::transaction(function () use ($product, &$data, &$renamed) {
+            if (isset($data['new_id']) && $data['new_id'] !== $product->id) {
+                $renamed = ['from' => $product->id, 'to' => $data['new_id']];
+                $product = $this->rename($product, $data['new_id']);
+            }
+
+            $product->fill(collect($data)->except(['translations', 'new_id'])->all());
             $changes = Audit::diff($product, self::AUDITED);
             $product->save();
 
@@ -373,11 +388,80 @@ class ProductController extends Controller
             return $changes;
         });
 
+        if ($renamed !== null) {
+            $changes['id'] = $renamed;
+            $product = Product::findOrFail($renamed['to']);
+        }
+
         if ($changes !== []) {
             Audit::record($request->user(), 'product.update', 'product', $product->id, $changes);
         }
 
         return response()->json($this->shape($product->fresh(['translations', 'category.translations', 'gallery'])));
+    }
+
+    /**
+     * Give a product a new code.
+     *
+     * The code is the primary key and the foreign key on its translations,
+     * photographs, set lines and past order lines, none of which cascade on
+     * update. So the row is copied under the new code, everything that points
+     * at the old one is moved across, and only then is the old row removed —
+     * past orders keep pointing at the product instead of being orphaned.
+     */
+    private function rename(Product $product, string $to): Product
+    {
+        $from = $product->id;
+
+        $copy = $product->replicate();
+        $copy->id = $to;
+        $copy->created_at = $product->created_at;
+        $copy->save();
+
+        foreach (['product_translations', 'product_images', 'bundle_items', 'order_items'] as $table) {
+            DB::table($table)->where('product_id', $from)->update(['product_id' => $to]);
+        }
+
+        Product::whereKey($from)->delete();
+        \App\Support\CatalogueCache::flush();
+
+        return Product::with(['translations', 'gallery'])->findOrFail($to);
+    }
+
+    /**
+     * Put the products of one category in the order the shopkeeper chose.
+     *
+     * The whole list is sent, so the numbers are rewritten 1..n in one go and
+     * can never end up duplicated or with gaps that two moves would grow.
+     */
+    public function reorder(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'category_id' => ['required', 'string', Rule::exists('categories', 'id')],
+            'ids' => ['required', 'array', 'min:1', 'max:500'],
+            'ids.*' => ['string', 'distinct', 'max:60'],
+        ]);
+
+        $rows = Product::where('category_id', $data['category_id'])->get()->keyBy('id');
+
+        // Anything not named keeps its place after the named ones.
+        $ordered = collect($data['ids'])->filter(fn ($id) => $rows->has($id))->values();
+        $rest = $rows->keys()->diff($ordered)->values();
+
+        DB::transaction(function () use ($ordered, $rest, $rows) {
+            $ordered->concat($rest)->each(function ($id, $i) use ($rows) {
+                $product = $rows[$id];
+                if ($product->sort !== $i + 1) {
+                    $product->forceFill(['sort' => $i + 1])->save();
+                }
+            });
+        });
+
+        Audit::record($request->user(), 'product.reorder', 'category', $data['category_id'], [
+            'order' => ['from' => null, 'to' => $ordered->all()],
+        ]);
+
+        return response()->json(['status' => 'ok']);
     }
 
     /**

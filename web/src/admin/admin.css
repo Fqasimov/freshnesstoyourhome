@@ -242,3 +242,8 @@ textarea.a-in{ resize:vertical; min-height:74px; line-height:1.45; }
   color:var(--text-2, var(--text)); font:inherit; font-size:.8rem; cursor:pointer;
 }
 .a-gallery__add:hover{ background:var(--surface-2); }
+
+/* The ↑ ↓ pair that puts a row earlier or later in its list. */
+.a-move{ white-space:nowrap; }
+.a-move .a-btn{ padding:4px 9px; margin-right:4px; line-height:1; }
+.a-move .a-btn:disabled{ opacity:.35; cursor:default; }

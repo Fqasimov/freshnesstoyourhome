@@ -60,7 +60,11 @@ const chosen = computed(() => form.value.items.filter(i => i.product_id))
 /* A preview only. The server works out the real figure the same way and
    is the one the website shows. */
 const full = computed(() => chosen.value.reduce((s, i) => s + (byId.value[i.product_id]?.price_minor ?? 0) * Number(i.qty || 0), 0))
-const price = computed(() => Math.round(full.value * (100 - Number(form.value.discount || 0)) / 100))
+/* Each product is discounted on its own and rounded to the qəpik, as the server does. */
+const price = computed(() => chosen.value.reduce((s, i) => {
+  const unit = byId.value[i.product_id]?.price_minor ?? 0
+  return s + Math.round(Math.round(unit * (100 - Number(form.value.discount || 0)) / 100) * Number(i.qty || 0))
+}, 0))
 
 const idOk = computed(() => !isNew || (/^[a-z0-9]+(-[a-z0-9]+)*$/.test(form.value.id) && form.value.id.length >= 3))
 const dupes = computed(() => new Set(chosen.value.map(i => i.product_id)).size !== chosen.value.length)

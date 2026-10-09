@@ -454,6 +454,16 @@ export async function respond (path, method, body) {
     return { status: 'ok' }
   }
 
+  if (route === '/admin/products/order' && method === 'POST') {
+    const inCat = db.products.filter(x => x.category_id === body.category_id)
+    const first = db.products.indexOf(inCat[0])
+    const ordered = body.ids.map(id => inCat.find(x => x.id === id)).filter(Boolean)
+    const rest = inCat.filter(x => !body.ids.includes(x.id))
+    const next = [...ordered, ...rest]
+    next.forEach((x, i) => { x.sort = i + 1 })
+    db.products.splice(first, next.length, ...next)
+    return { status: 'ok' }
+  }
   if (route === '/admin/products/stock' && method === 'POST') {
     const touched = []
     db.products.forEach(p => {
@@ -480,6 +490,15 @@ export async function respond (path, method, body) {
       }
     }
     if (body.category_id) p.category_id = body.category_id
+    if (body.unit_kind) { p.unit_kind = body.unit_kind; p.is_weight_based = body.unit_kind === 'kg' }
+    if (body.unit_qty !== undefined) p.unit_qty = body.unit_qty
+    if (body.new_id && body.new_id !== p.id) {
+      if (db.products.some(x => x.id === body.new_id)) {
+        throw new DemoError('Bu kod artıq istifadə olunur.', { new_id: ['Bu kod artıq istifadə olunur.'] })
+      }
+      audit('product.update', 'product', body.new_id, { id: { from: p.id, to: body.new_id } })
+      p.id = body.new_id
+    }
     // The same bounds the server validates against, so the preview refuses
     // what the real panel would refuse.
     if (body.price_minor !== undefined && (body.price_minor < 1 || body.price_minor > 10_000_000)) {
@@ -574,7 +593,13 @@ export async function respond (path, method, body) {
       product_count: db.products.filter(p => p.category_id === id).length }))
     db.extraCategories.forEach((c, i) => list.push({ ...c, sort: list.length + i,
       product_count: db.products.filter(p => p.category_id === c.id).length }))
-    return list
+    const order = db.categoryOrder ?? []
+    const rank = id => { const i = order.indexOf(id); return i < 0 ? order.length : i }
+    return list.sort((a, b) => rank(a.id) - rank(b.id))
+  }
+  if (route === '/admin/categories/order' && method === 'POST') {
+    db.categoryOrder = body.ids
+    return { status: 'ok' }
   }
   if (route === '/admin/categories' && method === 'GET') return { data: allCategories() }
   if (route === '/admin/categories' && method === 'POST') {

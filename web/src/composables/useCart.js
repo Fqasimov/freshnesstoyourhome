@@ -57,17 +57,19 @@ watch(items, v => {
 const keyOf = (id, v, kind) => kind + ':' + id + '::' + (v == null ? '-' : v)
 
 /* Ask the server what the basket costs.
-   Sets are excluded: they are a website-only construct with a discount the
-   business has not confirmed, and the API deliberately has no opinion about
-   them. Their lines still appear in the message at the price shown here. */
+   Sets go as sets, not as their products, so the server applies the set's
+   discount itself — the figure in the message is then the figure on the order. */
 async function refreshQuote () {
   if (!API) return
 
   const basket = items.value
     .filter(it => it.kind !== 'set')
     .map(it => ({ product_id: it.id, qty: it.qty }))
+  const bundles = items.value
+    .filter(it => it.kind === 'set')
+    .map(it => ({ id: it.id, qty: Math.max(1, Math.round(it.qty)) }))
 
-  if (basket.length === 0) { quote.value = null; return }
+  if (basket.length === 0 && bundles.length === 0) { quote.value = null; return }
 
   const id = ++quoteId
   quoting.value = true
@@ -78,6 +80,7 @@ async function refreshQuote () {
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
         lines: basket,
+        bundles,
         /* The endpoint has always taken this; the site simply never sent it,
            so every basket was priced as though delivery were free. An id the
            table does not know resolves to no zone and no fee, which is why
@@ -250,18 +253,21 @@ const canSend = computed(() => Boolean(
   const whatsapp = computed(() => messageFor(placedCode.value))
 
   /* What the order is made of, as the server understands it: plain products,
-     and each set as the products inside it. */
+     and each set as itself — the server knows what is in it and what it costs. */
   function orderLines () {
     const qty = new Map()
+    const bundles = new Map()
     for (const it of items.value) {
       if (it.kind === 'set') {
-        const set = SETS.find(x => x.id === it.id)
-        for (const p of set?.items ?? []) qty.set(p.id, (qty.get(p.id) ?? 0) + (p.qty ?? 1) * it.qty)
+        bundles.set(it.id, (bundles.get(it.id) ?? 0) + Math.max(1, Math.round(it.qty)))
       } else {
         qty.set(it.id, (qty.get(it.id) ?? 0) + it.qty)
       }
     }
-    return [...qty].map(([product_id, q]) => ({ product_id, qty: q }))
+    return {
+      lines: [...qty].map(([product_id, q]) => ({ product_id, qty: q })),
+      bundles: [...bundles].map(([id, q]) => ({ id, qty: q })),
+    }
   }
 
   /**
@@ -288,7 +294,7 @@ const canSend = computed(() => Boolean(
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({
-            lines: orderLines(),
+            ...orderLines(),
             zone_id: zoneId.value,
             contact_first_name: firstName.value.trim(),
             contact_last_name: lastName.value.trim(),
