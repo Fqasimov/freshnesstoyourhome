@@ -1,12 +1,11 @@
 <script setup>
 import { computed } from 'vue'
 import { CONTACT, SETS } from '../data/catalogue'
-import { LANDING } from '../data/landing'
 import { useI18n } from '../composables/useI18n'
 import CatalogueCta from './CatalogueCta.vue'
 import logo from '../assets/logo-mark.svg'
 
-const { t, lang } = useI18n()
+const { t } = useI18n()
 const year = new Date().getFullYear()
 /* Routes rather than bare fragments. The site runs on hash history, so a
    plain href="#sets" replaces the whole route with "sets", matches nothing
@@ -61,9 +60,6 @@ const links = computed(() => [
         <span>{{ t('foot.tags') }}</span>
         <RouterLink v-for="[label, q] in TAGS" :key="label" :to="{ path: '/kataloq', query: { q } }">{{ label }}</RouterLink>
       </div>
-      <nav class="foot__tags" aria-label="Bölmələr">
-        <RouterLink v-for="p in LANDING" :key="p.name" :to="p.path">{{ p.h1[lang] || p.h1.az }}</RouterLink>
-      </nav>
       <div class="foot__bot">
         <p>{{ t('foot.note') }}</p>
         <p>© {{ year }} Freshness To Your Home · <a href="/privacy/">{{ t('foot.privacy') }}</a></p>
