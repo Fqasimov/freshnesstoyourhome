@@ -228,6 +228,29 @@ knock on a door with goods. Staff are always anonymised, never hard-deleted:
 `order_events` and `weighed_by` point at them, and deleting the row would
 erase who moved or weighed an order.
 
+## Links and third-party scripts on the website
+
+- **Map links are Google Maps addresses and nothing else.** A customer-supplied
+  `map_link` is shown to staff as something clickable, so it has to be a
+  Google Maps address: `maps.app.goo.gl/`, `goo.gl/maps`, `maps.google.com/` or
+  a `google.com|az/maps` path. Plain `google.com/…` is not enough — it includes
+  `google.com/url?q=…`, which redirects anywhere. The same rule guards the website
+  order and the app's saved addresses (`OrderController`, `AddressController`).
+- **Google's map script is not part of the page's security policy unless a key
+  is configured.** The basket's "pick on the map" needs `maps.googleapis.com` and
+  `maps.gstatic.com`; `scripts/package-deploy.sh` adds exactly those, plus blob
+  workers, to the Content-Security-Policy only when `GOOGLE_MAPS_KEY` is set.
+  Without a key the policy stays `script-src 'self'`. The browser key itself is
+  public by design: restrict it in Google Cloud to this site's referrer and to
+  the Maps JavaScript API.
+- **Geolocation is allowed for the site itself** (`Permissions-Policy:
+  geolocation=(self)`), for the basket's "use my location"; it is still denied
+  to every embedded third party.
+- **Sets are priced by the server.** `POST /orders/quote` and `/orders/web` take
+  a set's id and a count, never a price or a percentage; the discount comes from
+  the `bundles` row and is applied per unit (`PricingService::bundleUnitMinor`).
+  A switched-off set is refused like an unavailable product.
+
 ## Still to do
 
 These are outside the code and cannot be closed from here.

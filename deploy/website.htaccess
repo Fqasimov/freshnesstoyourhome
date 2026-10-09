@@ -49,10 +49,10 @@ Options -Indexes -MultiViews
   <FilesMatch "\.html$">
     Header set Cache-Control "no-cache"
 
-    # Google Maps is allowed for one reason: the basket's "pick on the map" pin,
-    # which loads only when a Maps key is configured at build time. Scripts,
-    # tiles and API calls from maps.googleapis.com / maps.gstatic.com are the
-    # whole of the exception; nothing else from another site may run.
+    # Google Maps is NOT allowed here. The basket's "pick on the map" pin needs
+    # it, so scripts/package-deploy.sh adds exactly maps.googleapis.com and
+    # maps.gstatic.com to this policy — and only when a Maps key is configured
+    # (GOOGLE_MAPS_KEY). Without a key the policy below ships unchanged.
     #
     # Only our own scripts run, from our own origin: no inline script, no
     # eval, nothing from another site. This is what keeps an injected string
@@ -60,7 +60,7 @@ Options -Indexes -MultiViews
     # allow 'unsafe-inline' because Vue writes style attributes; a style
     # cannot read a token. Fonts come from Google. HTML only, so it never
     # overrides the stricter policy the API sets on its own responses.
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://maps.gstatic.com https://*.googleapis.com; connect-src 'self' https://maps.googleapis.com; worker-src blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
   </FilesMatch>
 
   Header always set X-Content-Type-Options "nosniff"

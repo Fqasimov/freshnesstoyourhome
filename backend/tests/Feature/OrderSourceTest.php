@@ -174,4 +174,32 @@ class OrderSourceTest extends TestCase
         $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => now()->subDay()->toDateString()]))
             ->assertStatus(422)->assertJsonValidationErrors(['delivery_date']);
     }
+
+    public function test_the_map_link_must_be_a_google_maps_address(): void
+    {
+        // Eleven requests in a minute is what the limiter exists to stop; this
+        // test is about the link, not the limiter.
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+
+        foreach ([
+            'https://www.google.com/maps?q=40.409300,49.867100',
+            'https://maps.app.goo.gl/AbCdEf',
+            'https://goo.gl/maps/AbCdEf',
+            'https://maps.google.com/?q=40.4,49.8',
+            'https://www.google.az/maps/place/Baku',
+        ] as $ok) {
+            $this->postJson('/api/orders/web', $this->webOrder(['map_link' => $ok]))->assertCreated();
+        }
+
+        foreach ([
+            'https://www.google.com/url?q=https://evil.test',
+            'https://google.com.evil.test/maps',
+            'https://www.google.com@evil.test/maps',
+            'http://www.google.com/maps?q=1,1',
+            'javascript:alert(1)',
+        ] as $bad) {
+            $this->postJson('/api/orders/web', $this->webOrder(['map_link' => $bad]))
+                ->assertStatus(422)->assertJsonValidationErrors(['map_link']);
+        }
+    }
 }

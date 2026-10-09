@@ -305,6 +305,8 @@ const canSend = computed(() => Boolean(
   async function send () {
     if (!canSend.value || sending.value) return
     const tab = window.open('', '_blank')
+    // The tab is about to go to a page that is not ours; it gets no handle on this one.
+    if (tab) tab.opener = null
     sending.value = true
     let code = ''
 

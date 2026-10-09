@@ -135,7 +135,7 @@ class OrderController extends Controller
             'address_notes' => ['sometimes', 'nullable', 'string', 'max:200'],
             'map_link' => [
                 'sometimes', 'nullable', 'string', 'max:500',
-                'regex:#^https://(maps\.app\.goo\.gl/|goo\.gl/maps|(www\.|maps\.)?google\.(com|az)/)#i',
+                'regex:#^https://(maps\.app\.goo\.gl/|goo\.gl/maps|maps\.google\.(com|az)/|(www\.)?google\.(com|az)/maps)#i',
             ],
             'delivery_date' => [
                 'sometimes', 'nullable', 'date_format:Y-m-d',
