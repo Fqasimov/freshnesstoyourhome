@@ -116,6 +116,6 @@ return [
     'support' => [
         'phone' => env('SUPPORT_PHONE', '+994503521919'),
         'whatsapp' => env('SUPPORT_WHATSAPP', '994503521919'),
-        'instagram' => env('SUPPORT_INSTAGRAM', 'freshness_to_your_home'),
+        'instagram' => env('SUPPORT_INSTAGRAM', 'freshnesstoyourhome'),
     ],
 ];

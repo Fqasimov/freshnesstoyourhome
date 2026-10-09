@@ -9,7 +9,7 @@ export const CONTACT = {
   phone: '+994503521919',
   phoneDisplay: '+994 50 352 19 19',
   whatsapp: '994503521919',
-  instagram: 'freshness_to_your_home',
+  instagram: 'freshnesstoyourhome',
   email: 'info@freshnesstoyourhome.az',
   privacyUrl: 'https://freshnesstoyourhome.az/privacy/',
   hours: {
