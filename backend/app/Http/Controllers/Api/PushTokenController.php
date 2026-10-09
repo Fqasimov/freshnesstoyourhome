@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class PushTokenController extends Controller
 {
+    private const MAX_PER_USER = 10;
+
     /**
      * Register this device for order updates.
      *
@@ -35,6 +37,15 @@ class PushTokenController extends Controller
 
         $token = DB::transaction(function () use ($data, $request) {
             $row = PushToken::firstOrNew(['token' => $data['token']]);
+
+            // Every status change is sent to every token an account has, so the
+            // number is bounded: the oldest are dropped, newest kept.
+            if (! $row->exists) {
+                $mine = PushToken::where('user_id', $request->user()->id)->orderBy('id')->pluck('id');
+                if ($mine->count() >= self::MAX_PER_USER) {
+                    PushToken::whereIn('id', $mine->take($mine->count() - self::MAX_PER_USER + 1))->delete();
+                }
+            }
 
             // forceFill, because `user_id` is deliberately not fillable: there
             // must be no path where a request body names the account a device

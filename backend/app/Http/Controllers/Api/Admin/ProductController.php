@@ -380,7 +380,14 @@ class ProductController extends Controller
                 }
 
                 if ($row->isDirty()) {
-                    $changes["name:{$locale}"] = ['from' => $row->getOriginal('name'), 'to' => $row->name];
+                    // Each field that moved, under its own name: a unit label
+                    // changed from "1 kg" to "100 g" changes what the price
+                    // means, and must not be logged as a change of name.
+                    foreach (['name', 'description', 'unit_label'] as $field) {
+                        if ($row->isDirty($field)) {
+                            $changes["{$field}:{$locale}"] = ['from' => $row->getOriginal($field), 'to' => $row->{$field}];
+                        }
+                    }
                     $row->save();
                 }
             }

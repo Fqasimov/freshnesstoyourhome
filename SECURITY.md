@@ -251,6 +251,50 @@ erase who moved or weighed an order.
   the `bundles` row and is applied per unit (`PricingService::bundleUnitMinor`).
   A switched-off set is refused like an unavailable product.
 
+## Known gaps, found in the October review and not closed in code
+
+Each of these is a decision or a change of behaviour for the shop, not a quiet
+fix. They are listed so nobody has to rediscover them.
+
+- **The panel's sign-in can be kept shut by a stranger who knows the admin's
+  address (medium).** The codes have a lane of their own, but the panel's own
+  endpoints are public: five requests an hour use up the address's budget,
+  a request kills the code just mailed, and five wrong guesses kill the live
+  one. Nothing is disclosed and a 12-hour session already open keeps working;
+  the second factor is untouched. The right control is outside the code:
+  Cloudflare Access in front of `/cms` and `/api/auth/panel` (DEPLOY.md), which
+  leaves nobody but the admin able to reach the endpoints at all. In code it
+  would mean binding the code to the device that asked for it, as sign-up does.
+- **The panel's code request answers a little faster for an address that is not
+  the admin's (low).** The real path sends mail inside the request. Closing it
+  means a real mail queue; deferring the work breaks the guarantee that a code
+  exists once the request returns, and the tests that hold it.
+- **A weighed order can be marked delivered without being weighed (low).** The
+  customer is then billed the estimate and the dashboard does not count it,
+  because it only counts open orders. Staff are trusted; if that should change,
+  refuse `delivered` while `requires_weighing` and `weighed_at` is empty.
+- **The admin's order list shows contact details unmasked and writes no audit
+  row (low).** Opening one order is audited; paging the list is not.
+- **A customer chooses the delivery zone, and nothing checks it against the
+  address (low).** The fee and minimum follow the zone they pick.
+- **Audit rows are written after the change commits**, and a product's old
+  history sits under its old code after a rename (low).
+- **The map picker widens the whole site's script policy when a key is set**,
+  including the admin page (low, defence in depth). Nothing in the panel can
+  inject script today. Left off by default; if it is turned on, serve the
+  panel from its own policy.
+- **One-time installer and upgrade pages** are protected by a random name only
+  (96 bits) and are shipped only in a first-install package, never by the
+  automatic deploy. Delete them as soon as they have been used.
+- **A push to `claude/photo-analysis-bgp25f` goes straight to production**, with
+  no approval step. Deploying from a protected branch, with the secrets in a
+  GitHub Environment that needs a reviewer, would close that.
+- **The browser keeps name, phone, address and the map pin in plain text** so a
+  returning customer does not retype them (disclosed in the privacy policy;
+  the Google Maps script is not yet named there when a key is set).
+- **Orders from the website have no account, so nothing erases them** when a
+  person asks. Staff can clear the contact fields on request.
+
 ## Still to do
 
 These are outside the code and cannot be closed from here.

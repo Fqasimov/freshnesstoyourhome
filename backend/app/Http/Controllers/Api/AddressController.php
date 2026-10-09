@@ -20,6 +20,9 @@ use Illuminate\Validation\Rule;
  */
 class AddressController extends Controller
 {
+    /** More than this is not a customer's addresses. */
+    private const MAX_PER_USER = 20;
+
     public function index(Request $request): JsonResponse
     {
         $addresses = $request->user()->addresses()
@@ -34,6 +37,10 @@ class AddressController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $this->validated($request);
+
+        if ($request->user()->addresses()->count() >= self::MAX_PER_USER) {
+            return response()->json(['message' => 'You have saved as many addresses as we keep. Remove one first.'], 422);
+        }
 
         $address = DB::transaction(function () use ($request, $data) {
             $address = $request->user()->addresses()->create($data);

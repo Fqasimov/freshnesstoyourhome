@@ -97,7 +97,7 @@ Route::prefix('auth')->group(function () {
 
 // ------------------------------------------------------------- signed in ---
 
-Route::middleware(['auth:sanctum', 'blocked'])->group(function () {
+Route::middleware(['auth:sanctum', 'blocked', 'throttle:api'])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::patch('me', [ProfileController::class, 'update']);
     Route::post('auth/logout', [AuthController::class, 'logout']);

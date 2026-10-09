@@ -62,6 +62,13 @@ class LoginCodeService
 
         $code = $this->generateCode();
 
+        // Spent and expired codes carry an address and an IP and have no use
+        // once their minutes are over. Cleared here, a little at a time, so it
+        // needs no scheduler on a host with no shell.
+        if (random_int(1, 25) === 1) {
+            LoginCode::where('expires_at', '<', now()->subDay())->delete();
+        }
+
         DB::transaction(function () use ($email, $hash, $code, $ip): void {
             // Only one code may be live at a time. Without this, asking for a
             // second code leaves the first one valid, and every resend widens

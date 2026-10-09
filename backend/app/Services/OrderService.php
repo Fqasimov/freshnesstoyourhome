@@ -147,6 +147,10 @@ class OrderService
             throw new OrderRejected('Your basket is empty.');
         }
 
+        if ($basket->subtotalMinor < 1) {
+            throw new OrderRejected('The basket comes to nothing. Please choose a larger amount.');
+        }
+
         if (! $basket->meetsMinimum()) {
             throw new OrderRejected(sprintf(
                 'The minimum order for this area is %s.',
@@ -238,6 +242,14 @@ class OrderService
                 throw new OrderRejected('This order is already closed.');
             }
 
+            // Only lines of this order that are sold by weight can be weighed.
+            // A key that names anything else is a mistake, not a weight.
+            $weighable = $fresh->items->where('is_weight_based', true)->pluck('id')->map(fn ($id) => (string) $id)->all();
+            $unknown = array_diff(array_map('strval', array_keys($confirmed)), $weighable);
+            if ($unknown !== []) {
+                throw new OrderRejected('Those weights do not belong to goods sold by weight on this order.');
+            }
+
             $subtotal = 0;
             $weighedEstimate = 0;
             $weighedFinal = 0;
@@ -255,7 +267,10 @@ class OrderService
                     continue;
                 }
 
-                $qty = (float) ($confirmed[(string) $item->id] ?? $item->qty);
+                // A line left out of this request keeps the weight already
+                // recorded for it (or the estimate, if it was never weighed):
+                // sending part of an order must not undo the rest.
+                $qty = (float) ($confirmed[(string) $item->id] ?? $item->confirmed_qty ?? $item->qty);
 
                 if ($qty <= 0) {
                     throw new OrderRejected("A confirmed weight must be greater than zero (line {$item->id}).");

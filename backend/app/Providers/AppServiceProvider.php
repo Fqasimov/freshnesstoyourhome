@@ -91,7 +91,7 @@ class AppServiceProvider extends ServiceProvider
         // across many addresses of their own.
         RateLimiter::for('otp-verify', fn (Request $r) => [
             Limit::perMinute(6)->by($r->ip()),
-            Limit::perMinute(6)->by('email:'.sha1(\App\Support\BlindIndex::normaliseEmail((string) $r->input('email')))),
+            Limit::perMinute(6)->by('email:'.sha1(\App\Support\BlindIndex::normaliseEmail(self::inputString($r, 'email')))),
         ]);
 
         // Website orders need no account, so the only brake is the source.
@@ -103,8 +103,8 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('web-order', fn (Request $r) => array_values(array_filter([
             Limit::perMinute(3)->by(self::sourceKey($r->ip())),
             Limit::perDay(30)->by(self::sourceKey($r->ip())),
-            strlen(preg_replace('/\D+/', '', (string) $r->input('contact_phone'))) >= 7
-                ? Limit::perDay(6)->by('phone:'.sha1(preg_replace('/\D+/', '', (string) $r->input('contact_phone'))))
+            strlen(preg_replace('/\D+/', '', self::inputString($r, 'contact_phone'))) >= 7
+                ? Limit::perDay(6)->by('phone:'.sha1(preg_replace('/\D+/', '', self::inputString($r, 'contact_phone'))))
                 : null,
         ])));
 
@@ -118,7 +118,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('password-login', fn (Request $r) => [
             Limit::perMinute(10)->by($r->ip()),
             Limit::perHour(60)->by($r->ip()),
-            Limit::perMinutes(15, 10)->by('login:'.sha1(mb_strtolower((string) $r->input('email')))),
+            Limit::perMinutes(15, 10)->by('login:'.sha1(mb_strtolower(self::inputString($r, 'email')))),
         ]);
 
         // Placing an order is cheap for the customer and expensive for the
@@ -136,7 +136,7 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinutes(10, 10)->by('panel:'.$r->ip()),
             Limit::perHour(30)->by('panel:'.$r->ip()),
             $r->filled('email')
-                ? Limit::perMinutes(10, 10)->by('panel-email:'.sha1(strtolower(trim((string) $r->input('email')))))
+                ? Limit::perMinutes(10, 10)->by('panel-email:'.sha1(strtolower(trim(self::inputString($r, 'email')))))
                 : null,
         ])));
 
@@ -160,6 +160,18 @@ class AppServiceProvider extends ServiceProvider
 
         // Laravel's default for everything else.
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(60)->by($r->user()?->id ?: $r->ip()));
+    }
+
+    /**
+     * A request field as text, or '' when it is anything else. Limiters run
+     * before validation, so the field can be an array or an object, and
+     * casting one of those throws — an unthrottled 500 for whoever sent it.
+     */
+    private static function inputString(Request $r, string $key): string
+    {
+        $value = $r->input($key);
+
+        return is_string($value) ? $value : '';
     }
 
     /** The address a limiter counts: IPv4 as it is, IPv6 reduced to its /64. */

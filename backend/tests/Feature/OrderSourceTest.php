@@ -240,4 +240,39 @@ class OrderSourceTest extends TestCase
         $this->assertNotSame($a, $c);
         $this->assertSame('203.0.113.9', \App\Providers\AppServiceProvider::sourceKey('203.0.113.9'));
     }
+
+    public function test_an_order_that_comes_to_nothing_is_refused(): void
+    {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+
+        // 0.001 kg of a cheap kilo rounds to no qəpik at all.
+        \App\Models\Product::where('id', 'smoked-salmon')->update(['price_minor' => 100]);
+        $order = $this->webOrder(['lines' => [['product_id' => 'smoked-salmon', 'qty' => 0.001]]]);
+
+        $this->postJson('/api/orders/web', $order)->assertStatus(422);
+    }
+
+    public function test_a_limiter_is_not_thrown_by_a_non_text_email(): void
+    {
+        foreach (['/api/auth/verify-code', '/api/auth/login', '/api/auth/panel/verify-code', '/api/auth/panel/request-code'] as $path) {
+            $this->postJson($path, ['email' => ['x'], 'code' => '123456', 'password' => 'x'])->assertStatus(422);
+        }
+    }
+
+    public function test_one_account_cannot_keep_unlimited_addresses_or_push_tokens(): void
+    {
+        [$user] = $this->customerWithAddress(['name' => 'Nicat', 'phone' => '+994501112233']);
+        $this->signInAs($user);
+
+        for ($i = 0; $i < 25; $i++) {
+            $this->postJson('/api/push-tokens', ['token' => 'ExponentPushToken[abcdefghijklmnop'.$i.']']);
+        }
+        $this->assertLessThanOrEqual(10, \App\Models\PushToken::where('user_id', $user->id)->count());
+
+        $made = 0;
+        for ($i = 0; $i < 22; $i++) {
+            $made += $this->postJson('/api/addresses', ['line' => "Küçə {$i}, ev 14", 'delivery_zone_id' => 'merkez'])->status() === 201 ? 1 : 0;
+        }
+        $this->assertLessThanOrEqual(20, $user->addresses()->count());
+    }
 }
