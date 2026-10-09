@@ -55,6 +55,7 @@ Route::post('orders/web', [OrderController::class, 'storeFromWebsite'])
 
 // Run migrations after an automated upload. Token-gated; see DeployController.
 Route::post('deploy/migrate', [DeployController::class, 'migrate'])->middleware('throttle:deploy');
+Route::post('deploy/reencrypt', [DeployController::class, 'reencrypt'])->middleware('throttle:deploy');
 
 Route::prefix('auth')->group(function () {
     // Tightly limited: this endpoint sends mail on request, which makes it the

@@ -201,6 +201,7 @@ class User extends Authenticatable
                 'address_notes' => null,
                 'address_map_link' => null,
                 'customer_note' => null,
+                'cancel_reason' => null,
             ])->save();
         }
 

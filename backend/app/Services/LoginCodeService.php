@@ -82,7 +82,9 @@ class LoginCodeService
                 'email' => $email,
                 'code_hash' => Hash::make($code),
                 'expires_at' => now()->addMinutes((int) config('freshness.auth.code_ttl_minutes')),
-                'request_ip' => $ip,
+                // The address a code was asked from is not kept: nothing reads it,
+                // and the limits that use it live in the rate limiter, not here.
+                'request_ip' => null,
             ]);
         });
 

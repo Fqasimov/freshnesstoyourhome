@@ -55,6 +55,8 @@ class Order extends Model
             'address_notes' => 'encrypted',
             'address_map_link' => 'encrypted',
             'customer_note' => 'encrypted',
+            // Free text typed by a customer when cancelling.
+            'cancel_reason' => \App\Casts\EncryptedText::class,
             'requires_weighing' => 'boolean',
             'subtotal_minor' => 'integer',
             'delivery_fee_minor' => 'integer',

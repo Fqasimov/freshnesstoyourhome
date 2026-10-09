@@ -295,6 +295,48 @@ fix. They are listed so nobody has to rediscover them.
 - **Orders from the website have no account, so nothing erases them** when a
   person asks. Staff can clear the contact fields on request.
 
+## If something is stolen: what the thief can read
+
+Encryption protects a thing only from someone who does not also have its key,
+so what matters is which of the two a thief gets.
+
+| What is stolen | What the thief has |
+|---|---|
+| A copy of the **database** (dump, backup, SQL injection) | Names, phones, emails, addresses, notes, map pins, cancel reasons, order notes and the admin's authenticator secret are ciphertext (AES-256-GCM). Emails and phones are searchable only through keyed hashes. Sign-in codes and passwords are bcrypt hashes; API tokens are hashed. Prices, products and order totals are not secret. **Not readable without `APP_KEY`.** |
+| The database **and** `.env` (or `APP_KEY`) together | Everything. The application must be able to decrypt, so anything that can run it can read. Keep database backups and the key in different places. |
+| The **website files** (`public_html`) | Nothing secret: the website is public code. `.env` and the API code live in `~/freshness`, outside the web root, behind `Require all denied`. |
+| The **FTP login or the server account** | Everything the application can read. This is the one that encryption cannot answer; the FTP password and the host account are the weakest links, so keep them long, unique and in a password manager. |
+| `BLIND_INDEX_KEY` alone | The ability to test guessed emails and phone numbers against the stored hashes, not the data itself. |
+
+**Why the keys are not themselves encrypted.** A key that is encrypted needs a
+second key to open it, and that one has to be somewhere the application can
+reach — which is the same place the thief got the first from. It adds a step,
+not a barrier. A key that really is out of reach of a stolen server lives in
+another machine (a key-management service or a hardware module) that this host
+plan cannot use. What can be done here, and is: keys are kept out of the
+database and out of the repository, `.env` is mode 0600 outside the web root,
+and a leaked key can be replaced.
+
+**Changing the encryption key** (do this the day it may have been seen):
+
+1. Put the current `APP_KEY` into `APP_PREVIOUS_KEYS`, and set a new `APP_KEY`
+   (`php artisan key:generate --show`).
+2. Run `php artisan freshness:reencrypt` — or, with no shell, send
+   `POST /api/deploy/reencrypt` with the `X-Deploy-Token` header, as for the
+   migrations. It rewrites every encrypted column under the new key and reports
+   anything it could not read. `--dry-run` counts without changing.
+3. Only when it reports success, remove the old key from `APP_PREVIOUS_KEYS`.
+
+`BLIND_INDEX_KEY` is separate and cannot be changed this way: its hashes are how
+customers are found, so changing it needs a re-index (it makes every customer
+unfindable until then). The deploy token is changed by replacing it in `.env`
+and in the repository secret `DEPLOY_TOKEN`; an admin session lasts 12 hours.
+
+Free text typed by customers (cancel reasons and the notes on status changes)
+used to be stored as typed; it is encrypted now, and sign-in codes no longer
+keep the address they were asked from. The audit trail keeps the admin's IP and
+browser on purpose: it is the record of who did what.
+
 ## Still to do
 
 These are outside the code and cannot be closed from here.
