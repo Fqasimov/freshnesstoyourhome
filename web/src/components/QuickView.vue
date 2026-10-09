@@ -1,7 +1,7 @@
 <script setup>
 import BIcon from './BIcon.vue'
 import { ref, computed, watch, onUnmounted } from 'vue'
-import { money, perKg } from '../data/catalogue'
+import { money } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
 
 const props = defineProps({ product: { type: Object, default: null } })
@@ -90,10 +90,6 @@ const chosen = computed(() =>
 const price = computed(() => chosen.value ? chosen.value.price : props.product?.price ?? 0)
 const unit  = computed(() => props.product
   ? (chosen.value ? unitOf(props.product, chosen.value) : unitOf(props.product)) : '')
-const kg = computed(() => {
-  if (!props.product) return null
-  return chosen.value ? price.value / (chosen.value.qty / 1000) : perKg(props.product)
-})
 
 const img = ref(null)
 const confirm = () => emit('add', { product: props.product, v: variant.value, qty: qty.value, el: img.value })
@@ -139,7 +135,6 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
             <div><dt>{{ t('ui.category') }}</dt><dd>{{ catName(product.cat) }}</dd></div>
             <div><dt>{{ t('ui.unit') }}</dt><dd>{{ unit }}</dd></div>
             <div><dt>{{ t('ui.price') }}</dt><dd>{{ price }} AZN</dd></div>
-            <div v-if="kg"><dt>{{ t('ui.perkgfull') }}</dt><dd>{{ money(kg) }} AZN</dd></div>
           </dl>
 
           <div class="modal__buy">

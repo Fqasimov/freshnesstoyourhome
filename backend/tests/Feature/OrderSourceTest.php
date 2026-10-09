@@ -153,4 +153,25 @@ class OrderSourceTest extends TestCase
         $this->postJson('/api/orders/web', $order + ['contact_name' => 'Aysel'])
             ->assertStatus(422)->assertJsonValidationErrors(['contact_last_name']);
     }
+
+    public function test_a_website_order_can_carry_a_note_and_a_delivery_date(): void
+    {
+        $date = $this->deliverableDate();
+
+        $res = $this->postJson('/api/orders/web', $this->webOrder([
+            'note' => 'Zəng etməyin, qapıda qoyun', 'delivery_date' => $date,
+        ]))->assertCreated()->json();
+
+        $order = Order::findOrFail($res['id']);
+        $this->assertSame('Zəng etməyin, qapıda qoyun', $order->customer_note);
+        $this->assertSame($date, $order->delivery_date->toDateString());
+    }
+
+    public function test_the_note_and_the_date_are_optional_but_a_date_must_be_one_the_shop_takes(): void
+    {
+        $this->postJson('/api/orders/web', $this->webOrder())->assertCreated();
+
+        $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => now()->subDay()->toDateString()]))
+            ->assertStatus(422)->assertJsonValidationErrors(['delivery_date']);
+    }
 }

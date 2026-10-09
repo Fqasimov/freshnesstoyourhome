@@ -144,6 +144,7 @@ class CatalogueController extends Controller
                     'open' => config('freshness.order.delivery_open'),
                     'close' => config('freshness.order.delivery_close'),
                     'lead_days' => (int) config('freshness.order.lead_days'),
+                    'max_days_ahead' => (int) config('freshness.order.max_days_ahead'),
                     'weight_tolerance_percent' => (int) config('freshness.order.weight_tolerance_percent'),
                     // So the sign-in screen can tell the customer how long
                     // their code lasts without hardcoding a number that would

@@ -61,8 +61,6 @@ export const money = n => {
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2)
 }
 
-/* A per-kilo reference price, but only where it tells the customer
-   something — a 400 gr tin is worth comparing, a single fish is not. */
 /* What a set costs, before and after its discount.
 
    The same arithmetic the server uses to write the order: each product is
@@ -83,19 +81,16 @@ export function setPricing (set) {
   return { items, full: fullMinor / 100, price: priceMinor / 100, saving: (fullMinor - priceMinor) / 100 }
 }
 
-export function perKg (p) {
-  const u = p.unit
-  if (u.kind === 'g') return p.price / (u.qty / 1000)
-  if (u.kind === 'kg' && u.qty !== 1) return p.price / u.qty
-  return null
-}
-
 /* ─────────────────────────────────────────────────────────────────────────
    The real catalogue
    ───────────────────────────────────────────────────────────────────────── */
 
 /** True while the page is showing the bundled copy rather than live data. */
 export const catalogueStale = ref(true)
+
+/* How far ahead an order may be dated: the shop's own rule, as the server
+   states it. The defaults are what the server ships with. */
+export const ORDER_DATES = reactive({ leadDays: 1, maxDaysAhead: 14 })
 
 const API = import.meta.env.VITE_API_URL
 
@@ -255,6 +250,11 @@ export async function loadCatalogue () {
     SETS.splice(0, SETS.length, ...(data.bundles ?? []).map(adaptBundle))
 
     if (Array.isArray(data.zones) && data.zones.length) mergeZones(data.zones)
+
+    const lead = Number(data.delivery?.lead_days)
+    const ahead = Number(data.delivery?.max_days_ahead)
+    if (Number.isFinite(lead) && lead >= 0) ORDER_DATES.leadDays = lead
+    if (Number.isFinite(ahead) && ahead > 0) ORDER_DATES.maxDaysAhead = ahead
 
     catalogueStale.value = false
   } catch {

@@ -11,6 +11,7 @@ const { t, nm } = useI18n()
 const {
   lines, count, total, open, setQty, setQtyTo, remove, whatsapp, weighed, ceiling,
   zoneId, address, mapLink, zone, deliveryText, canSend,
+  note, deliveryDate, minDate, maxDate, dateOk,
   firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode,
 } = useCart()
 
@@ -152,6 +153,19 @@ const MAPS_URL = mapsUrl()
         <input id="cart-map" class="deliv__in" type="url" inputmode="url"
                :placeholder="t('deliv.mapPh')" v-model="mapLink">
         <p class="deliv__hint">{{ t('deliv.mapHint') }}</p>
+
+        <label class="deliv__l" for="cart-date">
+          <span>{{ t('deliv.date') }}<span class="deliv__opt"> · {{ t('deliv.optional') }}</span></span>
+        </label>
+        <input id="cart-date" class="deliv__in" type="date" :min="minDate" :max="maxDate"
+               :class="{ 'deliv__in--bad': !dateOk }" v-model="deliveryDate">
+        <p class="deliv__hint">{{ dateOk ? t('deliv.dateHint') : t('deliv.dateBad') }}</p>
+
+        <label class="deliv__l" for="cart-note">
+          <span>{{ t('deliv.note') }}<span class="deliv__opt"> · {{ t('deliv.optional') }}</span></span>
+        </label>
+        <textarea id="cart-note" class="deliv__in" rows="2" maxlength="500"
+                  :placeholder="t('deliv.notePh')" v-model="note"></textarea>
 
         <div v-if="zone" class="deliv__fee">
           <span>{{ t('ui.waDeliv') }} · {{ nm(zone) }}</span>

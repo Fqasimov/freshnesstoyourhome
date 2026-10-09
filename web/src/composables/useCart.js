@@ -1,5 +1,5 @@
 import { ref, computed, watch } from 'vue'
-import { PRODUCTS, SETS, CONTACT, money, setPricing } from '../data/catalogue'
+import { PRODUCTS, SETS, CONTACT, ORDER_DATES, money, setPricing } from '../data/catalogue'
 import { zoneById, feeText } from '../data/delivery'
 import { useI18n } from './useI18n'
 
@@ -34,6 +34,19 @@ watch([zoneId, address, mapLink, firstName, lastName, phone], ([z, a, m, f, l, p
   try { localStorage.setItem('fth.delivery', JSON.stringify({ zoneId: z, address: a, mapLink: m, firstName: f, lastName: l, phone: p })) }
   catch (e) {}
 })
+
+/* Both optional, and for this order only: a note is about today's basket and a
+   date is a wish for one delivery, so neither is remembered for the next. */
+const note = ref('')
+const deliveryDate = ref('')
+
+/* A date as the server reads it — YYYY-MM-DD, counted from today. */
+const isoIn = days => {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
 
 /* The code of the order just placed, shown in the drawer once it is sent. */
 const placedCode = ref('')
@@ -221,8 +234,13 @@ export function useCart () {
   const NAME_OK = /^\p{L}[\p{L}\s'’.-]*$/u
 const nameOk = v => v.trim().length >= 2 && NAME_OK.test(v.trim())
 const phoneOk = computed(() => /^\+?[0-9 ()-]{7,20}$/.test(phone.value.trim()))
+const minDate = computed(() => isoIn(ORDER_DATES.leadDays))
+const maxDate = computed(() => isoIn(ORDER_DATES.maxDaysAhead))
+/* Empty is fine. A date that is filled in has to be one the shop takes. */
+const dateOk = computed(() => !deliveryDate.value ||
+    (deliveryDate.value >= minDate.value && deliveryDate.value <= maxDate.value))
 const canSend = computed(() => Boolean(
-    zone.value &&
+    zone.value && dateOk.value &&
     (!address.value.trim() || address.value.trim().length >= 5) &&
     nameOk(firstName.value) && nameOk(lastName.value) && phoneOk.value))
 
@@ -241,6 +259,8 @@ const canSend = computed(() => Boolean(
     if (zone.value) msg += `\n${t('ui.waDeliv')}: ${nm(zone.value)} — ${deliveryText.value}`
     if (address.value.trim()) msg += `\n${t('ui.waAddr')}: ${address.value.trim()}`
     if (mapLink.value.trim()) msg += `\n${t('ui.waMap')}: ${mapLink.value.trim()}`
+    if (deliveryDate.value) msg += `\n${t('ui.waDate')}: ${deliveryDate.value}`
+    if (note.value.trim()) msg += `\n${t('ui.waNote')}: ${note.value.trim()}`
 
     msg += `\n${t('deliv.fullName')}: ${firstName.value.trim()} ${lastName.value.trim()}`
     if (phone.value.trim()) msg += `\n${t('deliv.phone')}: ${phone.value.trim()}`
@@ -301,6 +321,8 @@ const canSend = computed(() => Boolean(
             contact_phone: phone.value.trim(),
             address_line: address.value.trim() || null,
             map_link: mapLink.value.trim() || null,
+            delivery_date: deliveryDate.value || null,
+            note: note.value.trim() || null,
           }),
         })
         if (res.ok) code = (await res.json()).code ?? ''
@@ -312,7 +334,7 @@ const canSend = computed(() => Boolean(
     else window.location.href = url
 
     placedCode.value = code
-    if (code) items.value = []
+    if (code) { items.value = []; note.value = ''; deliveryDate.value = '' }
     sending.value = false
   }
 
@@ -326,6 +348,7 @@ const canSend = computed(() => Boolean(
     add, setQty, setQtyTo, remove, whatsapp, qtyOf, step,
     quote, quoting, weighed, ceiling,
     zoneId, address, mapLink, zone, deliveryText, canSend,
+    note, deliveryDate, minDate, maxDate, dateOk,
     firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode,
   }
 }
