@@ -49,19 +49,24 @@ Options -Indexes -MultiViews
   <FilesMatch "\.html$">
     Header set Cache-Control "no-cache"
 
+    # Google Maps is allowed for one reason: the basket's "pick on the map" pin,
+    # which loads only when a Maps key is configured at build time. Scripts,
+    # tiles and API calls from maps.googleapis.com / maps.gstatic.com are the
+    # whole of the exception; nothing else from another site may run.
+    #
     # Only our own scripts run, from our own origin: no inline script, no
     # eval, nothing from another site. This is what keeps an injected string
     # from becoming code — and with it the panel's session token. Styles
     # allow 'unsafe-inline' because Vue writes style attributes; a style
     # cannot read a token. Fonts come from Google. HTML only, so it never
     # overrides the stricter policy the API sets on its own responses.
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://maps.gstatic.com https://*.googleapis.com; connect-src 'self' https://maps.googleapis.com; worker-src blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
   </FilesMatch>
 
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "DENY"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(), usb=()"
   Header always set Cross-Origin-Opener-Policy "same-origin"
 
   # Browsers remember "HTTPS only" for a year. Sent only over HTTPS, and

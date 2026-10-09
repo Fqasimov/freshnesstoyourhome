@@ -1,9 +1,9 @@
 <script setup>
 import BIcon from './BIcon.vue'
+import MapPicker from './MapPicker.vue'
 import { computed } from 'vue'
 import { money } from '../data/catalogue'
 import { ZONES } from '../data/delivery'
-import { mapsUrl } from '../data/brand'
 import { useI18n } from '../composables/useI18n'
 import { useCart } from '../composables/useCart'
 
@@ -17,16 +17,6 @@ const {
 
 const countLabel = computed(() =>
   `${count.value} ${count.value === 1 ? t('ui.item') : t('ui.items')}`)
-
-/* Somewhere to send people to fetch a link. An embedded picker needs a billed
-   Google Maps key; this needs none, and the link a phone's Share button
-   produces already resolves to an exact point. When a key exists, the picker
-   slots in above the field and writes its pin into `mapLink` — see
-   VITE_GOOGLE_MAPS_KEY in .env.example.
-
-   The centre it opens on is in shared/brand.json, so the app's checkout opens
-   the same map on the same city. */
-const MAPS_URL = mapsUrl()
 </script>
 
 <template>
@@ -143,16 +133,7 @@ const MAPS_URL = mapsUrl()
         <textarea id="cart-addr" class="deliv__in" rows="2"
                   :placeholder="t('deliv.addrPh')" v-model="address"></textarea>
 
-        <!-- The embedded picker goes here once there is a Maps key. -->
-        <label class="deliv__l" for="cart-map">
-          <span>{{ t('deliv.map') }}<span class="deliv__opt"> · {{ t('deliv.optional') }}</span></span>
-          <a class="deliv__open" :href="MAPS_URL" target="_blank" rel="noopener">
-            <BIcon name="geo-alt" :size="11" /> {{ t('deliv.mapOpen') }}
-          </a>
-        </label>
-        <input id="cart-map" class="deliv__in" type="url" inputmode="url"
-               :placeholder="t('deliv.mapPh')" v-model="mapLink">
-        <p class="deliv__hint">{{ t('deliv.mapHint') }}</p>
+        <MapPicker v-model="mapLink" />
 
         <label class="deliv__l" for="cart-date">
           <span>{{ t('deliv.date') }}<span class="deliv__opt"> · {{ t('deliv.optional') }}</span></span>
