@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import { PRODUCTS, CATEGORIES } from '../data/catalogue'
 import { CATEGORY_LOOK } from '../data/brand'
 import { useI18n } from '../composables/useI18n'
@@ -19,7 +20,11 @@ const { t, lang, nm, catName } = useI18n()
 defineEmits(['add', 'add-set', 'peek'])
 
 /* ── Filter state ──────────────────────────────────────────────────────── */
-const query = ref('')
+const route = useRoute()
+/* /kataloq?q=skumbriya opens the catalogue already searching — what the tag
+   links in the footer, and anyone sharing a search, rely on. */
+const query = ref(typeof route.query.q === 'string' ? route.query.q.slice(0, 60) : '')
+watch(() => route.query.q, q => { query.value = typeof q === 'string' ? q.slice(0, 60) : '' })
 const category = ref('all')
 const band = ref('any')
 const quick = ref(new Set())

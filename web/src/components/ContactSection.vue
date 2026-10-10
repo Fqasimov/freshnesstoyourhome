@@ -8,7 +8,15 @@ const { t } = useI18n()
 const waHref = computed(() =>
   `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(t('ui.waPlain'))}`)
 
-const igHref = computed(() => `https://instagram.com/${CONTACT.instagram}`)
+/* The brand file may hold a bare handle, an @handle, or a whole profile link —
+   all three are what somebody pastes in. Whichever it is, the link ends up as
+   the profile's own address on www.instagram.com. */
+const igHref = computed(() => {
+  const raw = String(CONTACT.instagram || '').trim()
+  if (/^https?:\/\//i.test(raw)) return raw
+  const handle = raw.replace(/^@/, '').replace(/^(www\.)?instagram\.com\//i, '').replace(/\/+$/, '')
+  return `https://www.instagram.com/${encodeURIComponent(handle)}/`
+})
 
 const hours = [['h.deliv', 'h.delivv'], ['h.support', 'h.supportv']]
 const terms = [['h.zone', 'h.zonev'], ['h.pay', 'h.payv'], ['h.order', 'h.orderv']]

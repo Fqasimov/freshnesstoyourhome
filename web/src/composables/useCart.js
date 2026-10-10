@@ -1,5 +1,5 @@
 import { ref, computed, watch } from 'vue'
-import { PRODUCTS, SETS, CONTACT, money, setPricing } from '../data/catalogue'
+import { PRODUCTS, SETS, CONTACT, ORDER_DATES, money, setPricing } from '../data/catalogue'
 import { zoneById, feeText } from '../data/delivery'
 import { useI18n } from './useI18n'
 
@@ -23,13 +23,30 @@ const saved = readDelivery()
 const zoneId  = ref(saved.zoneId || '')
 const address = ref(saved.address || '')
 const mapLink = ref(saved.mapLink || '')
-const name    = ref(saved.name || '')
+/* First name and surname are asked separately; a name saved by the older single
+   field is split on its first space so a returning customer is not asked twice. */
+const legacy    = String(saved.name || '').trim().split(/\s+/)
+const firstName = ref(saved.firstName ?? legacy[0] ?? '')
+const lastName  = ref(saved.lastName ?? legacy.slice(1).join(' '))
 const phone   = ref(saved.phone || '')
 
-watch([zoneId, address, mapLink, name, phone], ([z, a, m, n, p]) => {
-  try { localStorage.setItem('fth.delivery', JSON.stringify({ zoneId: z, address: a, mapLink: m, name: n, phone: p })) }
+watch([zoneId, address, mapLink, firstName, lastName, phone], ([z, a, m, f, l, p]) => {
+  try { localStorage.setItem('fth.delivery', JSON.stringify({ zoneId: z, address: a, mapLink: m, firstName: f, lastName: l, phone: p })) }
   catch (e) {}
 })
+
+/* Both optional, and for this order only: a note is about today's basket and a
+   date is a wish for one delivery, so neither is remembered for the next. */
+const note = ref('')
+const deliveryDate = ref('')
+
+/* A date as the server reads it — YYYY-MM-DD, counted from today. */
+const isoIn = days => {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
 
 /* The code of the order just placed, shown in the drawer once it is sent. */
 const placedCode = ref('')
@@ -52,24 +69,20 @@ watch(items, v => {
 
 const keyOf = (id, v, kind) => kind + ':' + id + '::' + (v == null ? '-' : v)
 
-/* What the order is made of, as the server understands it: products, and
-   sets by name. A set's contents and its discount are the panel's, so the
-   server prices it — the total here, in the message and in the panel is one
-   figure. */
-function orderBody () {
-  return {
-    lines: items.value.filter(it => it.kind !== 'set').map(it => ({ product_id: it.id, qty: it.qty })),
-    bundles: items.value.filter(it => it.kind === 'set').map(it => ({ bundle_id: it.id, qty: it.qty })),
-  }
-}
-
-/* Ask the server what the basket costs. */
+/* Ask the server what the basket costs.
+   Sets go as sets, not as their products, so the server applies the set's
+   discount itself — the figure in the message is then the figure on the order. */
 async function refreshQuote () {
   if (!API) return
 
-  const basket = orderBody()
+  const basket = items.value
+    .filter(it => it.kind !== 'set')
+    .map(it => ({ product_id: it.id, qty: it.qty }))
+  const bundles = items.value
+    .filter(it => it.kind === 'set')
+    .map(it => ({ id: it.id, qty: Math.max(1, Math.round(it.qty)) }))
 
-  if (basket.lines.length === 0 && basket.bundles.length === 0) { quote.value = null; return }
+  if (basket.length === 0 && bundles.length === 0) { quote.value = null; return }
 
   const id = ++quoteId
   quoting.value = true
@@ -79,7 +92,8 @@ async function refreshQuote () {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
-        ...basket,
+        lines: basket,
+        bundles,
         /* The endpoint has always taken this; the site simply never sent it,
            so every basket was priced as though delivery were free. An id the
            table does not know resolves to no zone and no fee, which is why
@@ -107,6 +121,17 @@ async function refreshQuote () {
 watch(items, refreshQuote, { deep: true, immediate: true })
 watch(zoneId, refreshQuote)
 
+/* Goods sold by the kilo can be ordered in any weight, so their quantity is typed
+   (or stepped by half a kilo) rather than counted. A product whose "kilo" unit is
+   something else — a 1.5 kg pack — is still counted in packs. */
+const isWeighed = id => {
+  const p = PRODUCTS.find(x => x.id === id)
+  return Boolean(p && p.unit?.kind === 'kg' && (p.unit.qty ?? 1) === 1)
+}
+const WEIGH_MIN = 0.1
+const MAX_QTY = 99
+const round2 = v => Math.round(v * 100) / 100
+
 export function useCart () {
   const { t, nm, unitOf } = useI18n()
 
@@ -130,7 +155,8 @@ export function useCart () {
     return {
       key: it.key, qty: it.qty, product: p,
       price: v ? v.price : p.price,
-      unit:  unitOf(p, v)
+      unit:  unitOf(p, v),
+      weighed: !v && isWeighed(p.id)
     }
   }
 
@@ -161,15 +187,30 @@ export function useCart () {
   function add (id, v = null, qty = 1, kind = 'product') {
     const key = keyOf(id, v, kind)
     const hit = items.value.find(c => c.key === key)
-    if (hit) hit.qty += qty
+    if (hit) hit.qty = round2(Math.min(MAX_QTY, hit.qty + qty))
     else items.value.push({ key, id, v, qty, kind })
   }
 
   function setQty (key, delta) {
     const it = items.value.find(c => c.key === key)
     if (!it) return
-    it.qty += delta
-    if (it.qty <= 0) remove(key)
+    const weighed = it.kind !== 'set' && isWeighed(it.id)
+    it.qty = round2(Math.min(MAX_QTY, it.qty + delta * (weighed ? 0.5 : 1)))
+    if (it.qty < (weighed ? WEIGH_MIN : 1)) remove(key)
+  }
+
+  /* A typed quantity. Anything that is not a sensible number is ignored, so a
+     half-typed "1," does not empty the basket; the field shows the stored
+     value again when it loses focus. */
+  function setQtyTo (key, raw) {
+    const it = items.value.find(c => c.key === key)
+    if (!it) return
+    const weighed = it.kind !== 'set' && isWeighed(it.id)
+    const n = Number(String(raw).trim().replace(',', '.'))
+    if (!Number.isFinite(n)) return
+    const next = weighed ? round2(n) : Math.round(n)
+    if (next < (weighed ? WEIGH_MIN : 1) || next > MAX_QTY) return
+    it.qty = next
   }
 
   const remove = key => { items.value = items.value.filter(c => c.key !== key) }
@@ -190,9 +231,18 @@ export function useCart () {
   const deliveryText = computed(() => (zone.value ? `${feeText(zone.value)} AZN` : ''))
 
   /* Nowhere to send it is as incomplete a basket as nothing in it. */
-  const canSend = computed(() => Boolean(
-    zone.value && address.value.trim() && name.value.trim().length >= 2 &&
-    /^\+?[0-9 ()-]{7,20}$/.test(phone.value.trim())))
+  const NAME_OK = /^\p{L}[\p{L}\s'’.-]*$/u
+const nameOk = v => v.trim().length >= 2 && NAME_OK.test(v.trim())
+const phoneOk = computed(() => /^\+?[0-9 ()-]{7,20}$/.test(phone.value.trim()))
+const minDate = computed(() => isoIn(ORDER_DATES.leadDays))
+const maxDate = computed(() => isoIn(ORDER_DATES.maxDaysAhead))
+/* Empty is fine. A date that is filled in has to be one the shop takes. */
+const dateOk = computed(() => !deliveryDate.value ||
+    (deliveryDate.value >= minDate.value && deliveryDate.value <= maxDate.value))
+const canSend = computed(() => Boolean(
+    zone.value && dateOk.value &&
+    (!address.value.trim() || address.value.trim().length >= 5) &&
+    nameOk(firstName.value) && nameOk(lastName.value) && phoneOk.value))
 
   const messageFor = code => {
     let msg = t('ui.waIntro') + '\n\n'
@@ -209,8 +259,10 @@ export function useCart () {
     if (zone.value) msg += `\n${t('ui.waDeliv')}: ${nm(zone.value)} — ${deliveryText.value}`
     if (address.value.trim()) msg += `\n${t('ui.waAddr')}: ${address.value.trim()}`
     if (mapLink.value.trim()) msg += `\n${t('ui.waMap')}: ${mapLink.value.trim()}`
+    if (deliveryDate.value) msg += `\n${t('ui.waDate')}: ${deliveryDate.value}`
+    if (note.value.trim()) msg += `\n${t('ui.waNote')}: ${note.value.trim()}`
 
-    if (name.value.trim()) msg += `\n${t('deliv.name')}: ${name.value.trim()}`
+    msg += `\n${t('deliv.fullName')}: ${firstName.value.trim()} ${lastName.value.trim()}`
     if (phone.value.trim()) msg += `\n${t('deliv.phone')}: ${phone.value.trim()}`
 
     msg += `\n\n${t('ui.waOutro')}`
@@ -219,6 +271,24 @@ export function useCart () {
   }
 
   const whatsapp = computed(() => messageFor(placedCode.value))
+
+  /* What the order is made of, as the server understands it: plain products,
+     and each set as itself — the server knows what is in it and what it costs. */
+  function orderLines () {
+    const qty = new Map()
+    const bundles = new Map()
+    for (const it of items.value) {
+      if (it.kind === 'set') {
+        bundles.set(it.id, (bundles.get(it.id) ?? 0) + Math.max(1, Math.round(it.qty)))
+      } else {
+        qty.set(it.id, (qty.get(it.id) ?? 0) + it.qty)
+      }
+    }
+    return {
+      lines: [...qty].map(([product_id, q]) => ({ product_id, qty: q })),
+      bundles: [...bundles].map(([id, q]) => ({ id, qty: q })),
+    }
+  }
 
   /**
    * Place the order, then open WhatsApp.
@@ -235,6 +305,8 @@ export function useCart () {
   async function send () {
     if (!canSend.value || sending.value) return
     const tab = window.open('', '_blank')
+    // The tab is about to go to a page that is not ours; it gets no handle on this one.
+    if (tab) tab.opener = null
     sending.value = true
     let code = ''
 
@@ -244,12 +316,15 @@ export function useCart () {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({
-            ...orderBody(),
+            ...orderLines(),
             zone_id: zoneId.value,
-            contact_name: name.value.trim(),
+            contact_first_name: firstName.value.trim(),
+            contact_last_name: lastName.value.trim(),
             contact_phone: phone.value.trim(),
-            address_line: address.value.trim(),
+            address_line: address.value.trim() || null,
             map_link: mapLink.value.trim() || null,
+            delivery_date: deliveryDate.value || null,
+            note: note.value.trim() || null,
           }),
         })
         if (res.ok) code = (await res.json()).code ?? ''
@@ -261,7 +336,7 @@ export function useCart () {
     else window.location.href = url
 
     placedCode.value = code
-    if (code) items.value = []
+    if (code) { items.value = []; note.value = ''; deliveryDate.value = '' }
     sending.value = false
   }
 
@@ -272,9 +347,10 @@ export function useCart () {
 
   return {
     items, lines, count, total, localTotal, open,
-    add, setQty, remove, whatsapp, qtyOf, step,
+    add, setQty, setQtyTo, remove, whatsapp, qtyOf, step,
     quote, quoting, weighed, ceiling,
     zoneId, address, mapLink, zone, deliveryText, canSend,
-    name, phone, send, sending, placedCode,
+    note, deliveryDate, minDate, maxDate, dateOk,
+    firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode,
   }
 }

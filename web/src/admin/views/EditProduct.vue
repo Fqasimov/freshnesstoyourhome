@@ -13,7 +13,7 @@ const props = defineProps({
   product: { type: Object, required: true },
   categories: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['close', 'saved'])
+const emit = defineEmits(['close', 'saved', 'deleted', 'changed'])
 
 const LANGS = [
   { id: 'az', label: 'Azərbaycanca', required: true },
@@ -24,6 +24,9 @@ const LANGS = [
 const p = props.product
 const form = ref({
   category_id: p.category_id,
+  code: p.id,
+  unit_kind: p.unit_kind,
+  unit_qty: String(p.unit_qty ?? 1),
   ...Object.fromEntries(LANGS.map(l => [l.id, {
     name: p.name?.[l.id] ?? '',
     description: p.description?.[l.id] ?? '',
@@ -32,7 +35,68 @@ const form = ref({
 })
 const busy = ref(false)
 
-const ready = computed(() => form.value.az.name.trim().length > 0)
+/* The extra photographs, kept here so adding and removing one shows at once. */
+const gallery = ref([...(p.gallery ?? [])])
+const picking = ref(null)
+const uploading = ref(false)
+const GALLERY_MAX = 8
+
+async function addPhotos (ev) {
+  const files = [...(ev.target.files ?? [])]
+  ev.target.value = ''
+  if (!files.length) return
+  uploading.value = true
+  try {
+    for (const file of files) {
+      if (gallery.value.length >= GALLERY_MAX) { complain({ message: `Ən çox ${GALLERY_MAX} əlavə şəkil.` }); break }
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { complain({ message: 'Yalnız JPEG, PNG və ya WebP.' }); continue }
+      if (file.size > 8 * 1024 * 1024) { complain({ message: 'Şəkil 8 MB-dan böyük olmamalıdır.' }); continue }
+      const body = new FormData()
+      body.append('photo', file)
+      const updated = await api(`/admin/products/${p.id}/gallery`, { method: 'POST', body })
+      gallery.value = updated.gallery ?? []
+      p.gallery = gallery.value
+    }
+    say('Şəkil əlavə edildi')
+    emit('changed', { ...p, gallery: gallery.value })
+  } catch (e) {
+    complain(e)
+  } finally {
+    uploading.value = false
+  }
+}
+
+async function removePhoto (img) {
+  try {
+    const updated = await api(`/admin/products/${p.id}/gallery/${img.id}`, { method: 'DELETE' })
+    gallery.value = updated.gallery ?? []
+    p.gallery = gallery.value
+    emit('changed', { ...p, gallery: gallery.value })
+  } catch (e) {
+    complain(e)
+  }
+}
+
+async function destroy () {
+  const name = p.name?.az ?? p.id
+  if (!window.confirm(`“${name}” həmişəlik silinsin?\n\nKeçmiş sifarişlər dəyişməyəcək. Aksiyalardan da çıxarılacaq. Bu əməliyyatı geri qaytarmaq olmur.`)) return
+  busy.value = true
+  try {
+    await api(`/admin/products/${p.id}`, { method: 'DELETE' })
+    say(`${name} silindi`)
+    emit('deleted', p.id)
+  } catch (e) {
+    complain(e)
+  } finally {
+    busy.value = false
+  }
+}
+
+const CODE = /^[a-z0-9]+(-[a-z0-9]+)*$/
+const codeOk = computed(() => form.value.code === p.id || (CODE.test(form.value.code) && form.value.code.length >= 3))
+const qtyNum = computed(() => Number(String(form.value.unit_qty).replace(',', '.')))
+const qtyOk = computed(() => Number.isFinite(qtyNum.value) && qtyNum.value >= 0.001 && qtyNum.value <= 9999)
+const ready = computed(() => form.value.az.name.trim().length > 0 && codeOk.value && qtyOk.value)
 
 async function save () {
   if (!ready.value) return
@@ -46,12 +110,16 @@ async function save () {
       unit_label: form.value[l.id].unit_label.trim() || null,
     }]))
 
-    const updated = await api(`/admin/products/${p.id}`, {
-      method: 'PATCH',
-      body: { category_id: form.value.category_id, translations },
-    })
+    const body = { category_id: form.value.category_id, translations }
+    // Only what was touched is sent: a code or unit nobody changed must not
+    // ride along and be mistaken for an edit.
+    if (form.value.code !== p.id) body.new_id = form.value.code
+    if (form.value.unit_kind !== p.unit_kind) body.unit_kind = form.value.unit_kind
+    if (qtyNum.value !== Number(p.unit_qty ?? 1)) body.unit_qty = qtyNum.value
+
+    const updated = await api(`/admin/products/${p.id}`, { method: 'PATCH', body })
     say(`${updated.name?.az ?? updated.id} yadda saxlanıldı`)
-    emit('saved', updated)
+    emit('saved', updated, p.id)
   } catch (e) {
     complain(e)
   } finally {
@@ -76,6 +144,32 @@ async function save () {
       <select v-model="form.category_id" class="a-in">
         <option v-for="[id, name] in categories" :key="id" :value="id">{{ name }}</option>
       </select>
+    </div>
+
+    <div class="a-sec">
+      <h3>Kod</h3>
+      <input v-model.trim="form.code" class="a-in a-mono" maxlength="60" aria-label="Məhsul kodu"
+             :class="{ 'a-in--dirty': !codeOk }" autocapitalize="off" spellcheck="false">
+      <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
+        Kiçik latın hərfləri, rəqəmlər və tire (məs. <span class="a-mono">hise-qizil-baliq</span>).
+        Kod dəyişəndə keçmiş sifarişlər, aksiyalar və şəkillər yeni koda keçir.
+      </p>
+    </div>
+
+    <div class="a-sec">
+      <h3>Vahidin növü</h3>
+      <div class="a-row">
+        <select v-model="form.unit_kind" class="a-in" style="max-width:200px" aria-label="Vahidin növü">
+          <option value="kg">Çəki ilə (kq)</option>
+          <option value="pc">Ədəd ilə</option>
+        </select>
+        <input v-model="form.unit_qty" class="a-in a-in--num" style="width:90px" inputmode="decimal"
+               :class="{ 'a-in--dirty': !qtyOk }" aria-label="Vahidin miqdarı">
+        <span class="a-muted" style="font-size:.8rem">{{ form.unit_kind === 'kg' ? 'kq' : 'ədəd' }} — qiymət bu miqdara aiddir</span>
+      </div>
+      <p v-if="form.unit_kind !== p.unit_kind" class="a-muted" style="font-size:.76rem; margin:8px 0 0">
+        Növü dəyişəndə qiymətin nəyə aid olduğunu da yoxlayın. Artıq verilmiş sifarişlər dəyişmir.
+      </p>
     </div>
 
     <div class="a-sec">
@@ -104,9 +198,28 @@ async function save () {
       </p>
     </div>
 
+    <div class="a-sec">
+      <h3>Əlavə şəkillər <span class="a-muted" style="font-weight:400">({{ gallery.length }}/{{ GALLERY_MAX }})</span></h3>
+      <div class="a-gallery">
+        <div v-for="g in gallery" :key="g.id" class="a-gallery__it">
+          <img :src="g.thumb_url ?? g.image_url" alt="">
+          <button type="button" class="a-gallery__x" aria-label="Şəkli sil" @click="removePhoto(g)">×</button>
+        </div>
+        <button v-if="gallery.length < GALLERY_MAX" type="button" class="a-gallery__add" :disabled="uploading"
+                @click="picking.click()">
+          {{ uploading ? '…' : '+ Şəkil' }}
+        </button>
+        <input ref="picking" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden @change="addPhotos">
+      </div>
+      <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
+        Əsas şəkil cədvəldə dəyişdirilir. Bunlar məhsul açılanda saytda əlavə olaraq göstərilir.
+      </p>
+    </div>
+
     <div class="a-drawer__foot">
       <button class="a-btn" :disabled="!ready || busy" @click="save">{{ busy ? '…' : 'Yadda saxla' }}</button>
       <button class="a-btn a-btn--ghost" :disabled="busy" @click="emit('close')">Ləğv et</button>
+      <button class="a-btn a-btn--danger" style="margin-left:auto" :disabled="busy" @click="destroy">Məhsulu sil</button>
     </div>
   </aside>
 </template>

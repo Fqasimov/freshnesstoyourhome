@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 
@@ -15,6 +15,15 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
 export default defineConfig(({ mode }) => {
   const single = mode === 'single'
   const adminDemo = mode === 'admin-demo'
+
+  /* The panel's demo mode answers from made-up data and accepts any sign-in. It
+     is switched on by VITE_ADMIN_DEMO=1 and must only ever be on for the demo
+     build. A stray value in a .env file or the shell would otherwise be baked
+     into the real panel without a word. */
+  const env = { ...loadEnv(mode, process.cwd(), 'VITE_'), ...process.env }
+  if (!adminDemo && env.VITE_ADMIN_DEMO) {
+    throw new Error('VITE_ADMIN_DEMO is set for a build that is not the demo build. Unset it.')
+  }
   const oneFile = single || adminDemo
 
   return {

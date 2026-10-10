@@ -55,6 +55,7 @@ Route::post('orders/web', [OrderController::class, 'storeFromWebsite'])
 
 // Run migrations after an automated upload. Token-gated; see DeployController.
 Route::post('deploy/migrate', [DeployController::class, 'migrate'])->middleware('throttle:deploy');
+Route::post('deploy/reencrypt', [DeployController::class, 'reencrypt'])->middleware('throttle:deploy');
 
 Route::prefix('auth')->group(function () {
     // Tightly limited: this endpoint sends mail on request, which makes it the
@@ -82,7 +83,7 @@ Route::prefix('auth')->group(function () {
         ->middleware('throttle:password-login');
     Route::post('social/{provider}', [AccountAuthController::class, 'social'])
         ->whereIn('provider', ['google', 'apple'])
-        ->middleware('throttle:password-login');
+        ->middleware('throttle:social-login');
 
     // The admin panel's own door. Only addresses in ADMIN_EMAILS get a code
     // or a token here, and the token it issues is the only kind the admin
@@ -97,8 +98,6 @@ Route::prefix('auth')->group(function () {
 
 // ------------------------------------------------------------- signed in ---
 
-// throttle:api, because nothing else limits these: one free account and a
-// loop could otherwise add addresses or devices without end.
 Route::middleware(['auth:sanctum', 'blocked', 'throttle:api'])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::patch('me', [ProfileController::class, 'update']);
@@ -165,21 +164,29 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::post('products', [ProductController::class, 'store']);
         Route::patch('products/{id}', [ProductController::class, 'update']);
         Route::post('products/stock', [ProductController::class, 'stock']);
+        Route::post('products/order', [ProductController::class, 'reorder']);
 
         // Separate limiter: an upload costs disk and a few hundred milliseconds
         // of image decoding, where the rest of this group costs a query.
         Route::post('products/{id}/photo', [ProductController::class, 'photo'])
             ->middleware('throttle:admin-upload');
         Route::delete('products/{id}/photo', [ProductController::class, 'removePhoto']);
+        Route::post('products/{id}/gallery', [ProductController::class, 'addGalleryPhoto'])
+            ->middleware('throttle:admin-upload');
+        Route::delete('products/{id}/gallery/{imageId}', [ProductController::class, 'removeGalleryPhoto'])
+            ->whereNumber('imageId');
+        Route::delete('products/{id}', [ProductController::class, 'destroy']);
 
         Route::get('categories', [CategoryController::class, 'index']);
         Route::post('categories', [CategoryController::class, 'store']);
+        Route::post('categories/order', [CategoryController::class, 'reorder']);
         Route::patch('categories/{id}', [CategoryController::class, 'update']);
         Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
 
         Route::get('bundles', [BundleController::class, 'index']);
         Route::post('bundles', [BundleController::class, 'store']);
         Route::patch('bundles/{id}', [BundleController::class, 'update']);
+        Route::delete('bundles/{id}', [BundleController::class, 'destroy']);
         Route::post('bundles/{id}/photo', [BundleController::class, 'photo'])
             ->middleware('throttle:admin-upload');
         Route::delete('bundles/{id}/photo', [BundleController::class, 'removePhoto']);
@@ -187,6 +194,7 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::get('zones', [DeliveryZoneController::class, 'index']);
         Route::post('zones', [DeliveryZoneController::class, 'store']);
         Route::patch('zones/{id}', [DeliveryZoneController::class, 'update']);
+        Route::delete('zones/{id}', [DeliveryZoneController::class, 'destroy']);
 
         Route::get('customers', [CustomerController::class, 'index']);
         Route::get('customers/{id}', [CustomerController::class, 'show']);

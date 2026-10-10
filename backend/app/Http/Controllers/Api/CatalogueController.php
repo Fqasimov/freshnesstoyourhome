@@ -47,7 +47,7 @@ class CatalogueController extends Controller
                 ])
                 ->all();
 
-            $products = Product::with('translations')
+            $products = Product::with(['translations', 'gallery'])
                 ->orderable()
                 ->orderBy('sort')
                 ->get()
@@ -72,6 +72,8 @@ class CatalogueController extends Controller
                     'image' => $p->image_path,
                     'image_url' => $p->imageUrl(),
                     'thumb_url' => $p->thumbUrl(),
+                    // Extra photographs, shown when the product is opened.
+                    'gallery' => array_map(fn ($g) => ['image_url' => $g['image_url'], 'thumb_url' => $g['thumb_url']], $p->galleryPayload()),
                     'name' => $p->translationMap('name'),
                     'description' => $p->translationMap('description'),
                     'unit_label' => $p->translationMap('unit_label'),
@@ -142,6 +144,7 @@ class CatalogueController extends Controller
                     'open' => config('freshness.order.delivery_open'),
                     'close' => config('freshness.order.delivery_close'),
                     'lead_days' => (int) config('freshness.order.lead_days'),
+                    'max_days_ahead' => (int) config('freshness.order.max_days_ahead'),
                     'weight_tolerance_percent' => (int) config('freshness.order.weight_tolerance_percent'),
                     // So the sign-in screen can tell the customer how long
                     // their code lasts without hardcoding a number that would

@@ -61,27 +61,24 @@ export const money = n => {
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2)
 }
 
-/* A per-kilo reference price, but only where it tells the customer
-   something — a 400 gr tin is worth comparing, a single fish is not. */
-/* What a set costs, before and after its discount. */
+/* What a set costs, before and after its discount.
+
+   The same arithmetic the server uses to write the order: each product is
+   discounted on its own and rounded to the qəpik, then multiplied by how many
+   are in the set. Rounding the total to a whole manat instead made the card
+   say "−10%" over a price that was really 8% or 12% off, and a price that
+   differed from the one on the order. */
 export function setPricing (set) {
   const items = set.items.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean)
   /* Bundles from the API carry a quantity per line — two loaves, one tin. The
      bundled fallback sets have none, so the default keeps their arithmetic
      exactly as it was. */
   const qty = id => set.qty?.[id] ?? 1
-  /* In qəpik and rounded exactly as the server rounds it — the discount is
-     taken down to the qəpik — so the price on the card is the price charged. */
-  const fullMinor = items.reduce((sum, p) => sum + Math.round((p.priceMinor ?? Math.round(p.price * 100)) * qty(p.id)), 0)
-  const priceMinor = fullMinor - Math.floor(fullMinor * set.off / 100)
+  const minor = p => p.priceMinor ?? Math.round(p.price * 100)
+  const fullMinor = items.reduce((sum, p) => sum + Math.round(minor(p) * qty(p.id)), 0)
+  const priceMinor = items.reduce((sum, p) =>
+    sum + Math.round(Math.round(minor(p) * (100 - set.off) / 100) * qty(p.id)), 0)
   return { items, full: fullMinor / 100, price: priceMinor / 100, saving: (fullMinor - priceMinor) / 100 }
-}
-
-export function perKg (p) {
-  const u = p.unit
-  if (u.kind === 'g') return p.price / (u.qty / 1000)
-  if (u.kind === 'kg' && u.qty !== 1) return p.price / u.qty
-  return null
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -90,6 +87,10 @@ export function perKg (p) {
 
 /** True while the page is showing the bundled copy rather than live data. */
 export const catalogueStale = ref(true)
+
+/* How far ahead an order may be dated: the shop's own rule, as the server
+   states it. The defaults are what the server ships with. */
+export const ORDER_DATES = reactive({ leadDays: 1, maxDaysAhead: 14 })
 
 const API = import.meta.env.VITE_API_URL
 
@@ -131,6 +132,8 @@ function adaptProduct (p) {
        has no bundled picture at all — shows the one that was uploaded with
        it. */
     img: p.image_url ?? PHOTOS[`../assets/products/${p.image ?? p.id + '.jpg'}`] ?? null,
+    /* Extra photographs, in order; shown as small pictures under the main one. */
+    gallery: (p.gallery ?? []).map(g => ({ url: g.image_url, thumb: g.thumb_url ?? g.image_url })),
   }
 }
 
@@ -247,6 +250,11 @@ export async function loadCatalogue () {
     SETS.splice(0, SETS.length, ...(data.bundles ?? []).map(adaptBundle))
 
     if (Array.isArray(data.zones) && data.zones.length) mergeZones(data.zones)
+
+    const lead = Number(data.delivery?.lead_days)
+    const ahead = Number(data.delivery?.max_days_ahead)
+    if (Number.isFinite(lead) && lead >= 0) ORDER_DATES.leadDays = lead
+    if (Number.isFinite(ahead) && ahead > 0) ORDER_DATES.maxDaysAhead = ahead
 
     catalogueStale.value = false
   } catch {

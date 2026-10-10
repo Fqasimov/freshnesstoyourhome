@@ -46,6 +46,26 @@ async function remove (c) {
   }
 }
 
+/* Moving a category swaps it with its neighbour and sends the whole new order,
+   so the numbers on the server are rewritten together and never collide. */
+const moving = ref(false)
+async function move (c, dir) {
+  const i = rows.value.indexOf(c)
+  const j = i + dir
+  if (moving.value || j < 0 || j >= rows.value.length) return
+  const next = rows.value.slice()
+  ;[next[i], next[j]] = [next[j], next[i]]
+  moving.value = true
+  try {
+    await api('/admin/categories/order', { method: 'POST', body: { ids: next.map(r => r.id) } })
+    rows.value = next
+  } catch (e) {
+    complain(e)
+  } finally {
+    moving.value = false
+  }
+}
+
 function saved (c) {
   const row = rows.value.find(r => r.id === c.id)
   if (row) Object.assign(row, c)
@@ -60,7 +80,7 @@ onMounted(load)
   <div class="a-row" style="align-items:flex-start">
     <div style="flex:1">
       <h2 class="a-h">Kateqoriyalar</h2>
-      <p class="a-sub">Adı dəyişmək üçün kateqoriyanın adına toxunun. Yeni kateqoriya ilk məhsulu əlavə ediləndən sonra saytda və tətbiqdə görünür.</p>
+      <p class="a-sub">Adı dəyişmək üçün kateqoriyanın adına toxunun. Yerini dəyişmək üçün ↑ ↓ düymələrindən istifadə edin — saytda və tətbiqdə eyni sıra ilə görünür. Yeni kateqoriya ilk məhsulu əlavə ediləndən sonra saytda və tətbiqdə görünür.</p>
     </div>
     <button class="a-btn" @click="editing = 'new'">+ Yeni kateqoriya</button>
   </div>
@@ -70,6 +90,7 @@ onMounted(load)
     <table class="a-t">
       <thead>
         <tr>
+          <th style="width:76px">Sıra</th>
           <th>Kateqoriya</th>
           <th class="num">Məhsul</th>
           <th>Aktiv</th>
@@ -77,7 +98,13 @@ onMounted(load)
         </tr>
       </thead>
       <tbody>
-        <tr v-for="c in rows" :key="c.id">
+        <tr v-for="(c, i) in rows" :key="c.id">
+          <td class="a-move">
+            <button type="button" class="a-btn a-btn--sm a-btn--ghost" :disabled="moving || i === 0"
+                    aria-label="Yuxarı" @click="move(c, -1)">↑</button>
+            <button type="button" class="a-btn a-btn--sm a-btn--ghost" :disabled="moving || i === rows.length - 1"
+                    aria-label="Aşağı" @click="move(c, 1)">↓</button>
+          </td>
           <td>
             <button type="button" class="a-link" @click="editing = c">{{ c.name?.az ?? c.id }}</button>
             <div class="a-mono a-muted">{{ c.id }}</div>

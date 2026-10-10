@@ -29,7 +29,9 @@ permissions:
 
 jobs:
   publish:
-    if: vars.APP_UPDATES_ENABLED == 'true'
+    # Only from the release branch. "Run workflow" lets anyone with write
+    # access pick any branch; that must not be a way to ship unreviewed code.
+    if: vars.APP_UPDATES_ENABLED == 'true' && github.ref == 'refs/heads/claude/photo-analysis-bgp25f'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:

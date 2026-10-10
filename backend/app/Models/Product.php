@@ -71,6 +71,22 @@ class Product extends Model
         return $this->hasMany(ProductTranslation::class);
     }
 
+    /** The extra photographs, in the order they are shown. */
+    public function gallery(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /** @return list<array{id:int,image_url:string,thumb_url:string}> */
+    public function galleryPayload(): array
+    {
+        return $this->gallery->map(fn (ProductImage $i) => [
+            'id' => $i->id,
+            'image_url' => $i->url(),
+            'thumb_url' => $i->thumbUrl(),
+        ])->all();
+    }
+
     /**
      * Sold by weight, so the price at checkout can only be an estimate.
      *
@@ -84,6 +100,9 @@ class Product extends Model
 
     public function scopeOrderable(Builder $query): Builder
     {
-        return $query->where('is_active', true)->where('in_stock', true);
+        // A category switched off in the panel takes its products off sale
+        // with it, not merely off the shelf.
+        return $query->where('is_active', true)->where('in_stock', true)
+            ->whereHas('category', fn (Builder $q) => $q->where('is_active', true));
     }
 }

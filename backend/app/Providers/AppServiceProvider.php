@@ -93,8 +93,8 @@ class AppServiceProvider extends ServiceProvider
         // finer-grained budgets on top of this; this is the coarse gate that
         // keeps a flood from reaching the mailer at all.
         RateLimiter::for('otp-request', fn (Request $r) => [
-            Limit::perMinute(3)->by($r->ip()),
-            Limit::perHour(20)->by($r->ip()),
+            Limit::perMinute(3)->by(self::sourceKey($r->ip())),
+            Limit::perHour(20)->by(self::sourceKey($r->ip())),
         ]);
 
         // Guessing a code. Per source, and per address-and-source. Not per
@@ -103,37 +103,55 @@ class AppServiceProvider extends ServiceProvider
         // nothing anyway — every code is bound to the ticket of the request
         // that asked for it, and dies after max_attempts wrong tries.
         RateLimiter::for('otp-verify', fn (Request $r) => [
-            Limit::perMinute(6)->by($r->ip()),
-            Limit::perMinute(6)->by('email:'.sha1(\App\Support\BlindIndex::normaliseEmail((string) $r->input('email'))).':'.$r->ip()),
+            Limit::perMinute(6)->by(self::sourceKey($r->ip())),
+            Limit::perMinute(6)->by('email:'.self::emailKey($r).':'.self::sourceKey($r->ip())),
         ]);
 
         // Website orders need no account, so the brakes are the source and,
         // because sources are cheap, a cap on the whole day. Past it the
         // website still opens WhatsApp with the order, just without a code.
-        RateLimiter::for('web-order', fn (Request $r) => [
-            Limit::perMinute(3)->by($r->ip()),
-            Limit::perDay(30)->by($r->ip()),
+        // The source is an IPv4 address or, for IPv6, the /64 it belongs to:
+        // a single home connection is handed 2^64 addresses, and counting each
+        // one separately would be no limit at all. A phone number is a further
+        // key — one household does not place more than a handful in a day, and
+        // it stops one number being used to make the shop ring a stranger.
+        RateLimiter::for('web-order', fn (Request $r) => array_values(array_filter([
+            Limit::perMinute(3)->by(self::sourceKey($r->ip())),
+            Limit::perDay(30)->by(self::sourceKey($r->ip())),
+            strlen(preg_replace('/\D+/', '', self::inputString($r, 'contact_phone'))) >= 7
+                ? Limit::perDay(6)->by('phone:'.\App\Support\BlindIndex::ofPhone(self::inputString($r, 'contact_phone')))
+                : null,
             Limit::perDay((int) config('freshness.order.web_daily_cap'))->by('web-order:all'),
-        ]);
+        ])));
 
         RateLimiter::for('register', fn (Request $r) => [
-            Limit::perMinute(10)->by($r->ip()),
-            Limit::perHour(40)->by($r->ip()),
+            Limit::perMinute(10)->by(self::sourceKey($r->ip())),
+            Limit::perHour(40)->by(self::sourceKey($r->ip())),
         ]);
 
         // Guessing passwords. Per address as well as per source, so a botnet
         // spreading guesses across IPs still runs into the address's budget.
         RateLimiter::for('password-login', fn (Request $r) => [
-            Limit::perMinute(10)->by($r->ip()),
-            Limit::perHour(60)->by($r->ip()),
-            Limit::perMinutes(15, 10)->by('login:'.sha1(mb_strtolower((string) $r->input('email')))),
+            Limit::perMinute(10)->by(self::sourceKey($r->ip())),
+            Limit::perHour(60)->by(self::sourceKey($r->ip())),
+            Limit::perMinutes(15, 10)->by('login:'.self::emailKey($r)),
+        ]);
+
+        // Signing in with Google or Apple. There is nothing to guess — the
+        // token is signed by the provider — so this is only a brake on the
+        // source. It must not share the password limiter: these requests have
+        // no email field, and every one of them would land in the same
+        // empty-address bucket, letting ten requests lock out everybody.
+        RateLimiter::for('social-login', fn (Request $r) => [
+            Limit::perMinute(10)->by(self::sourceKey($r->ip())),
+            Limit::perHour(60)->by(self::sourceKey($r->ip())),
         ]);
 
         // Placing an order is cheap for the customer and expensive for the
         // shop: every one is goods set aside and a courier slot.
         RateLimiter::for('place-order', fn (Request $r) => [
-            Limit::perMinute(5)->by($r->user()?->id ?: $r->ip()),
-            Limit::perDay(40)->by($r->user()?->id ?: $r->ip()),
+            Limit::perMinute(5)->by($r->user()?->id ?: self::sourceKey($r->ip())),
+            Limit::perDay(40)->by($r->user()?->id ?: self::sourceKey($r->ip())),
         ]);
 
         // The admin panel's sign-in. One person uses it, a few times a day;
@@ -144,33 +162,69 @@ class AppServiceProvider extends ServiceProvider
         // across many IPs gains nothing: a code works only with the ticket of
         // the browser that asked for it, and dies after max_attempts tries.
         RateLimiter::for('panel-auth', fn (Request $r) => array_values(array_filter([
-            Limit::perMinutes(10, 10)->by('panel:'.$r->ip()),
-            Limit::perHour(30)->by('panel:'.$r->ip()),
+            Limit::perMinutes(10, 10)->by('panel:'.self::sourceKey($r->ip())),
+            Limit::perHour(30)->by('panel:'.self::sourceKey($r->ip())),
             $r->filled('email')
-                ? Limit::perMinutes(10, 10)->by('panel-email:'.sha1(strtolower(trim((string) $r->input('email')))).':'.$r->ip())
+                ? Limit::perMinutes(10, 10)->by('panel-email:'.self::emailKey($r).':'.self::sourceKey($r->ip()))
                 : null,
         ])));
 
         // A deploy calls this once. Anything more is someone guessing.
-        RateLimiter::for('deploy', fn (Request $r) => Limit::perMinute(3)->by('deploy:'.$r->ip()));
+        RateLimiter::for('deploy', fn (Request $r) => Limit::perMinute(3)->by('deploy:'.self::sourceKey($r->ip())));
 
         // Public and cached, so it can be generous — but not unbounded, or it
         // is a free way to make the server do work.
         // Generous, because this is staff doing their job — and finite,
         // because an admin panel with a runaway loop in it is still a way to
         // take the shop down.
-        RateLimiter::for('admin', fn (Request $r) => Limit::perMinute(120)->by($r->user()?->id ?: $r->ip()));
+        RateLimiter::for('admin', fn (Request $r) => Limit::perMinute(120)->by($r->user()?->id ?: self::sourceKey($r->ip())));
 
         // Enough to photograph a delivery, not enough to fill a disk.
         RateLimiter::for('admin-upload', fn (Request $r) => [
-            Limit::perMinute(20)->by($r->user()?->id ?: $r->ip()),
-            Limit::perDay(400)->by($r->user()?->id ?: $r->ip()),
+            Limit::perMinute(20)->by($r->user()?->id ?: self::sourceKey($r->ip())),
+            Limit::perDay(400)->by($r->user()?->id ?: self::sourceKey($r->ip())),
         ]);
 
-        RateLimiter::for('catalogue', fn (Request $r) => Limit::perMinute(60)->by($r->ip()));
+        RateLimiter::for('catalogue', fn (Request $r) => Limit::perMinute(60)->by(self::sourceKey($r->ip())));
 
         // Laravel's default for everything else.
-        RateLimiter::for('api', fn (Request $r) => Limit::perMinute(60)->by($r->user()?->id ?: $r->ip()));
+        RateLimiter::for('api', fn (Request $r) => Limit::perMinute(60)->by($r->user()?->id ?: self::sourceKey($r->ip())));
+    }
+
+    /**
+     * A request field as text, or '' when it is anything else. Limiters run
+     * before validation, so the field can be an array or an object, and
+     * casting one of those throws — an unthrottled 500 for whoever sent it.
+     */
+    private static function inputString(Request $r, string $key): string
+    {
+        $value = $r->input($key);
+
+        return is_string($value) ? $value : '';
+    }
+
+    /**
+     * The email a request names, as a keyed hash. Limiter counters live in
+     * the cache table; a plain sha1 of an address can be reversed by hashing
+     * a list of addresses, a keyed one cannot without the key.
+     */
+    private static function emailKey(Request $r): string
+    {
+        return \App\Support\BlindIndex::ofEmail(self::inputString($r, 'email'));
+    }
+
+    /** The address a limiter counts: IPv4 as it is, IPv6 reduced to its /64. */
+    public static function sourceKey(?string $ip): string
+    {
+        $ip = (string) $ip;
+
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $packed = inet_pton($ip);
+
+            return $packed === false ? $ip : bin2hex(substr($packed, 0, 8)).'::/64';
+        }
+
+        return $ip;
     }
 
     /**
@@ -185,6 +239,7 @@ class AppServiceProvider extends ServiceProvider
         $models = [
             \App\Models\Product::class,
             \App\Models\ProductTranslation::class,
+            \App\Models\ProductImage::class,
             \App\Models\Category::class,
             \App\Models\CategoryTranslation::class,
             \App\Models\DeliveryZone::class,

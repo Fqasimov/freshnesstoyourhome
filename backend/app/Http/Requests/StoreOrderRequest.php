@@ -32,7 +32,12 @@ class StoreOrderRequest extends FormRequest
 
             'lines' => ['required_without:bundles', 'array', 'max:'.config('freshness.order.max_lines')],
             'lines.*.product_id' => ['required', 'string', 'max:60', Rule::exists('products', 'id')],
-            ...\App\Http\Controllers\Api\OrderController::bundleRules(),
+
+            // Sets, as the website sends them: which one and how many. What is
+            // in a set and its discount are the panel's, read when pricing.
+            'bundles' => ['required_without:lines', 'array', 'max:20'],
+            'bundles.*.id' => ['required', 'string', 'max:40', 'distinct', Rule::exists('bundles', 'id')],
+            'bundles.*.qty' => ['required', 'integer', 'min:1', 'max:20'],
             'lines.*.qty' => [
                 'required', 'numeric',
                 // Three decimals is the finest weight the scales report; a
@@ -40,6 +45,9 @@ class StoreOrderRequest extends FormRequest
                 // rounding do something interesting.
                 'min:0.001',
                 'max:'.config('freshness.order.max_qty_per_line'),
+                // Priced at the precision it is stored at, so the line on the
+                // order and the line that was charged are the same number.
+                'decimal:0,3',
             ],
 
             // The shop takes orders a day ahead, so today is not offered.
@@ -48,7 +56,9 @@ class StoreOrderRequest extends FormRequest
                 'after_or_equal:'.now()->addDays($lead)->toDateString(),
                 'before_or_equal:'.now()->addDays($maxAhead)->toDateString(),
             ],
-            'delivery_slot' => ['sometimes', 'nullable', 'string', 'max:20'],
+            // A time or a range of times ("14:00", "14:00-16:00"); not a place
+            // for free text that staff then read as an instruction.
+            'delivery_slot' => ['sometimes', 'nullable', 'string', 'max:20', 'regex:/^\d{1,2}:\d{2}(\s?[-–]\s?\d{1,2}:\d{2})?$/u'],
 
             // Nothing is charged online. Both of these are settled at the door,
             // which is what keeps this system out of PCI scope entirely.

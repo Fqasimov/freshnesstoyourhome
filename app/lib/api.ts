@@ -27,6 +27,17 @@ if (!BASE) {
 
 const TOKEN_KEY = 'auth_token'
 
+/* The session token stays on this phone: not restored from a backup onto
+   another device, not carried over by a phone migration. */
+const KEYCHAIN = { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY }
+
+/* An id that came from outside the app — a link, a notification — goes into
+   a URL path only as one encoded segment, so it can never name another
+   endpoint ("../staff/orders/…") under the customer's token. */
+const seg = (id: string | number) => encodeURIComponent(String(id))
+
+let migratedKeychain = false
+
 /**
  * Only a real device has a keychain.
  *
@@ -45,7 +56,13 @@ export async function getToken (): Promise<string | null> {
   if (!NATIVE) return null
 
   try {
-    cachedToken = await SecureStore.getItemAsync(TOKEN_KEY)
+    cachedToken = await SecureStore.getItemAsync(TOKEN_KEY, KEYCHAIN)
+    // A token saved by an older build was stored as backup-able; writing it
+    // again moves it into this-device-only storage. Once, quietly.
+    if (cachedToken && !migratedKeychain) {
+      migratedKeychain = true
+      SecureStore.setItemAsync(TOKEN_KEY, cachedToken, KEYCHAIN).catch(() => {})
+    }
   } catch {
     cachedToken = null
   }
@@ -57,8 +74,8 @@ export async function setToken (token: string | null): Promise<void> {
   if (!NATIVE) return
 
   try {
-    if (token === null) await SecureStore.deleteItemAsync(TOKEN_KEY)
-    else await SecureStore.setItemAsync(TOKEN_KEY, token)
+    if (token === null) await SecureStore.deleteItemAsync(TOKEN_KEY, KEYCHAIN)
+    else await SecureStore.setItemAsync(TOKEN_KEY, token, KEYCHAIN)
   } catch {
     // The keychain refusing a write is worth knowing about: the customer will
     // have to sign in again next launch.
@@ -252,21 +269,10 @@ export type QuoteLine = {
   bundle_id?: string | null
 }
 
-export type QuoteSet = {
-  bundle_id: string
-  name: string
-  qty: number
-  discount_percent: number
-  full_minor: number
-  discount_minor: number
-  price_minor: number
-}
-
 export type Quote = {
   lines: QuoteLine[]
-  bundles?: QuoteSet[]
+  /** Products that cannot be sold, and `bundle:<id>` for a set switched off. */
   unavailable_product_ids: string[]
-  unavailable_bundle_ids?: string[]
   subtotal_minor: number
   delivery_fee_minor: number
   discount_minor: number
@@ -322,7 +328,8 @@ export type Order = {
 }
 
 export type BasketLine = { product_id: string; qty: number }
-export type BasketSet = { bundle_id: string; qty: number }
+/** A set, by id: what is in it and its discount are the panel's. */
+export type BasketSet = { id: string; qty: number }
 
 /* ── Endpoints ────────────────────────────────────────────────────────── */
 
@@ -366,9 +373,9 @@ export const api = {
   createAddress: (data: Partial<Address>) =>
     request<Address>('addresses', { method: 'POST', body: data }),
   updateAddress: (id: string, data: Partial<Address>) =>
-    request<Address>(`addresses/${id}`, { method: 'PUT', body: data }),
+    request<Address>(`addresses/${seg(id)}`, { method: 'PUT', body: data }),
   deleteAddress: (id: string) =>
-    request<{ status: string }>(`addresses/${id}`, { method: 'DELETE' }),
+    request<{ status: string }>(`addresses/${seg(id)}`, { method: 'DELETE' }),
 
   /**
    * Pricing is public, and the language goes with the request — there may be
@@ -387,9 +394,9 @@ export const api = {
     request<{ status: string }>('push-tokens', { method: 'DELETE', body: { token } }),
 
   orders: () => request<{ data: Order[] }>('orders'),
-  order: (id: string) => request<{ data: Order }>(`orders/${id}`),
+  order: (id: string) => request<{ data: Order }>(`orders/${seg(id)}`),
   placeOrder: (payload: Record<string, unknown>) =>
     request<Order>('orders', { method: 'POST', body: payload }),
   cancelOrder: (id: string, reason?: string) =>
-    request<Order>(`orders/${id}/cancel`, { method: 'POST', body: { reason } }),
+    request<Order>(`orders/${seg(id)}/cancel`, { method: 'POST', body: { reason } }),
 }

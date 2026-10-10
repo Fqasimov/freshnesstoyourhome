@@ -76,10 +76,12 @@ const OWN = {
 
     'foot.privacy':'Məxfilik siyasəti',
     'foot.note':'Qiymətlər AZN ilə, göstərilən vahidə görədir, dərc olunduğu tarixə aiddir və bazara uyğun dəyişə bilər. “1 kq” kimi göstərilən çəkilər çatdırılma zamanı faktiki çəkiyə görə dəqiqləşdirilir.',
+    'foot.tags':'Axtarılan məhsullar',
 
     'cart.t':'Səbətiniz','cart.sub':'Təxmini məbləğ',
     'cart.note':'Onlayn heç bir ödəniş alınmır. Səbəti göndərdikdə WhatsApp siyahınızla açılır — dəqiq çəki və yekun məbləği çatdırılmadan əvvəl təsdiqləyirik.',
     'cart.send':'Səbəti WhatsApp-a göndər',
+    'deliv.first':'Ad','deliv.firstPh':'Adınız','deliv.last':'Soyad','deliv.lastPh':'Soyadınız','deliv.fullName':'Ad, soyad',
     'deliv.name':'Adınız','deliv.namePh':'Adınızı daxil edin','deliv.phone':'Telefon','deliv.phonePh':'Telefon nömrənizi daxil edin',
     'ui.waCode':'Sifariş kodu','cart.placed':'Sifarişiniz qəbul edildi','cart.placedP':'WhatsApp-da çatdırılma vaxtını və çəkini təsdiqləyəcəyik.','cart.placedWa':'WhatsApp-ı yenidən aç',
 
@@ -88,8 +90,8 @@ const OWN = {
     'ui.empty.d':'Başqa bölməyə baxın və ya axtarışı təmizləyin.',
     'ui.cartempty':'Səbətiniz boşdur',
     'ui.cartempty.d':'Kataloqdan məhsul əlavə edin, burada görünəcək.',
-    'ui.remove':'Sil','ui.perkg':'/kq','ui.add':'Səbətə at',
-    'ui.unit':'Vahid','ui.category':'Bölmə','ui.price':'Qiymət','ui.perkgfull':'1 kq-a görə qiymət',
+    'ui.remove':'Sil','ui.add':'Səbətə at',
+    'ui.unit':'Vahid','ui.category':'Bölmə','ui.price':'Qiymət',
     'ui.waIntro':'Salam! Freshness To Your Home-dan sifariş vermək istəyirəm:',
     'cat.h':'Kataloq','cat.lede':'Axtarın və ya filtrlərlə daraldın.',
     'cat.filters':'Filtrlər','cat.sections':'Bölmələr','cat.price':'Qiymət','cat.quick':'Tez seçim',
@@ -115,7 +117,7 @@ const OWN = {
     'shop.showAll':'Bütün məhsulları göstər','shop.showCounters':'Bölmələrə qayıt',
     'shop.results':'Axtarış nəticələri','shop.noresults':'Heç nə tapılmadı. Başqa söz yoxlayın.',
     'shop.clear':'Təmizlə',
-    'ui.waWeighed':'ən çox','ui.weighedFlag':'Çəkiyə görə','ui.weighedNote':'Çəkiyə görə satılan məhsullar kuryerdə ölçülür — yekun məbləğ bir az dəyişə bilər.',
+    'ui.waWeighed':'ən çox','ui.weighedFlag':'Çəkiyə görə','ui.weightVaries':'Çəki miqdarı verdiyiniz sifarişlə fərqlənə bilər','ui.kgAmount':'Çəki (kq)','ui.kgShort':'kq','deliv.note':'Sifarişə qeyd','deliv.notePh':'Məsələn: zəng etməyin, qapıda qoyun, balığı təmizləyin…','deliv.date':'Çatdırılma tarixi','deliv.dateHint':'İstəsəniz tarix seçin. Seçilməzsə, ən yaxın günə çatdırırıq.','deliv.dateBad':'Bu tarix seçilə bilməz.','ui.waDate':'Tarix','ui.waNote':'Qeyd','map.h':'Dəqiq yer','map.here':'Mövcud yerimi göstər','map.choose':'Xəritədə seç','map.close':'Xəritəni bağla','map.tap':'Xəritəyə toxunun və ya iynəni sürüşdürün.','map.set':'Yer seçildi','map.open':'Google Maps-da aç','map.clear':'Sil','map.denied':'Yer müəyyən edilə bilmədi. İcazə verin və ya ünvanı yazın.','map.failed':'Xəritə yüklənmədi. Mövcud yerimi göstərin və ya ünvanı yazın.','deliv.optional':'məcburi deyil','ui.weighedNote':'Çəkiyə görə satılan məhsullar kuryerdə ölçülür — yekun məbləğ bir az dəyişə bilər.',
     'ui.waTotal':'Təxmini məbləğ','ui.waOutro':'Zəhmət olmasa mövcudluğu və çatdırılma vaxtını təsdiqləyin. Təşəkkürlər!',
         'ui.waDeliv':'Çatdırılma','ui.waAddr':'Ünvan','ui.waMap':'Xəritə',
     'ui.waPlain':'Salam! Məhsullarınız barədə sualım var.'
@@ -190,10 +192,12 @@ const OWN = {
 
     'foot.privacy':'Политика конфиденциальности',
     'foot.note':'Цены в манатах, за указанную единицу, действительны на момент публикации и могут меняться вслед за рынком. Вес, указанный как «1 кг», уточняется при доставке по фактически отпущенному весу.',
+    'foot.tags':'Часто ищут',
 
     'cart.t':'Ваша корзина','cart.sub':'Примерная сумма',
     'cart.note':'Онлайн ничего не списывается. Отправка корзины откроет WhatsApp с готовым списком — точный вес и итоговую сумму подтверждаем до доставки.',
     'cart.send':'Отправить корзину в WhatsApp',
+    'deliv.first':'Имя','deliv.firstPh':'Ваше имя','deliv.last':'Фамилия','deliv.lastPh':'Ваша фамилия','deliv.fullName':'Имя, фамилия',
     'deliv.name':'Ваше имя','deliv.namePh':'Введите ваше имя','deliv.phone':'Телефон','deliv.phonePh':'Введите номер телефона',
     'ui.waCode':'Код заказа','cart.placed':'Заказ принят','cart.placedP':'Мы подтвердим время доставки и вес в WhatsApp.','cart.placedWa':'Открыть WhatsApp снова',
 
@@ -202,8 +206,8 @@ const OWN = {
     'ui.empty.d':'Посмотрите другой раздел или очистите поиск.',
     'ui.cartempty':'Корзина пуста',
     'ui.cartempty.d':'Добавьте что-нибудь из каталога, и оно появится здесь.',
-    'ui.remove':'Удалить','ui.perkg':'/кг','ui.add':'В корзину',
-    'ui.unit':'Единица','ui.category':'Раздел','ui.price':'Цена','ui.perkgfull':'Цена за 1 кг',
+    'ui.remove':'Удалить','ui.add':'В корзину',
+    'ui.unit':'Единица','ui.category':'Раздел','ui.price':'Цена',
     'ui.waIntro':'Здравствуйте! Хочу оформить заказ в Freshness To Your Home:',
     'cat.h':'Каталог','cat.lede':'Найдите поиском или сузьте фильтрами.',
     'cat.filters':'Фильтры','cat.sections':'Разделы','cat.price':'Цена','cat.quick':'Быстрый выбор',
@@ -229,7 +233,7 @@ const OWN = {
     'shop.showAll':'Показать все товары','shop.showCounters':'Вернуться к разделам',
     'shop.results':'Результаты поиска','shop.noresults':'Ничего не найдено. Попробуйте другое слово.',
     'shop.clear':'Очистить',
-    'ui.waWeighed':'не более','ui.weighedFlag':'На вес','ui.weighedNote':'Товары на вес взвешиваются курьером — итоговая сумма может немного отличаться.',
+    'ui.waWeighed':'не более','ui.weighedFlag':'На вес','ui.weightVaries':'Вес может отличаться от заказанного','ui.kgAmount':'Вес (кг)','ui.kgShort':'кг','deliv.note':'Комментарий к заказу','deliv.notePh':'Например: не звоните, оставьте у двери, почистите рыбу…','deliv.date':'Дата доставки','deliv.dateHint':'Выберите дату, если нужно. Без даты привезём в ближайший день.','deliv.dateBad':'Эту дату выбрать нельзя.','ui.waDate':'Дата','ui.waNote':'Комментарий','map.h':'Точное место','map.here':'Определить моё место','map.choose':'Выбрать на карте','map.close':'Закрыть карту','map.tap':'Нажмите на карту или перетащите метку.','map.set':'Место выбрано','map.open':'Открыть в Google Maps','map.clear':'Удалить','map.denied':'Не удалось определить место. Разрешите доступ или напишите адрес.','map.failed':'Карта не загрузилась. Определите место или напишите адрес.','deliv.optional':'необязательно','ui.weighedNote':'Товары на вес взвешиваются курьером — итоговая сумма может немного отличаться.',
     'ui.waTotal':'Примерная сумма','ui.waOutro':'Пожалуйста, подтвердите наличие и время доставки. Спасибо!',
         'ui.waDeliv':'Доставка','ui.waAddr':'Адрес','ui.waMap':'Карта',
     'ui.waPlain':'Здравствуйте! У меня вопрос по вашим товарам.'
@@ -304,10 +308,12 @@ const OWN = {
 
     'foot.privacy':'Privacy policy',
     'foot.note':'Prices in AZN, per the unit shown, current at the time of publication and subject to change with the market. Weights marked “1 kg” are settled on delivery against the actual weight supplied.',
+    'foot.tags':'Popular searches',
 
     'cart.t':'Your basket','cart.sub':'Estimated total',
     'cart.note':'Nothing is charged online. Sending the basket opens WhatsApp with your list ready — we confirm exact weights and the final total before delivery.',
     'cart.send':'Send basket on WhatsApp',
+    'deliv.first':'First name','deliv.firstPh':'Your first name','deliv.last':'Surname','deliv.lastPh':'Your surname','deliv.fullName':'Name',
     'deliv.name':'Your name','deliv.namePh':'Enter your name','deliv.phone':'Phone','deliv.phonePh':'Enter your phone number',
     'ui.waCode':'Order code','cart.placed':'Order received','cart.placedP':'We will confirm the delivery time and weights on WhatsApp.','cart.placedWa':'Open WhatsApp again',
 
@@ -316,8 +322,8 @@ const OWN = {
     'ui.empty.d':'Try another counter, or clear the search.',
     'ui.cartempty':'Your basket is empty',
     'ui.cartempty.d':'Add something from the catalogue and it will appear here.',
-    'ui.remove':'Remove','ui.perkg':'/kg','ui.add':'Add to basket',
-    'ui.unit':'Unit','ui.category':'Counter','ui.price':'Price','ui.perkgfull':'Price per kg',
+    'ui.remove':'Remove','ui.add':'Add to basket',
+    'ui.unit':'Unit','ui.category':'Counter','ui.price':'Price',
     'ui.waIntro':'Hello! I would like to order from Freshness To Your Home:',
     'cat.h':'Catalogue','cat.lede':'Search, or narrow it down with the filters.',
     'cat.filters':'Filters','cat.sections':'Counters','cat.price':'Price','cat.quick':'Quick picks',
@@ -343,7 +349,7 @@ const OWN = {
     'shop.showAll':'Show every product','shop.showCounters':'Back to the counters',
     'shop.results':'Search results','shop.noresults':'Nothing found. Try another word.',
     'shop.clear':'Clear',
-    'ui.waWeighed':'at most','ui.weighedFlag':'By weight','ui.weighedNote':'Anything sold by weight is measured by the courier — the final amount may vary slightly.',
+    'ui.waWeighed':'at most','ui.weighedFlag':'By weight','ui.weightVaries':'The weight may differ from what you ordered','ui.kgAmount':'Weight (kg)','ui.kgShort':'kg','deliv.note':'Order note','deliv.notePh':'For example: do not call, leave at the door, clean the fish…','deliv.date':'Delivery date','deliv.dateHint':'Pick a date if you like. Without one we deliver on the earliest day.','deliv.dateBad':'That date cannot be chosen.','ui.waDate':'Date','ui.waNote':'Note','map.h':'Exact spot','map.here':'Use my location','map.choose':'Pick on the map','map.close':'Close map','map.tap':'Tap the map or drag the pin.','map.set':'Spot chosen','map.open':'Open in Google Maps','map.clear':'Remove','map.denied':'Could not get your location. Allow it, or type the address.','map.failed':'The map did not load. Use your location or type the address.','deliv.optional':'optional','ui.weighedNote':'Anything sold by weight is measured by the courier — the final amount may vary slightly.',
     'ui.waTotal':'Estimated total','ui.waOutro':'Please confirm availability and delivery time. Thank you!',
         'ui.waDeliv':'Delivery','ui.waAddr':'Address','ui.waMap':'Map',
     'ui.waPlain':'Hello! I have a question about your products.'

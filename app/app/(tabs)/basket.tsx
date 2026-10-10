@@ -50,9 +50,21 @@ export default function Basket () {
       <AppBar title={t('cart.title')} />
 
       <ScrollView contentContainerStyle={{ padding: space.gutter, paddingBottom: 32 }}>
-        {(quote?.bundles ?? []).map(set => {
-          const bundle = catalogue.bundleById(set.bundle_id)
-          const image = (bundle && bundlePhoto(bundle)) ?? productPhoto(catalogue.byId(bundle?.items[0]?.product_id ?? ''))
+        {cart.sets.map(({ id, qty }) => {
+          // A set is priced by the server as its products at the set's
+          // discount; here those lines are shown as the one thing bought.
+          const bundle = catalogue.bundleById(id)
+          const lines = (quote?.lines ?? []).filter(l => l.bundle_id === id)
+          if (!bundle || lines.length === 0) return null
+          const set = {
+            bundle_id: id,
+            qty,
+            name: pick(bundle.name),
+            discount_percent: bundle.discount_percent,
+            price_minor: lines.reduce((sum, l) => sum + l.line_total_minor, 0),
+            full_minor: lines.reduce((sum, l) => sum + Math.round((catalogue.byId(l.product_id)?.price_minor ?? 0) * l.qty), 0),
+          }
+          const image = bundlePhoto(bundle) ?? productPhoto(catalogue.byId(bundle.items[0]?.product_id ?? ''))
 
           return (
             <View key={`set-${set.bundle_id}`} style={s.row}>
@@ -153,9 +165,6 @@ export default function Basket () {
         {quote ? (
           <View style={{ marginTop: 18 }}>
             <Row label={t('cart.subtotal')} value={money(quote.subtotal_minor, quote.currency)} />
-            {quote.discount_minor > 0 ? (
-              <Row label={t('sets.discount')} value={`−${money(quote.discount_minor, quote.currency)}`} />
-            ) : null}
             {quote.delivery_fee_minor > 0 ? (
               <Row label={t('cart.delivery')} value={money(quote.delivery_fee_minor, quote.currency)} />
             ) : null}

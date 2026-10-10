@@ -51,3 +51,20 @@ export const router = createRouter({
     return { top: 0 }
   },
 })
+
+/* Each page says what it is, in the words people search for. The home page keeps
+   the title and description written into index.html; the catalogue gets its own. */
+const HOME_TITLE = document.title
+const metaDesc = document.querySelector('meta[name="description"]')
+const HOME_DESC = metaDesc?.getAttribute('content') ?? ''
+const PAGES = {
+  catalogue: {
+    title: 'Kataloq — balıq, hisə verilmiş skumbriya, dəniz məhsulları | Freshness To Your Home',
+    desc: 'Freshness To Your Home kataloqu: təzə balıq, hisə verilmiş skumbriya və skumbriya filesi, dəniz məhsulları, kürü, pendir, ət və şirniyyat. Qiymətlər AZN ilə, Bakıya çatdırılma.',
+  },
+}
+router.afterEach(to => {
+  const page = PAGES[to.name]
+  document.title = page?.title ?? HOME_TITLE
+  metaDesc?.setAttribute('content', page?.desc ?? HOME_DESC)
+})

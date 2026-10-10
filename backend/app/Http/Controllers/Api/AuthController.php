@@ -102,6 +102,9 @@ class AuthController extends Controller
     public function logoutAll(Request $request): JsonResponse
     {
         $request->user()->tokens()->delete();
+        // A lost phone that is signed out must stop showing this account's
+        // orders on its lock screen too.
+        $request->user()->pushTokens()->delete();
 
         return response()->json(['status' => 'ok']);
     }

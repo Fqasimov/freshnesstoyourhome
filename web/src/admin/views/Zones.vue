@@ -55,6 +55,11 @@ function saveMin (z) {
   patch(z, { min_order_minor: minor }, `${z.name?.az ?? z.id}: minimum ${toAzn(minor)} AZN`)
 }
 
+function removed (id) {
+  rows.value = rows.value.filter(z => z.id !== id)
+  editing.value = null
+}
+
 function saved (zone) {
   const row = rows.value.find(z => z.id === zone.id)
   if (row) Object.assign(row, zone)
@@ -113,5 +118,5 @@ onMounted(load)
   </div>
 
   <ZoneForm v-if="editing" :zone="editing === 'new' ? null : editing"
-            @close="editing = null" @saved="saved" />
+            @close="editing = null" @saved="saved" @deleted="removed" />
 </template>

@@ -6,6 +6,7 @@ use App\Mail\LoginCodeMail;
 use App\Mail\SignInBudgetAlarm;
 use App\Models\LoginCode;
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use App\Support\BlindIndex;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
@@ -70,6 +71,13 @@ class LoginCodeService
         $code = $this->generateCode();
         $requesterHash = $this->requesterHash($requester);
 
+        // Spent and expired codes carry an address and have no use once their
+        // minutes are over. Cleared here, a little at a time, so it needs no
+        // scheduler on a host with no shell.
+        if (random_int(1, 25) === 1) {
+            LoginCode::where('expires_at', '<', now()->subDay())->delete();
+        }
+
         DB::transaction(function () use ($email, $hash, $code, $ip, $requesterHash): void {
             // One live code per requester. Without this, asking for a second
             // code leaves the first one valid, and every resend widens the
@@ -86,7 +94,9 @@ class LoginCodeService
                 'email' => $email,
                 'code_hash' => Hash::make($code),
                 'expires_at' => now()->addMinutes((int) config('freshness.auth.code_ttl_minutes')),
-                'request_ip' => $ip,
+                // The address a code was asked from is not kept: nothing reads it,
+                // and the limits that use it live in the rate limiter, not here.
+                'request_ip' => null,
             ]);
         });
 
@@ -218,7 +228,8 @@ class LoginCodeService
     private function withinLimits(string $email, string $emailHash, ?string $ip, bool $panel = false): bool
     {
         $limits = config('freshness.auth.throttle');
-        $source = sha1((string) $ip);
+        // An IPv4 address, or the /64 an IPv6 one belongs to.
+        $source = AppServiceProvider::sourceKey($ip);
 
         // The panel keeps budgets of its own, so nothing the public does can
         // leave the admin without a code — not even filling the global one.

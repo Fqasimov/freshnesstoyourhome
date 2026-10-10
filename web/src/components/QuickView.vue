@@ -1,7 +1,7 @@
 <script setup>
 import BIcon from './BIcon.vue'
-import { ref, computed, watch } from 'vue'
-import { money, perKg } from '../data/catalogue'
+import { ref, computed, watch, onUnmounted } from 'vue'
+import { money } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
 
 const props = defineProps({ product: { type: Object, default: null } })
@@ -11,10 +11,76 @@ const { t, nm, alt, dsc, catName, unitOf } = useI18n()
 const variant = ref(null)
 const qty = ref(1)
 
+/* By the kilo the amount is typed, in kilos, as many as the customer wants. */
+const weighed = computed(() => props.product?.unit?.kind === 'kg' && (props.product.unit.qty ?? 1) === 1
+  && !props.product.variants)
+const typed = ref('1')
+watch(qty, v => { typed.value = String(v) })
+function setTyped (raw) {
+  const n = Number(String(raw).trim().replace(',', '.'))
+  if (Number.isFinite(n) && n >= 0.1 && n <= 99) qty.value = Math.round(n * 100) / 100
+  typed.value = String(qty.value)
+}
+function stepQty (dir) {
+  const step = weighed.value ? 0.5 : 1
+  const next = Math.round((qty.value + dir * step) * 100) / 100
+  qty.value = Math.min(99, Math.max(weighed.value ? 0.1 : 1, next))
+}
+
+/* The main photograph and the extras, as one strip to look through. */
+const shown = ref(null)
+const pictures = computed(() => {
+  const p = props.product
+  if (!p) return []
+  return [p.img, ...(p.gallery ?? []).map(g => g.url)].filter(Boolean)
+})
+
+/* The whole picture, full screen. Opened by tapping the photograph, it shows
+   the image uncropped (the card crops it to a square) and steps through the
+   product's other photographs. */
+const big = ref(-1)
+const bigOpen = computed(() => big.value >= 0 && pictures.value.length > 0)
+function openBig () {
+  const at = pictures.value.indexOf(shown.value ?? props.product?.img)
+  if (pictures.value.length) big.value = Math.max(0, at)
+}
+function stepBig (dir) {
+  const n = pictures.value.length
+  if (n) big.value = (big.value + dir + n) % n
+}
+function closeBig () {
+  if (big.value >= 0) shown.value = pictures.value[big.value] ?? shown.value
+  big.value = -1
+}
+function onKey (e) {
+  if (!bigOpen.value) return
+  if (e.key === 'Escape') { e.stopPropagation(); closeBig() }
+  else if (e.key === 'ArrowRight') stepBig(1)
+  else if (e.key === 'ArrowLeft') stepBig(-1)
+}
+watch(bigOpen, open => {
+  if (open) window.addEventListener('keydown', onKey, true)
+  else window.removeEventListener('keydown', onKey, true)
+})
+onUnmounted(() => window.removeEventListener('keydown', onKey, true))
+
+/* A swipe steps through the photographs; a tap on the picture itself does not. */
+let touchX = null
+const onTouchStart = e => { touchX = e.changedTouches[0].clientX }
+const onTouchEnd = e => {
+  if (touchX == null) return
+  const d = e.changedTouches[0].clientX - touchX
+  touchX = null
+  if (Math.abs(d) > 40) stepBig(d < 0 ? 1 : -1)
+}
+
 /* Reset the picker each time a different product is opened. */
 watch(() => props.product, p => {
+  big.value = -1
   variant.value = p && p.variants ? 0 : null
   qty.value = 1
+  typed.value = '1'
+  shown.value = null
 })
 
 const chosen = computed(() =>
@@ -24,10 +90,6 @@ const chosen = computed(() =>
 const price = computed(() => chosen.value ? chosen.value.price : props.product?.price ?? 0)
 const unit  = computed(() => props.product
   ? (chosen.value ? unitOf(props.product, chosen.value) : unitOf(props.product)) : '')
-const kg = computed(() => {
-  if (!props.product) return null
-  return chosen.value ? price.value / (chosen.value.qty / 1000) : perKg(props.product)
-})
 
 const img = ref(null)
 const confirm = () => emit('add', { product: props.product, v: variant.value, qty: qty.value, el: img.value })
@@ -38,9 +100,21 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
     <div v-if="product" class="modal" role="dialog" aria-modal="true" @click.self="emit('close')">
       <div class="modal__box">
         <div class="modal__img" ref="img">
-          <img :src="product.img" :alt="nm(product)">
+          <button v-if="pictures.length" type="button" class="modal__zoom" :aria-label="nm(product)" @click="openBig">
+            <img :src="shown ?? product.img" :alt="nm(product)">
+            <span class="modal__zoomhint" aria-hidden="true"><BIcon name="search" :size="13" /></span>
+          </button>
+          <img v-else :src="shown ?? product.img" :alt="nm(product)">
           <button class="x modal__x" aria-label="Close" @click="emit('close')">
             <BIcon name="x-lg" :size="14" />
+          </button>
+        </div>
+
+        <div v-if="pictures.length > 1" class="modal__thumbs">
+          <button v-for="(src, i) in pictures" :key="src" type="button"
+                  :class="{ on: (shown ?? product.img) === src }" :aria-label="`${nm(product)} ${i + 1}`"
+                  @click="shown = src">
+            <img :src="src" alt="" loading="lazy">
           </button>
         </div>
 
@@ -61,23 +135,57 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
             <div><dt>{{ t('ui.category') }}</dt><dd>{{ catName(product.cat) }}</dd></div>
             <div><dt>{{ t('ui.unit') }}</dt><dd>{{ unit }}</dd></div>
             <div><dt>{{ t('ui.price') }}</dt><dd>{{ price }} AZN</dd></div>
-            <div v-if="kg"><dt>{{ t('ui.perkgfull') }}</dt><dd>{{ money(kg) }} AZN</dd></div>
           </dl>
 
           <div class="modal__buy">
-            <div class="qty">
-              <button @click="qty = Math.max(1, qty - 1)" aria-label="−">−</button>
-              <span>{{ qty }}</span>
-              <button @click="qty++" aria-label="+">+</button>
+            <div class="qty" :class="{ 'qty--kg': weighed }">
+              <button @click="stepQty(-1)" aria-label="−">−</button>
+              <label v-if="weighed" class="qty__kg">
+                <input type="text" inputmode="decimal" autocomplete="off" v-model="typed"
+                       :aria-label="t('ui.kgAmount')" @change="setTyped(typed)"
+                       @keydown.enter.prevent="$event.target.blur()">
+                <i>{{ t('ui.kgShort') }}</i>
+              </label>
+              <span v-else>{{ qty }}</span>
+              <button @click="stepQty(1)" aria-label="+">+</button>
             </div>
             <button class="btn" @click="confirm">
               <span>{{ t('ui.add') }} · {{ money(price * qty) }} AZN</span>
             </button>
           </div>
+          <p v-if="weighed" class="modal__vary">{{ t('ui.weightVaries') }}</p>
         </div>
       </div>
     </div>
   </Transition>
+
+  <!-- On the body, not inside the quick view: that box is transformed while it
+       animates in, and a fixed child of a transformed parent is sized to the
+       parent, not to the screen. -->
+  <Teleport to="body">
+    <div v-if="bigOpen" class="lb" role="dialog" aria-modal="true" :aria-label="nm(product)"
+         @click.self="closeBig" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd">
+      <button type="button" class="lb__x" aria-label="Close" @click="closeBig">
+        <BIcon name="x-lg" :size="16" />
+      </button>
+      <button v-if="pictures.length > 1" type="button" class="lb__nav lb__nav--prev" aria-label="Previous" @click="stepBig(-1)">
+        <BIcon name="arrow-left" :size="18" />
+      </button>
+      <img class="lb__img" :src="pictures[big]" :alt="nm(product)" @click.self="closeBig">
+      <button v-if="pictures.length > 1" type="button" class="lb__nav lb__nav--next" aria-label="Next" @click="stepBig(1)">
+        <BIcon name="arrow-right" :size="18" />
+      </button>
+      <div v-if="pictures.length > 1" class="lb__bar">
+        <span class="lb__count">{{ big + 1 }} / {{ pictures.length }}</span>
+        <div class="lb__thumbs">
+          <button v-for="(src, i) in pictures" :key="src" type="button" :class="{ on: i === big }"
+                  :aria-label="`${nm(product)} ${i + 1}`" @click="big = i">
+            <img :src="src" alt="" loading="lazy">
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -93,6 +201,11 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
 }
 .modal__img{ position:relative; background:var(--paper-2); aspect-ratio:1; }
 .modal__img img{ width:100%; height:100%; object-fit:cover; }
+.modal__zoom{ display:block; width:100%; height:100%; padding:0; border:0; background:none; cursor:zoom-in; position:relative; }
+.modal__zoomhint{
+  position:absolute; right:14px; bottom:14px; width:32px; height:32px; border-radius:50%;
+  display:grid; place-items:center; background:rgba(246,243,234,.9); color:var(--ink); pointer-events:none;
+}
 .modal__body{ padding:clamp(24px,3vw,40px); display:flex; flex-direction:column; }
 .modal__body .card__cat{ margin-bottom:8px; }
 .modal__body h3{ font-family:var(--display); font-size:clamp(1.5rem,2.6vw,2.1rem); font-weight:500; margin:0; letter-spacing:-.022em; line-height:1.1; }
@@ -109,6 +222,14 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
 }
 .variants button.on{ background:var(--forest); border-color:var(--forest); color:var(--paper); }
 .modal__buy{ display:flex; gap:10px; align-items:center; margin-top:auto; padding-top:26px; }
+.modal__vary{ margin:12px 0 0; font-size:.78rem; line-height:1.45; color:var(--ink-3); }
+.modal__thumbs{ display:flex; gap:8px; padding:10px 20px 0; overflow-x:auto; }
+.modal__thumbs button{ flex:0 0 auto; width:56px; height:56px; padding:0; border-radius:10px; overflow:hidden; border:2px solid transparent; opacity:.75; transition:opacity .2s var(--ease), border-color .2s var(--ease); }
+.modal__thumbs button.on{ border-color:var(--forest); opacity:1; }
+.modal__thumbs img{ width:100%; height:100%; object-fit:cover; display:block; }
+.modal__buy .qty--kg .qty__kg{ display:flex; align-items:baseline; gap:2px; padding:0 2px; }
+.modal__buy .qty--kg .qty__kg input{ width:3.8em; text-align:center; border:0; background:transparent; outline:0; padding:0; font:inherit; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); }
+.modal__buy .qty--kg .qty__kg i{ font-style:normal; font-size:.78rem; color:var(--ink-3); }
 .modal__buy .qty{ height:48px; padding:0 4px; }
 .modal__buy .qty button{ width:34px; height:34px; }
 .modal__buy .btn{ flex:1; justify-content:center; white-space:nowrap; padding-inline:16px; font-size:.82rem; }
@@ -129,5 +250,35 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
 @media (prefers-reduced-motion: reduce){
   .modal-enter-active,.modal-leave-active,
   .modal-enter-active .modal__box,.modal-leave-active .modal__box{ transition:none; }
+}
+</style>
+
+<!-- Not scoped: the viewer is teleported out of this component's tree. -->
+<style>
+.lb{
+  position:fixed; inset:0; z-index:900; background:rgba(14,22,12,.94);
+  display:grid; grid-template-rows:1fr auto; place-items:center;
+  padding:56px 64px 0; overscroll-behavior:contain;
+}
+.lb__img{ max-width:100%; max-height:100%; min-height:0; object-fit:contain; display:block; user-select:none; }
+.lb__x,.lb__nav{
+  position:absolute; z-index:2; width:46px; height:46px; border-radius:50%; border:0;
+  display:grid; place-items:center; background:rgba(246,243,234,.14); color:#F6F3EA; cursor:pointer;
+  transition:background .25s ease;
+}
+.lb__x:hover,.lb__nav:hover{ background:rgba(246,243,234,.28); }
+.lb__x{ top:14px; right:14px; }
+.lb__nav{ top:50%; margin-top:-23px; }
+.lb__nav--prev{ left:12px; }
+.lb__nav--next{ right:12px; }
+.lb__bar{ grid-row:2; display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px 0 16px; max-width:100%; }
+.lb__count{ color:rgba(246,243,234,.7); font-size:.78rem; letter-spacing:.06em; }
+.lb__thumbs{ display:flex; gap:8px; overflow-x:auto; max-width:100%; padding:2px; }
+.lb__thumbs button{ flex:0 0 auto; width:54px; height:54px; padding:0; border-radius:8px; overflow:hidden; border:2px solid transparent; opacity:.6; cursor:pointer; background:none; }
+.lb__thumbs button.on{ border-color:#F6F3EA; opacity:1; }
+.lb__thumbs img{ width:100%; height:100%; object-fit:cover; display:block; }
+@media (max-width:640px){
+  .lb{ padding:52px 8px 0; }
+  .lb__nav{ top:auto; bottom:92px; margin:0; }
 }
 </style>

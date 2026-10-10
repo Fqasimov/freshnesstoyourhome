@@ -1,31 +1,22 @@
 <script setup>
 import BIcon from './BIcon.vue'
+import MapPicker from './MapPicker.vue'
 import { computed } from 'vue'
 import { money } from '../data/catalogue'
 import { ZONES } from '../data/delivery'
-import { mapsUrl } from '../data/brand'
 import { useI18n } from '../composables/useI18n'
 import { useCart } from '../composables/useCart'
 
 const { t, nm } = useI18n()
 const {
-  lines, count, total, open, setQty, remove, whatsapp, weighed, ceiling,
+  lines, count, total, open, setQty, setQtyTo, remove, whatsapp, weighed, ceiling,
   zoneId, address, mapLink, zone, deliveryText, canSend,
-  name, phone, send, sending, placedCode,
+  note, deliveryDate, minDate, maxDate, dateOk,
+  firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode,
 } = useCart()
 
 const countLabel = computed(() =>
   `${count.value} ${count.value === 1 ? t('ui.item') : t('ui.items')}`)
-
-/* Somewhere to send people to fetch a link. An embedded picker needs a billed
-   Google Maps key; this needs none, and the link a phone's Share button
-   produces already resolves to an exact point. When a key exists, the picker
-   slots in above the field and writes its pin into `mapLink` — see
-   VITE_GOOGLE_MAPS_KEY in .env.example.
-
-   The centre it opens on is in shared/brand.json, so the app's checkout opens
-   the same map on the same city. */
-const MAPS_URL = mapsUrl()
 </script>
 
 <template>
@@ -60,11 +51,21 @@ const MAPS_URL = mapsUrl()
             <b>{{ nm(l.product) }}</b>
             <span>{{ l.unit }} · {{ l.price }} AZN</span>
             <em>{{ money(l.price * l.qty) }} AZN</em>
+            <small v-if="l.weighed" class="line__w">{{ t('ui.weightVaries') }}</small>
           </div>
           <div class="line__r">
-            <div class="qty">
+            <div class="qty" :class="{ 'qty--kg': l.weighed }">
               <button @click="setQty(l.key, -1)" aria-label="−">−</button>
-              <span>{{ l.qty }}</span>
+              <!-- By the kilo the amount is typed: 0.7, 1.5, 2.25 — whatever
+                   the customer wants. -->
+              <label v-if="l.weighed" class="qty__kg">
+                <input type="text" inputmode="decimal" autocomplete="off"
+                       :value="l.qty" :aria-label="t('ui.kgAmount')"
+                       @change="setQtyTo(l.key, $event.target.value); $event.target.value = l.qty"
+                       @keydown.enter.prevent="$event.target.blur()">
+                <i>{{ t('ui.kgShort') }}</i>
+              </label>
+              <span v-else>{{ l.qty }}</span>
               <button @click="setQty(l.key, 1)" aria-label="+">+</button>
             </div>
             <button class="rm" @click="remove(l.key)">{{ t('ui.remove') }}</button>
@@ -100,15 +101,27 @@ const MAPS_URL = mapsUrl()
       <div class="deliv">
         <p class="deliv__h">{{ t('deliv.h') }}</p>
 
-        <label class="deliv__l" for="cart-name">{{ t('deliv.name') }}</label>
-        <input id="cart-name" class="deliv__in" autocomplete="name"
-               :placeholder="t('deliv.namePh')" v-model="name">
+        <div class="deliv__pair">
+          <div>
+            <label class="deliv__l" for="cart-first"><span>{{ t('deliv.first') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
+            <input id="cart-first" class="deliv__in" autocomplete="given-name" required aria-required="true"
+                   :class="{ 'deliv__in--bad': firstName && !nameOk(firstName) }"
+                   :placeholder="t('deliv.firstPh')" v-model="firstName">
+          </div>
+          <div>
+            <label class="deliv__l" for="cart-last"><span>{{ t('deliv.last') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
+            <input id="cart-last" class="deliv__in" autocomplete="family-name" required aria-required="true"
+                   :class="{ 'deliv__in--bad': lastName && !nameOk(lastName) }"
+                   :placeholder="t('deliv.lastPh')" v-model="lastName">
+          </div>
+        </div>
 
-        <label class="deliv__l" for="cart-phone">{{ t('deliv.phone') }}</label>
-        <input id="cart-phone" class="deliv__in" type="tel" inputmode="tel" autocomplete="tel"
+        <label class="deliv__l" for="cart-phone"><span>{{ t('deliv.phone') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
+        <input id="cart-phone" class="deliv__in" type="tel" inputmode="tel" autocomplete="tel" required aria-required="true"
+               :class="{ 'deliv__in--bad': phone && !phoneOk }"
                :placeholder="t('deliv.phonePh')" v-model="phone">
 
-        <label class="deliv__l" for="cart-zone">{{ t('deliv.zone') }}</label>
+        <label class="deliv__l" for="cart-zone"><span>{{ t('deliv.zone') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
         <select id="cart-zone" class="deliv__in" v-model="zoneId">
           <option value="">{{ t('deliv.zonePick') }}</option>
           <option v-for="z in ZONES" :key="z.id" :value="z.id">
@@ -116,20 +129,24 @@ const MAPS_URL = mapsUrl()
           </option>
         </select>
 
-        <label class="deliv__l" for="cart-addr">{{ t('deliv.addr') }}</label>
+        <label class="deliv__l" for="cart-addr"><span>{{ t('deliv.addr') }}</span><span class="deliv__opt">{{ t('deliv.optional') }}</span></label>
         <textarea id="cart-addr" class="deliv__in" rows="2"
                   :placeholder="t('deliv.addrPh')" v-model="address"></textarea>
 
-        <!-- The embedded picker goes here once there is a Maps key. -->
-        <label class="deliv__l" for="cart-map">
-          {{ t('deliv.map') }}
-          <a class="deliv__open" :href="MAPS_URL" target="_blank" rel="noopener">
-            <BIcon name="geo-alt" :size="11" /> {{ t('deliv.mapOpen') }}
-          </a>
+        <MapPicker v-model="mapLink" />
+
+        <label class="deliv__l" for="cart-date">
+          <span>{{ t('deliv.date') }}<span class="deliv__opt"> · {{ t('deliv.optional') }}</span></span>
         </label>
-        <input id="cart-map" class="deliv__in" type="url" inputmode="url"
-               :placeholder="t('deliv.mapPh')" v-model="mapLink">
-        <p class="deliv__hint">{{ t('deliv.mapHint') }}</p>
+        <input id="cart-date" class="deliv__in" type="date" :min="minDate" :max="maxDate"
+               :class="{ 'deliv__in--bad': !dateOk }" v-model="deliveryDate">
+        <p class="deliv__hint">{{ dateOk ? t('deliv.dateHint') : t('deliv.dateBad') }}</p>
+
+        <label class="deliv__l" for="cart-note">
+          <span>{{ t('deliv.note') }}<span class="deliv__opt"> · {{ t('deliv.optional') }}</span></span>
+        </label>
+        <textarea id="cart-note" class="deliv__in" rows="2" maxlength="500"
+                  :placeholder="t('deliv.notePh')" v-model="note"></textarea>
 
         <div v-if="zone" class="deliv__fee">
           <span>{{ t('ui.waDeliv') }} · {{ nm(zone) }}</span>
@@ -214,6 +231,19 @@ const MAPS_URL = mapsUrl()
   margin:0 0 10px; font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
   color:var(--ink-3);
 }
+.line__w{ display:block; margin-top:3px; font-size:.7rem; line-height:1.35; color:var(--ink-3); }
+.qty--kg .qty__kg{ display:flex; align-items:baseline; gap:2px; padding:0 2px; }
+.qty--kg .qty__kg input{
+  width:3.6em; text-align:center; border:0; background:transparent; outline:0; padding:0;
+  font:inherit; font-size:.82rem; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink);
+}
+.qty--kg .qty__kg input:focus-visible{ outline:2px solid var(--leaf); outline-offset:2px; border-radius:6px; }
+.qty--kg .qty__kg i{ font-style:normal; font-size:.7rem; color:var(--ink-3); }
+.deliv__opt{ font-weight:400; opacity:.75; }
+.deliv__pair{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.deliv__pair > div{ min-width:0; }
+.deliv__req{ color:var(--brick); font-weight:700; }
+.deliv__in--bad{ border-color:var(--brick); }
 .deliv__l{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:.72rem; color:var(--ink-3); margin:0 0 4px; }
 .deliv__open{ display:inline-flex; align-items:center; gap:4px; color:var(--logo); border-bottom:1px solid transparent; }
 .deliv__open:hover{ border-color:currentColor; }

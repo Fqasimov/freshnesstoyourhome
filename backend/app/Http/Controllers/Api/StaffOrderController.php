@@ -63,7 +63,7 @@ class StaffOrderController extends Controller
      */
     public function show(Request $request, string $id): JsonResponse
     {
-        $order = Order::with('items')->findOrFail($id);
+        $order = $this->findForStaff($request, $id, ['items']);
 
         // Full contact details, so on the record — as the admin's customer
         // view is.
@@ -99,7 +99,7 @@ class StaffOrderController extends Controller
             'note' => ['sometimes', 'nullable', 'string', 'max:200'],
         ]);
 
-        $order = Order::findOrFail($id);
+        $order = $this->findForStaff($request, $id);
 
         $order = $this->orders->transition(
             $order,
@@ -108,7 +108,7 @@ class StaffOrderController extends Controller
             $data['note'] ?? null,
         );
 
-        return response()->json(new OrderResource($order->load('items')));
+        return response()->json($this->forStaff($request, new OrderResource($order->load('items'))));
     }
 
     /**
@@ -125,7 +125,7 @@ class StaffOrderController extends Controller
             'weights.*' => ['required', 'numeric', 'min:0.001', 'max:999'],
         ]);
 
-        $order = Order::with('items')->findOrFail($id);
+        $order = $this->findForStaff($request, $id, ['items']);
 
         $order = $this->orders->confirmWeights(
             $order,
@@ -133,6 +133,32 @@ class StaffOrderController extends Controller
             $request->user(),
         );
 
-        return response()->json(new OrderResource($order));
+        return response()->json($this->forStaff($request, new OrderResource($order)));
+    }
+
+    /**
+     * An order a member of staff may act on. A courier works open orders only
+     * — the same set their list shows — so an order id from yesterday's list
+     * is not a way back into a customer's details once it is closed. The admin
+     * keeps the whole history.
+     */
+    private function findForStaff(Request $request, string $id, array $with = []): Order
+    {
+        return Order::with($with)
+            ->when(! $request->user()->isAdmin(), fn ($q) => $q->whereNotIn('status', [Order::DELIVERED, Order::CANCELLED]))
+            ->findOrFail($id);
+    }
+
+    /**
+     * What a change returns. For a courier the contact details stay masked:
+     * the only way to them is the single-order view, which is on the record.
+     */
+    private function forStaff(Request $request, OrderResource $resource): OrderResource
+    {
+        if (! $request->user()->isAdmin()) {
+            $request->attributes->set(OrderResource::MASK_CONTACT, true);
+        }
+
+        return $resource;
     }
 }

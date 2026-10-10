@@ -1,4 +1,6 @@
 import * as SecureStore from 'expo-secure-store'
+
+const KEYCHAIN = { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY }
 import { Platform } from 'react-native'
 
 /**
@@ -19,7 +21,7 @@ let memory: Remembered | null = null
 export async function getRemembered (): Promise<Remembered | null> {
   if (!NATIVE) return memory
   try {
-    const raw = await SecureStore.getItemAsync(KEY)
+    const raw = await SecureStore.getItemAsync(KEY, KEYCHAIN)
     return raw ? JSON.parse(raw) as Remembered : null
   } catch {
     return null
@@ -29,11 +31,11 @@ export async function getRemembered (): Promise<Remembered | null> {
 export async function remember (who: Remembered): Promise<void> {
   memory = who
   if (!NATIVE) return
-  try { await SecureStore.setItemAsync(KEY, JSON.stringify(who)) } catch { /* not fatal */ }
+  try { await SecureStore.setItemAsync(KEY, JSON.stringify(who), KEYCHAIN) } catch { /* not fatal */ }
 }
 
 export async function forget (): Promise<void> {
   memory = null
   if (!NATIVE) return
-  try { await SecureStore.deleteItemAsync(KEY) } catch { /* not fatal */ }
+  try { await SecureStore.deleteItemAsync(KEY, KEYCHAIN) } catch { /* not fatal */ }
 }

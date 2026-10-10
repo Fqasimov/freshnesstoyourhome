@@ -17,6 +17,8 @@ import { color } from '@/theme/tokens'
 import { leaveApp } from '@/lib/nav'
 import { FloatingCart } from '@/components/FloatingCart'
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 // Held until the app can actually show something, rather than auto-hiding into
 // a blank screen while fonts and the saved language are still loading.
 SplashScreen.preventAutoHideAsync().catch(() => {})
@@ -132,7 +134,9 @@ function PushBridge () {
     // Tapping a notification should land on the order it is about, not on the
     // home screen leaving the customer to find it.
     const open = (data: any) => {
-      if (data?.type === 'order' && typeof data.order_id === 'string') {
+      // Notification data is outside the app's control; only an order id of
+      // the shape the server issues (a UUID) is followed.
+      if (data?.type === 'order' && typeof data.order_id === 'string' && UUID.test(data.order_id)) {
         router.push({ pathname: '/orders/[id]', params: { id: data.order_id } })
       }
     }

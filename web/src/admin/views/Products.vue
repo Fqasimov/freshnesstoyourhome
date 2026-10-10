@@ -86,6 +86,42 @@ function savePrice (row) {
   patch(row, { price_minor: minor }, `${row.name?.az ?? row.id}: ${toAzn(minor)} AZN`)
 }
 
+/* Order is set within one category. The arrows move a product past its
+   neighbour in that category (hidden by a search or not), and the whole new
+   order is sent so the server rewrites it in one go. */
+const moving = ref(false)
+const siblings = r => rows.value.filter(x => x.category_id === r.category_id)
+  .sort((a, b) => a.sort - b.sort)
+const canMove = (r, dir) => {
+  const list = siblings(r)
+  const i = list.indexOf(r)
+  return i + dir >= 0 && i + dir < list.length
+}
+async function move (row, dir) {
+  if (moving.value || !canMove(row, dir)) return
+  const list = siblings(row)
+  const i = list.indexOf(row)
+  const next = list.slice()
+  ;[next[i], next[i + dir]] = [next[i + dir], next[i]]
+  moving.value = true
+  try {
+    await api('/admin/products/order', {
+      method: 'POST',
+      body: { category_id: row.category_id, ids: next.map(r => r.id) },
+    })
+    // Rewrite the rows in place: the slots this category occupies are filled
+    // in the new order, everything else stays where it was.
+    const slots = rows.value.reduce((acc, r, idx) => (r.category_id === row.category_id ? [...acc, idx] : acc), [])
+    const copy = rows.value.slice()
+    slots.forEach((idx, n) => { copy[idx] = next[n]; next[n].sort = n + 1 })
+    rows.value = copy
+  } catch (e) {
+    complain(e)
+  } finally {
+    moving.value = false
+  }
+}
+
 const toggle = (row, field) =>
   patch(row, { [field]: !row[field] }, `${row.name?.az ?? row.id} yeniləndi`)
 
@@ -117,14 +153,29 @@ function replaceRow (updated) {
   if (row) Object.assign(row, updated)
 }
 
-function edited (updated) {
-  replaceRow(updated)
+function edited (updated, was = updated.id) {
+  // The product's code may just have changed, so the row is found by the old one.
+  const row = rows.value.find(r => r.id === was)
+  if (row) {
+    Object.assign(row, updated)
+    if (was !== updated.id) {
+      delete draft.value[was]
+    }
+    draft.value[updated.id] = toAzn(row.price_minor)
+  }
+  editing.value = null
+}
+
+function removed (id) {
+  rows.value = rows.value.filter(r => r.id !== id)
   editing.value = null
 }
 
 function added (product) {
   adding.value = false
-  rows.value.unshift(product)
+  // A new product goes last in its category, which is where the server put it.
+  const at = rows.value.map(r => r.category_id).lastIndexOf(product.category_id)
+  at < 0 ? rows.value.push(product) : rows.value.splice(at + 1, 0, product)
   draft.value[product.id] = toAzn(product.price_minor)
 }
 
@@ -141,6 +192,7 @@ onMounted(() => {
       <p class="a-sub">
         Qiyməti dəyişin və Enter basın. Adı, təsviri və vahidi dəyişmək üçün məhsulun adına toxunun.
         Şəkil üçün çərçivəyə toxunun və ya faylı üstünə atın.
+        Məhsulun öz bölməsindəki yerini ↑ ↓ düymələri ilə dəyişin.
         Dəyişiklik saytda və tətbiqdə dərhal görünür.
       </p>
     </div>
@@ -171,6 +223,7 @@ onMounted(() => {
       <thead>
         <tr>
           <th style="width:30px"></th>
+          <th style="width:76px">Sıra</th>
           <th style="width:120px">Şəkil</th>
           <th>Məhsul</th>
           <th>Bölmə</th>
@@ -186,6 +239,12 @@ onMounted(() => {
           <td>
             <input type="checkbox" :checked="picked.has(r.id)" @change="pick(r.id)"
                    :aria-label="r.name?.az">
+          </td>
+          <td class="a-move">
+            <button type="button" class="a-btn a-btn--sm a-btn--ghost" :disabled="moving || !canMove(r, -1)"
+                    aria-label="Yuxarı" @click="move(r, -1)">↑</button>
+            <button type="button" class="a-btn a-btn--sm a-btn--ghost" :disabled="moving || !canMove(r, 1)"
+                    aria-label="Aşağı" @click="move(r, 1)">↓</button>
           </td>
           <td>
             <PhotoField
@@ -233,6 +292,6 @@ onMounted(() => {
   </div>
 
   <EditProduct v-if="editing" :product="editing" :categories="categories"
-               @close="editing = null" @saved="edited" />
+               @close="editing = null" @saved="edited" @changed="replaceRow" @deleted="removed" />
   <NewProduct v-if="adding" :categories="categories" @close="adding = false" @created="added" />
 </template>

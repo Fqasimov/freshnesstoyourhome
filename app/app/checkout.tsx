@@ -100,10 +100,9 @@ export default function Checkout () {
     } catch (e) {
       const err = e as ApiError
       const unavailable = (err.payload?.unavailable_product_ids ?? []) as string[]
-      const unavailableSets = (err.payload?.unavailable_bundle_ids ?? []) as string[]
 
-      if (unavailable.length || unavailableSets.length) {
-        await cart.dropUnavailable(unavailable, unavailableSets)
+      if (unavailable.length) {
+        await cart.dropUnavailable(unavailable)
         setError(err.message)
       } else {
         setError(Object.values(err.fieldErrors)[0] ?? err.message ?? t('err.generic'))
@@ -208,9 +207,6 @@ export default function Checkout () {
         {quote ? (
           <View style={{ marginTop: 6 }}>
             <Row label={t('cart.subtotal')} value={money(quote.subtotal_minor, quote.currency)} />
-            {quote.discount_minor > 0 ? (
-              <Row label={t('sets.discount')} value={`−${money(quote.discount_minor, quote.currency)}`} />
-            ) : null}
             {quote.delivery_fee_minor > 0 ? (
               <Row label={t('cart.delivery')} value={money(quote.delivery_fee_minor, quote.currency)} />
             ) : null}

@@ -10,8 +10,6 @@ final class PricedBasket
     /**
      * @param  array<int, PricedLine>  $lines
      * @param  array<int, string>  $unavailableProductIds
-     * @param  array<int, PricedSet>  $sets
-     * @param  array<int, string>  $unavailableBundleIds
      */
     public function __construct(
         public readonly array $lines,
@@ -23,13 +21,11 @@ final class PricedBasket
         public readonly bool $requiresWeighing,
         public readonly int $minimumOrderMinor,
         public readonly ?DeliveryZone $zone,
-        public readonly array $sets = [],
-        public readonly array $unavailableBundleIds = [],
     ) {}
 
     public function hasUnavailable(): bool
     {
-        return $this->unavailableProductIds !== [] || $this->unavailableBundleIds !== [];
+        return $this->unavailableProductIds !== [];
     }
 
     public function meetsMinimum(): bool
@@ -77,19 +73,10 @@ final class PricedBasket
                 'unit_price_minor' => $l->unitPriceMinor,
                 'line_total_minor' => $l->lineTotalMinor,
                 'is_weight_based' => $l->isWeightBased,
+                // So the app can show a set as one row in the basket.
                 'bundle_id' => $l->bundleId,
             ], $this->lines),
-            'bundles' => array_map(fn (PricedSet $s) => [
-                'bundle_id' => $s->bundle->id,
-                'name' => $s->bundle->nameIn($locale),
-                'qty' => $s->qty,
-                'discount_percent' => $s->bundle->discount_percent,
-                'full_minor' => $s->fullMinor,
-                'discount_minor' => $s->discountMinor,
-                'price_minor' => $s->priceMinor(),
-            ], $this->sets),
             'unavailable_product_ids' => $this->unavailableProductIds,
-            'unavailable_bundle_ids' => $this->unavailableBundleIds,
             'subtotal_minor' => $this->subtotalMinor,
             'delivery_fee_minor' => $this->deliveryFeeMinor,
             'discount_minor' => $this->discountMinor,

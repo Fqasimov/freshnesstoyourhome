@@ -29,7 +29,9 @@ permissions:
 
 jobs:
   deploy:
-    if: vars.DEPLOY_ENABLED == 'true'
+    # Only from the release branch. "Run workflow" lets anyone with write
+    # access pick any branch; that must not be a way to ship unreviewed code.
+    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/claude/photo-analysis-bgp25f'
     runs-on: ubuntu-latest
     # The first run sends ~13,800 files (vendor/) one at a time over FTP;
     # later runs send only what changed and take a few minutes.
@@ -73,6 +75,11 @@ jobs:
 
       # ---- Build exactly what the server gets -----------------------------
       - name: Stage the home folder
+        env:
+          # Optional. A browser key for the basket's map pin picker, restricted
+          # to freshnesstoyourhome.az in Google Cloud. Unset, the picker is
+          # left out and "use my location" still works.
+          VITE_GOOGLE_MAPS_KEY: ${{ vars.GOOGLE_MAPS_KEY }}
         run: |
           STAGE_OUT="$RUNNER_TEMP/site" scripts/package-deploy.sh
           # hostinq.az's FTPS server rejects zero-byte files ("tlsv1 alert

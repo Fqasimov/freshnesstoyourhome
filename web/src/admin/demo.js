@@ -413,6 +413,57 @@ export async function respond (path, method, body) {
     return { ...p }
   }
 
+  /* extra photographs, and deleting for good */
+  if (seg[0] === 'admin' && seg[1] === 'products' && seg[3] === 'gallery') {
+    const p = db.products.find(x => x.id === seg[2])
+    p.gallery = p.gallery ?? []
+    if (method === 'POST') {
+      const file = body instanceof FormData ? body.get('photo') : null
+      if (!file || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        throw new DemoError('Yalnız JPEG, PNG və ya WebP.', { photo: ['Yalnız JPEG, PNG və ya WebP.'] })
+      }
+      if (p.gallery.length >= 8) throw new DemoError('Ən çox 8 əlavə şəkil.', { photo: ['Ən çox 8 əlavə şəkil.'] })
+      const url = URL.createObjectURL(file)
+      p.gallery.push({ id: Date.now() + p.gallery.length, image_url: url, thumb_url: url })
+      audit('product.gallery.add', 'product', p.id, { gallery: { from: p.gallery.length - 1, to: p.gallery.length } })
+      return { ...p }
+    }
+    if (method === 'DELETE') {
+      p.gallery = p.gallery.filter(g => String(g.id) !== seg[4])
+      audit('product.gallery.remove', 'product', p.id, { file: { from: seg[4], to: null } })
+      return { ...p }
+    }
+  }
+  if (seg[0] === 'admin' && seg[1] === 'products' && seg.length === 3 && method === 'DELETE') {
+    const p = db.products.find(x => x.id === seg[2])
+    db.products = db.products.filter(x => x.id !== seg[2])
+    db.bundles.forEach(b => { b.items = b.items.filter(i => i.product_id !== seg[2]); if (!b.items.length) b.is_active = false })
+    audit('product.delete', 'product', seg[2], { name: { from: p?.name?.az, to: null } })
+    return { status: 'ok' }
+  }
+  if (seg[0] === 'admin' && seg[1] === 'bundles' && seg.length === 3 && method === 'DELETE') {
+    const b = db.bundles.find(x => x.id === seg[2])
+    db.bundles = db.bundles.filter(x => x.id !== seg[2])
+    audit('bundle.delete', 'bundle', seg[2], { name: { from: b?.name?.az, to: null } })
+    return { status: 'ok' }
+  }
+  if (seg[0] === 'admin' && seg[1] === 'zones' && seg.length === 3 && method === 'DELETE') {
+    const z = db.zones.find(x => x.id === seg[2])
+    db.zones = db.zones.filter(x => x.id !== seg[2])
+    audit('zone.delete', 'zone', seg[2], { name: { from: z?.name?.az, to: null } })
+    return { status: 'ok' }
+  }
+
+  if (route === '/admin/products/order' && method === 'POST') {
+    const inCat = db.products.filter(x => x.category_id === body.category_id)
+    const first = db.products.indexOf(inCat[0])
+    const ordered = body.ids.map(id => inCat.find(x => x.id === id)).filter(Boolean)
+    const rest = inCat.filter(x => !body.ids.includes(x.id))
+    const next = [...ordered, ...rest]
+    next.forEach((x, i) => { x.sort = i + 1 })
+    db.products.splice(first, next.length, ...next)
+    return { status: 'ok' }
+  }
   if (route === '/admin/products/stock' && method === 'POST') {
     const touched = []
     db.products.forEach(p => {
@@ -439,6 +490,15 @@ export async function respond (path, method, body) {
       }
     }
     if (body.category_id) p.category_id = body.category_id
+    if (body.unit_kind) { p.unit_kind = body.unit_kind; p.is_weight_based = body.unit_kind === 'kg' }
+    if (body.unit_qty !== undefined) p.unit_qty = body.unit_qty
+    if (body.new_id && body.new_id !== p.id) {
+      if (db.products.some(x => x.id === body.new_id)) {
+        throw new DemoError('Bu kod artıq istifadə olunur.', { new_id: ['Bu kod artıq istifadə olunur.'] })
+      }
+      audit('product.update', 'product', body.new_id, { id: { from: p.id, to: body.new_id } })
+      p.id = body.new_id
+    }
     // The same bounds the server validates against, so the preview refuses
     // what the real panel would refuse.
     if (body.price_minor !== undefined && (body.price_minor < 1 || body.price_minor > 10_000_000)) {
@@ -533,7 +593,13 @@ export async function respond (path, method, body) {
       product_count: db.products.filter(p => p.category_id === id).length }))
     db.extraCategories.forEach((c, i) => list.push({ ...c, sort: list.length + i,
       product_count: db.products.filter(p => p.category_id === c.id).length }))
-    return list
+    const order = db.categoryOrder ?? []
+    const rank = id => { const i = order.indexOf(id); return i < 0 ? order.length : i }
+    return list.sort((a, b) => rank(a.id) - rank(b.id))
+  }
+  if (route === '/admin/categories/order' && method === 'POST') {
+    db.categoryOrder = body.ids
+    return { status: 'ok' }
   }
   if (route === '/admin/categories' && method === 'GET') return { data: allCategories() }
   if (route === '/admin/categories' && method === 'POST') {

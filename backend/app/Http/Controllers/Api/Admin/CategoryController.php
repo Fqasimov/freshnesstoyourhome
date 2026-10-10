@@ -70,6 +70,33 @@ class CategoryController extends Controller
         return response()->json($this->shape($category, 0), 201);
     }
 
+    /** Put the categories in the order the shopkeeper chose. */
+    public function reorder(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:200'],
+            'ids.*' => ['string', 'distinct', 'max:40'],
+        ]);
+
+        $rows = Category::all()->keyBy('id');
+        $ordered = collect($data['ids'])->filter(fn ($id) => $rows->has($id))->values();
+        $rest = $rows->keys()->diff($ordered)->values();
+
+        DB::transaction(function () use ($ordered, $rest, $rows) {
+            $ordered->concat($rest)->each(function ($id, $i) use ($rows) {
+                if ($rows[$id]->sort !== $i + 1) {
+                    $rows[$id]->forceFill(['sort' => $i + 1])->save();
+                }
+            });
+        });
+
+        Audit::record($request->user(), 'category.reorder', 'category', null, [
+            'order' => ['from' => null, 'to' => $ordered->all()],
+        ]);
+
+        return response()->json(['status' => 'ok']);
+    }
+
     /** Only an empty category can go: products must never be left without one. */
     public function destroy(Request $request, string $id): JsonResponse
     {

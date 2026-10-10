@@ -15,13 +15,18 @@ import { color, font, space } from '@/theme/tokens'
 const tap = () => { if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}) }
 
 /**
- * What a set costs, before and after the panel's discount — rounded the way
- * the server rounds it, so the card agrees with the basket. Display only:
- * the basket's figure comes from the server's quote.
+ * What a set costs, before and after the panel's discount — each unit
+ * discounted and rounded to the qəpik, as the server does it, so the card
+ * agrees with the basket. Display only: the basket's figure is the server's.
  */
 export function setPricing (bundle: Bundle, byId: ReturnType<typeof useCatalogue>['byId']) {
-  const full = bundle.items.reduce((sum, i) => sum + Math.round((byId(i.product_id)?.price_minor ?? 0) * i.qty), 0)
-  const now = full - Math.floor(full * bundle.discount_percent / 100)
+  let full = 0
+  let now = 0
+  for (const i of bundle.items) {
+    const unit = byId(i.product_id)?.price_minor ?? 0
+    full += Math.round(unit * i.qty)
+    now += Math.round(Math.round(unit * (100 - bundle.discount_percent) / 100) * i.qty)
+  }
   return { full, now }
 }
 

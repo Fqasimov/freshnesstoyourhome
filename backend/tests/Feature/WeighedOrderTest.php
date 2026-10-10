@@ -202,8 +202,42 @@ class WeighedOrderTest extends TestCase
             $this->postJson("/api/staff/orders/{$order->id}/transition", ['status' => $status])->assertOk();
         }
 
+        // Out of a courier's reach once closed; refused for an admin too.
+        $this->postJson("/api/staff/orders/{$order->id}/weights", [
+            'weights' => [(string) $item->id => 5.0],
+        ])->assertNotFound();
+
+        $this->signInAs(User::factory()->admin()->create()->fresh());
+
         $this->postJson("/api/staff/orders/{$order->id}/weights", [
             'weights' => [(string) $item->id => 5.0],
         ])->assertStatus(422);
+    }
+
+    public function test_weighing_part_of_an_order_does_not_undo_the_rest(): void
+    {
+        $order = $this->placeOrder(['smoked-salmon' => 1, 'smoked-beluga' => 1]);
+        [$a, $b] = [$order->items[0], $order->items[1]];
+
+        $courier = User::factory()->courier()->create();
+        $this->signInAs($courier->fresh());
+
+        $this->postJson("/api/staff/orders/{$order->id}/weights", ['weights' => [(string) $a->id => 1.05, (string) $b->id => 1.02]])->assertOk();
+        // A second request names only the first line.
+        $this->postJson("/api/staff/orders/{$order->id}/weights", ['weights' => [(string) $a->id => 1.04]])->assertOk();
+
+        $order->refresh();
+        $this->assertSame(1.04, (float) $order->items->firstWhere('id', $a->id)->confirmed_qty);
+        $this->assertSame(1.02, (float) $order->items->firstWhere('id', $b->id)->confirmed_qty);
+    }
+
+    public function test_a_weight_for_a_line_that_is_not_on_the_order_is_refused(): void
+    {
+        $order = $this->placeOrder(['smoked-salmon' => 1]);
+
+        $courier = User::factory()->courier()->create();
+        $this->signInAs($courier->fresh());
+
+        $this->postJson("/api/staff/orders/{$order->id}/weights", ['weights' => ['999999' => 1.0]])->assertStatus(422);
     }
 }

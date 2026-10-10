@@ -9,9 +9,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * A set bought from the website or the app costs what the panel says: its
- * products at their own prices, less the panel's percentage — priced here,
- * so the customer, the WhatsApp message and the panel all see one figure.
+ * A set bought from the website or the app costs what the panel says: each of
+ * its products at the panel's percentage off — priced here, so the customer,
+ * the WhatsApp message and the panel all see one figure.
  */
 class BundleOrderTest extends TestCase
 {
@@ -30,45 +30,43 @@ class BundleOrderTest extends TestCase
 
     public function test_a_set_is_quoted_at_the_panels_discount(): void
     {
+        // Two sets: each unit 10% off — dorado 13.50, trout 8.10 — so
+        // 2 × (13.50 + 2 × 8.10) = 59.40, plus delivery.
         $quote = $this->postJson('/api/orders/quote', [
-            'bundles' => [['bundle_id' => 'fish-night', 'qty' => 2]],
+            'bundles' => [['id' => 'fish-night', 'qty' => 2]],
             'zone_id' => self::ZONE,
         ])->assertOk();
 
-        // Two sets: 2 × (15 + 18) = 66.00, less 10% = 59.40, plus delivery.
-        $quote->assertJsonPath('subtotal_minor', 6600)
-            ->assertJsonPath('discount_minor', 660)
-            ->assertJsonPath('bundles.0.price_minor', 5940)
+        $quote->assertJsonPath('subtotal_minor', 5940)
             ->assertJsonPath('total_minor', 5940 + $quote->json('delivery_fee_minor'))
-            ->assertJsonPath('lines.0.bundle_id', 'fish-night');
+            ->assertJsonPath('lines.0.bundle_id', 'fish-night')
+            ->assertJsonPath('lines.0.unit_price_minor', 1350);
     }
 
     public function test_sets_and_single_products_price_together(): void
     {
         $this->postJson('/api/orders/quote', [
             'lines' => [['product_id' => 'smoked-trout', 'qty' => 1]],
-            'bundles' => [['bundle_id' => 'fish-night', 'qty' => 1]],
+            'bundles' => [['id' => 'fish-night', 'qty' => 1]],
         ])->assertOk()
-            ->assertJsonPath('subtotal_minor', 900 + 3300)
-            ->assertJsonPath('discount_minor', 330)
-            ->assertJsonPath('total_minor', 900 + 2970);
+            ->assertJsonPath('subtotal_minor', 900 + 2970)
+            ->assertJsonPath('lines.0.bundle_id', null);
     }
 
     public function test_the_discount_comes_from_the_panel_not_the_request(): void
     {
         $this->postJson('/api/orders/quote', [
-            'bundles' => [['bundle_id' => 'fish-night', 'qty' => 1, 'discount_percent' => 90, 'price_minor' => 1]],
-        ])->assertOk()->assertJsonPath('discount_minor', 330);
+            'bundles' => [['id' => 'fish-night', 'qty' => 1, 'discount_percent' => 90, 'price_minor' => 1]],
+        ])->assertOk()->assertJsonPath('subtotal_minor', 2970);
     }
 
     public function test_a_set_with_something_out_of_stock_cannot_be_ordered(): void
     {
         Product::whereKey('smoked-trout')->update(['in_stock' => false]);
 
-        $this->postJson('/api/orders/quote', ['bundles' => [['bundle_id' => 'fish-night', 'qty' => 1]]])
+        $this->postJson('/api/orders/quote', ['bundles' => [['id' => 'fish-night', 'qty' => 1]]])
             ->assertOk()
-            ->assertJsonPath('unavailable_bundle_ids', ['fish-night'])
-            ->assertJsonPath('discount_minor', 0);
+            ->assertJsonPath('unavailable_product_ids', ['smoked-trout']);
 
         $this->postJson('/api/orders/web', $this->webOrder())->assertStatus(422);
     }
@@ -81,35 +79,33 @@ class BundleOrderTest extends TestCase
         $this->assertSame(0, Order::count());
     }
 
-    public function test_a_website_order_with_a_set_lands_in_the_panel_with_its_discount(): void
+    public function test_a_website_order_with_a_set_lands_in_the_panel_at_the_set_price(): void
     {
         $this->postJson('/api/orders/web', $this->webOrder())->assertCreated();
 
         $order = Order::with('items')->sole();
-        $this->assertSame(3300, $order->subtotal_minor);
-        $this->assertSame(330, $order->discount_minor);
-        $this->assertSame(2970 + $order->delivery_fee_minor, $order->total_minor);
+        $this->assertSame(2970, $order->subtotal_minor);
         $this->assertEqualsCanonicalizing(['smoked-dorado', 'smoked-trout'], $order->items->pluck('product_id')->all());
     }
 
-    public function test_an_app_order_with_a_set_carries_the_discount(): void
+    public function test_an_app_order_can_carry_a_set(): void
     {
         [$user, $address] = $this->customerWithAddress();
         $this->signInAs($user);
 
         $this->postJson('/api/orders', [
             'address_id' => $address->id,
-            'bundles' => [['bundle_id' => 'fish-night', 'qty' => 1]],
+            'bundles' => [['id' => 'fish-night', 'qty' => 1]],
             'delivery_date' => $this->deliverableDate(),
-        ])->assertCreated()->assertJsonPath('discount_minor', 330);
+        ])->assertCreated()->assertJsonPath('subtotal_minor', 2970);
     }
 
     private function webOrder(): array
     {
         return [
-            'bundles' => [['bundle_id' => 'fish-night', 'qty' => 1]],
+            'bundles' => [['id' => 'fish-night', 'qty' => 1]],
             'zone_id' => self::ZONE,
-            'contact_name' => 'Aysel', 'contact_phone' => '+994 50 123 45 67', 'address_line' => 'Nizami küçəsi 10',
+            'contact_name' => 'Aysel Məmmədova', 'contact_phone' => '+994 50 123 45 67', 'address_line' => 'Nizami küçəsi 10',
         ];
     }
 }

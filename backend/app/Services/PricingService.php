@@ -20,20 +20,26 @@ use App\Support\Money;
 class PricingService
 {
     /**
+     * What one unit of a product costs inside a set.
+     *
+     * Each unit is discounted and rounded to the qəpik on its own, so the
+     * price on an order line, the set's price on the website and the one in
+     * the panel are the same arithmetic and cannot disagree by a qəpik.
+     */
+    public static function bundleUnitMinor(int $unitPriceMinor, int $percent): int
+    {
+        $percent = max(0, min(100, $percent));
+
+        return (int) round($unitPriceMinor * (100 - $percent) / 100, 0, PHP_ROUND_HALF_UP);
+    }
+
+    /**
      * @param  array<int, array{product_id: string, qty: float}>  $lines
-     * @param  array<int, array{bundle_id: string, qty: int}>  $bundles  sets, as the panel defines them
+     * @param  array<int, array{id: string, qty: int|float}>  $bundles  sets, bought whole
      */
     public function quote(array $lines, ?string $zoneId = null, array $bundles = []): PricedBasket
     {
-        // A set is its products at their own prices, less the panel's
-        // percentage. Its contents and that percentage are read here, never
-        // from the request: the client says which set and how many.
-        $sets = Bundle::with(['items', 'translations'])
-            ->where('is_active', true)
-            ->whereIn('id', array_column($bundles, 'bundle_id'))
-            ->get()
-            ->keyBy('id');
-
+        $sets = $this->orderableBundles($bundles);
         $ids = array_merge(
             array_column($lines, 'product_id'),
             $sets->flatMap(fn (Bundle $b) => $b->items->pluck('product_id'))->all(),
@@ -77,46 +83,45 @@ class PricingService
             $requiresWeighing = $requiresWeighing || $product->isWeightBased();
         }
 
-        $pricedSets = [];
-        $unavailableSets = [];
-        $discount = 0;
+        // A set is its products at the set's discount, written as ordinary
+        // lines at the discounted unit price. The weigh-at-the-door step
+        // re-prices from the unit price on the line, so the discount survives
+        // the scales too.
+        foreach ($bundles as $request) {
+            $bundle = $sets->get($request['id']);
+            $times = (float) $request['qty'];
 
-        foreach ($bundles as $wanted) {
-            $set = $sets->get($wanted['bundle_id']);
-            $qty = (int) $wanted['qty'];
-
-            // Switched off, emptied, or holding something that cannot be sold
-            // today: the whole set goes, as the catalogue already hides it.
-            if ($set === null || $set->items->isEmpty()
-                || $set->items->contains(fn ($item) => ! $products->has($item->product_id))) {
-                $unavailableSets[] = $wanted['bundle_id'];
+            if ($bundle === null) {
+                $unavailable[] = 'bundle:'.$request['id'];
 
                 continue;
             }
 
-            $full = 0;
-            foreach ($set->items as $item) {
+            $missing = $bundle->items->first(fn ($item) => ! $products->has($item->product_id));
+            if ($missing !== null) {
+                $unavailable[] = $missing->product_id;
+
+                continue;
+            }
+
+            foreach ($bundle->items as $item) {
                 $product = $products->get($item->product_id);
-                $itemQty = (float) $item->qty * $qty;
-                $lineTotal = Money::line($product->price_minor, $itemQty);
+                $unit = self::bundleUnitMinor($product->price_minor, $bundle->discount_percent);
+                $qty = (float) $item->qty * $times;
+                $lineTotal = Money::line($unit, $qty);
 
                 $priced[] = new PricedLine(
                     product: $product,
-                    qty: $itemQty,
-                    unitPriceMinor: $product->price_minor,
+                    qty: $qty,
+                    unitPriceMinor: $unit,
                     lineTotalMinor: $lineTotal,
                     isWeightBased: $product->isWeightBased(),
-                    bundleId: $set->id,
+                    bundleId: $bundle->id,
                 );
 
-                $full += $lineTotal;
+                $subtotal += $lineTotal;
                 $requiresWeighing = $requiresWeighing || $product->isWeightBased();
             }
-
-            $off = $full - Money::percentOff($full, $set->discount_percent);
-            $pricedSets[] = new PricedSet($set, $qty, $full, $off);
-            $subtotal += $full;
-            $discount += $off;
         }
 
         $zone = $zoneId === null
@@ -131,13 +136,25 @@ class PricingService
             unavailableProductIds: $unavailable,
             subtotalMinor: $subtotal,
             deliveryFeeMinor: $deliveryFee,
-            discountMinor: $discount,
-            totalMinor: $subtotal - $discount + $deliveryFee,
+            discountMinor: 0,
+            totalMinor: $subtotal + $deliveryFee,
             requiresWeighing: $requiresWeighing,
             minimumOrderMinor: $minimum,
             zone: $zone,
-            sets: $pricedSets,
-            unavailableBundleIds: $unavailableSets,
         );
+    }
+
+    /** The sets asked for that are switched on, keyed by id. */
+    private function orderableBundles(array $bundles)
+    {
+        if ($bundles === []) {
+            return collect();
+        }
+
+        return Bundle::with('items')
+            ->where('is_active', true)
+            ->whereIn('id', array_column($bundles, 'id'))
+            ->get()
+            ->keyBy('id');
     }
 }

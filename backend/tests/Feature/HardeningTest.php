@@ -197,7 +197,7 @@ class HardeningTest extends TestCase
         config(['freshness.order.web_daily_cap' => 2]);
         $order = [
             'lines' => [['product_id' => 'smoked-salmon', 'qty' => 1]], 'zone_id' => self::ZONE,
-            'contact_name' => 'Aysel', 'contact_phone' => '+994 50 123 45 67', 'address_line' => 'Nizami küçəsi 10',
+            'contact_name' => 'Aysel Məmmədova', 'contact_phone' => '+994 50 123 45 67', 'address_line' => 'Nizami küçəsi 10',
         ];
 
         $this->fromIp('2.2.2.1')->postJson('/api/orders/web', $order)->assertCreated();

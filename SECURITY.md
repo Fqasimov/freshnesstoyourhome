@@ -260,6 +260,171 @@ knock on a door with goods. Staff are always anonymised, never hard-deleted:
 `order_events` and `weighed_by` point at them, and deleting the row would
 erase who moved or weighed an order.
 
+## Links and third-party scripts on the website
+
+- **Map links are Google Maps addresses and nothing else.** A customer-supplied
+  `map_link` is shown to staff as something clickable, so it has to be a
+  Google Maps address: `maps.app.goo.gl/`, `goo.gl/maps`, `maps.google.com/` or
+  a `google.com|az/maps` path. Plain `google.com/…` is not enough — it includes
+  `google.com/url?q=…`, which redirects anywhere. The same rule guards the website
+  order and the app's saved addresses (`OrderController`, `AddressController`).
+- **Google's map script is not part of the page's security policy unless a key
+  is configured.** The basket's "pick on the map" needs `maps.googleapis.com` and
+  `maps.gstatic.com`; `scripts/package-deploy.sh` adds exactly those, plus blob
+  workers, to the Content-Security-Policy only when `GOOGLE_MAPS_KEY` is set.
+  Without a key the policy stays `script-src 'self'`. The browser key itself is
+  public by design: restrict it in Google Cloud to this site's referrer and to
+  the Maps JavaScript API.
+- **Geolocation is allowed for the site itself** (`Permissions-Policy:
+  geolocation=(self)`), for the basket's "use my location"; it is still denied
+  to every embedded third party.
+- **Sets are priced by the server.** `POST /orders/quote` and `/orders/web` take
+  a set's id and a count, never a price or a percentage; the discount comes from
+  the `bundles` row and is applied per unit (`PricingService::bundleUnitMinor`).
+  A switched-off set is refused like an unavailable product.
+
+## The mobile app
+
+Reviewed in October 2026 together with the API it calls. What holds now:
+
+- **The session token is in the Keychain / Keystore**, readable only while the
+  phone is unlocked and never copied into a backup or onto another device
+  (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`). Tokens saved by older builds are moved to
+  that setting the first time they are read.
+- **Ids from the server or a notification are encoded** before they go into a
+  URL path, and a notification opens an order only when its id is a UUID, so a
+  crafted `../` cannot point a request at another endpoint.
+- **The basket belongs to an account.** Signing in as somebody else on the same
+  phone empties it.
+- **Notifications stop with the session.** Signing out everywhere, a password
+  reset, blocking an account, or a blocked account's next request all delete the
+  phone's push tokens, so a lost phone stops receiving order updates.
+- **Google and Apple sign-in** open or join an account only for an address the
+  provider owns: Gmail, a Google Workspace domain, an Apple relay or iCloud
+  address. For any other address the person signs up by emailed code first —
+  otherwise whoever once held a Google account on that address could claim the
+  account before its owner and keep a way back in. A password reset removes any
+  Google or Apple link. These sign-ins have their own rate limit; they used to
+  share the password limiter's empty-address bucket, where ten requests from
+  anywhere would have locked everybody out.
+- **Every limiter counts an IPv6 network as one source** (its /64), and the
+  email keys in limiter counters are keyed hashes, not plain sha1.
+- **A pending sign-up in the cache is encrypted**, so the cache table is not a
+  list of names and birthdays.
+- **Couriers reach open orders only.** A delivered or cancelled order answers
+  404 to a courier; replies to a courier's status change or weighing carry no
+  contact details; and a courier cannot weigh a line far below what was
+  ordered (the same tolerance that caps it above). Admins are not limited.
+- **Order fields have a shape**: at most three decimals of quantity, a time
+  range for the slot, map links without dot segments (a `/maps/../url` link
+  resolves to Google's redirector), and nothing from a hidden category.
+- **Unknown API paths answer like a missing record**, so routes cannot be
+  enumerated by their status codes.
+- **Builds and over-the-air updates run only from the deploy branch**, even when
+  the workflow is started by hand from another one.
+
+Still open on the app side:
+
+- **Over-the-air updates are not code-signed (medium).** Anyone holding the
+  Expo account or the `EXPO_TOKEN` secret can push JavaScript to every
+  installed app. Turn on `expo-updates` code signing (`npx expo-updates
+  codesigning:generate`, keep the private key off GitHub), put `EXPO_TOKEN` in a
+  GitHub Environment that needs approval, and protect the deploy branch. Code
+  signing is a native change: it needs a new store build, and only reaches
+  phones that install it.
+- **`decode-uri-component` 0.2.x inside expo-router** has a published
+  denial-of-service advisory (low: a malformed link can crash the screen it
+  opens). It is fixed by the next Expo SDK upgrade; the other advisories
+  `npm audit` reports are in build-time tools, not in the app.
+- **Social sign-in has no nonce (low).** A Google or Apple token stolen from
+  the phone could be replayed against the API until it expires (an hour).
+
+## Known gaps, found in the October review and not closed in code
+
+Each of these is a decision or a change of behaviour for the shop, not a quiet
+fix. They are listed so nobody has to rediscover them.
+
+- **The panel's sign-in can be kept shut by a stranger who knows the admin's
+  address (medium).** The codes have a lane of their own, but the panel's own
+  endpoints are public: five requests an hour use up the address's budget,
+  a request kills the code just mailed, and five wrong guesses kill the live
+  one. Nothing is disclosed and a 12-hour session already open keeps working;
+  the second factor is untouched. The right control is outside the code:
+  Cloudflare Access in front of `/cms` and `/api/auth/panel` (DEPLOY.md), which
+  leaves nobody but the admin able to reach the endpoints at all. In code it
+  would mean binding the code to the device that asked for it, as sign-up does.
+- **The panel's code request answers a little faster for an address that is not
+  the admin's (low).** The real path sends mail inside the request. Closing it
+  means a real mail queue; deferring the work breaks the guarantee that a code
+  exists once the request returns, and the tests that hold it.
+- **A weighed order can be marked delivered without being weighed (low).** The
+  customer is then billed the estimate and the dashboard does not count it,
+  because it only counts open orders. Staff are trusted; if that should change,
+  refuse `delivered` while `requires_weighing` and `weighed_at` is empty.
+- **The admin's order list shows contact details unmasked and writes no audit
+  row (low).** Opening one order is audited; paging the list is not.
+- **A customer chooses the delivery zone, and nothing checks it against the
+  address (low).** The fee and minimum follow the zone they pick.
+- **Audit rows are written after the change commits**, and a product's old
+  history sits under its old code after a rename (low).
+- **The map picker widens the whole site's script policy when a key is set**,
+  including the admin page (low, defence in depth). Nothing in the panel can
+  inject script today. Left off by default; if it is turned on, serve the
+  panel from its own policy.
+- **One-time installer and upgrade pages** are protected by a random name only
+  (96 bits) and are shipped only in a first-install package, never by the
+  automatic deploy. Delete them as soon as they have been used.
+- **A push to `claude/photo-analysis-bgp25f` goes straight to production**, with
+  no approval step. Deploying from a protected branch, with the secrets in a
+  GitHub Environment that needs a reviewer, would close that.
+- **The browser keeps name, phone, address and the map pin in plain text** so a
+  returning customer does not retype them (disclosed in the privacy policy;
+  the Google Maps script is not yet named there when a key is set).
+- **Orders from the website have no account, so nothing erases them** when a
+  person asks. Staff can clear the contact fields on request.
+
+## If something is stolen: what the thief can read
+
+Encryption protects a thing only from someone who does not also have its key,
+so what matters is which of the two a thief gets.
+
+| What is stolen | What the thief has |
+|---|---|
+| A copy of the **database** (dump, backup, SQL injection) | Names, phones, emails, addresses, notes, map pins, cancel reasons, order notes and the admin's authenticator secret are ciphertext (AES-256-GCM). Emails and phones are searchable only through keyed hashes. Sign-in codes and passwords are bcrypt hashes; API tokens are hashed. Prices, products and order totals are not secret. **Not readable without `APP_KEY`.** |
+| The database **and** `.env` (or `APP_KEY`) together | Everything. The application must be able to decrypt, so anything that can run it can read. Keep database backups and the key in different places. |
+| The **website files** (`public_html`) | Nothing secret: the website is public code. `.env` and the API code live in `~/freshness`, outside the web root, behind `Require all denied`. |
+| The **FTP login or the server account** | Everything the application can read. This is the one that encryption cannot answer; the FTP password and the host account are the weakest links, so keep them long, unique and in a password manager. |
+| `BLIND_INDEX_KEY` alone | The ability to test guessed emails and phone numbers against the stored hashes, not the data itself. |
+
+**Why the keys are not themselves encrypted.** A key that is encrypted needs a
+second key to open it, and that one has to be somewhere the application can
+reach — which is the same place the thief got the first from. It adds a step,
+not a barrier. A key that really is out of reach of a stolen server lives in
+another machine (a key-management service or a hardware module) that this host
+plan cannot use. What can be done here, and is: keys are kept out of the
+database and out of the repository, `.env` is mode 0600 outside the web root,
+and a leaked key can be replaced.
+
+**Changing the encryption key** (do this the day it may have been seen):
+
+1. Put the current `APP_KEY` into `APP_PREVIOUS_KEYS`, and set a new `APP_KEY`
+   (`php artisan key:generate --show`).
+2. Run `php artisan freshness:reencrypt` — or, with no shell, send
+   `POST /api/deploy/reencrypt` with the `X-Deploy-Token` header, as for the
+   migrations. It rewrites every encrypted column under the new key and reports
+   anything it could not read. `--dry-run` counts without changing.
+3. Only when it reports success, remove the old key from `APP_PREVIOUS_KEYS`.
+
+`BLIND_INDEX_KEY` is separate and cannot be changed this way: its hashes are how
+customers are found, so changing it needs a re-index (it makes every customer
+unfindable until then). The deploy token is changed by replacing it in `.env`
+and in the repository secret `DEPLOY_TOKEN`; an admin session lasts 12 hours.
+
+Free text typed by customers (cancel reasons and the notes on status changes)
+used to be stored as typed; it is encrypted now, and sign-in codes no longer
+keep the address they were asked from. The audit trail keeps the admin's IP and
+browser on purpose: it is the record of who did what.
+
 ## Still to do
 
 These are outside the code and cannot be closed from here.

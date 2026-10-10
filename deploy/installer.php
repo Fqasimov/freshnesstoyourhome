@@ -179,7 +179,7 @@ if ($action === 'install' && !is_file($envPath) && $allOk) {
             'OTP_GLOBAL_HOURLY=500',
             'SUPPORT_PHONE="+994503521919"',
             'SUPPORT_WHATSAPP="994503521919"',
-            'SUPPORT_INSTAGRAM="freshness_to_your_home"',
+            'SUPPORT_INSTAGRAM="freshnesstoyourhome"',
             '',
             'LOG_CHANNEL=stack',
             'LOG_STACK=daily',

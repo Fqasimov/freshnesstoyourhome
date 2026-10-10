@@ -7,7 +7,9 @@ use App\Models\Bundle;
 use App\Models\BundleItem;
 use App\Models\BundleTranslation;
 use App\Models\Product;
+use App\Services\PricingService;
 use App\Support\Audit;
+use App\Support\Money;
 use App\Support\StoredImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -222,6 +224,25 @@ class BundleController extends Controller
     }
 
     /** Take it off; the website goes back to the strip of product pictures. */
+    /** Delete a set for good. The products inside it are not touched. */
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        $bundle = Bundle::with('translations')->findOrFail($id);
+        $name = $bundle->nameIn('az');
+        $file = $bundle->image_file;
+
+        DB::transaction(function () use ($bundle) {
+            BundleItem::where('bundle_id', $bundle->id)->delete();
+            BundleTranslation::where('bundle_id', $bundle->id)->delete();
+            $bundle->delete();
+        });
+
+        StoredImage::forget($file);
+        Audit::record($request->user(), 'bundle.delete', 'bundle', $id, ['name' => ['from' => $name, 'to' => null]]);
+
+        return response()->json(['status' => 'ok']);
+    }
+
     public function removePhoto(Request $request, string $id): JsonResponse
     {
         $bundle = Bundle::with(['translations', 'items.product.translations'])->findOrFail($id);
@@ -264,7 +285,10 @@ class BundleController extends Controller
         // the discount. Computed here so the panel never has to do money
         // arithmetic of its own — the same rule the website follows.
         $full = $items->sum(fn ($i) => (int) ($i['price_minor'] ?? 0) * $i['qty']);
-        $price = (int) round($full * (100 - $b->discount_percent) / 100);
+        $price = (int) $items->sum(fn ($i) => Money::line(
+            PricingService::bundleUnitMinor((int) ($i['price_minor'] ?? 0), $b->discount_percent),
+            (float) $i['qty'],
+        ));
 
         return [
             'id' => $b->id,

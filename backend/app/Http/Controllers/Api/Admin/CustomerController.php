@@ -132,6 +132,7 @@ class CustomerController extends Controller
 
         if ($data['blocked']) {
             $user->tokens()->delete();
+            $user->pushTokens()->delete();
         }
 
         Audit::record($request->user(), $data['blocked'] ? 'customer.block' : 'customer.unblock', 'user', $user->id, [

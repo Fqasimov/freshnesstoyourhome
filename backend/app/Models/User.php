@@ -183,6 +183,16 @@ class User extends Authenticatable
         $this->pushTokens()->delete();
         $this->addresses()->delete();
 
+        // Sign-in codes hold the address and the IP they were asked from.
+        // Erasure that leaves them behind is not erasure.
+        $lanes = array_filter([
+            $this->email_hash,
+            $this->email ? \App\Support\BlindIndex::ofProvider('panel', (string) $this->email) : null,
+        ]);
+        if ($lanes !== []) {
+            \App\Models\LoginCode::whereIn('email_hash', $lanes)->delete();
+        }
+
         foreach ($this->orders()->cursor() as $order) {
             $order->forceFill([
                 'contact_name' => null,
@@ -191,6 +201,7 @@ class User extends Authenticatable
                 'address_notes' => null,
                 'address_map_link' => null,
                 'customer_note' => null,
+                'cancel_reason' => null,
             ])->save();
         }
 

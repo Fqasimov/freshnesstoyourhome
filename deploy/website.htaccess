@@ -22,7 +22,7 @@ Options -Indexes -MultiViews
   # Nothing from a code checkout belongs on a website, even by accident.
   RewriteRule (^|/)(vendor|node_modules|storage|bootstrap|database|tests)(/|$) - [F,L,NC]
   RewriteRule (^|/)(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml)$ - [F,L,NC]
-  RewriteRule \.(env|ini|log|sql|sqlite|bak|old|orig|swp|dist|sh|ya?ml)$ - [F,L,NC]
+  RewriteRule \.(env|ini|log|sql|sqlite|bak|old|orig|swp|dist|sh|ya?ml|zip|tar|t?gz|7z|rar|map)$ - [F,L,NC]
 
   # The shop's pages (/, /kataloq) are one app: any path that is not a real
   # file or folder is answered by index.html, and the app shows the page.
@@ -49,6 +49,11 @@ Options -Indexes -MultiViews
   <FilesMatch "\.html$">
     Header set Cache-Control "no-cache"
 
+    # Google Maps is NOT allowed here. The basket's "pick on the map" pin needs
+    # it, so scripts/package-deploy.sh adds exactly maps.googleapis.com and
+    # maps.gstatic.com to this policy — and only when a Maps key is configured
+    # (GOOGLE_MAPS_KEY). Without a key the policy below ships unchanged.
+    #
     # Only our own scripts run, from our own origin: no inline script, no
     # eval, nothing from another site. This is what keeps an injected string
     # from becoming code — and with it the panel's session token. Styles
@@ -61,7 +66,7 @@ Options -Indexes -MultiViews
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "DENY"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(), usb=()"
   Header always set Cross-Origin-Opener-Policy "same-origin"
 
   # Browsers remember "HTTPS only" for a year. Sent only over HTTPS, and

@@ -23,12 +23,7 @@ class DeployController extends Controller
 {
     public function migrate(Request $request): JsonResponse
     {
-        $token = (string) config('freshness.deploy_token');
-        $given = (string) $request->header('X-Deploy-Token');
-
-        if (strlen($token) < 32 || ! hash_equals($token, $given)) {
-            abort(404);
-        }
+        $this->authorise($request);
 
         $code = Artisan::call('migrate', ['--force' => true]);
 
@@ -36,5 +31,35 @@ class DeployController extends Controller
             'ok' => $code === 0,
             'output' => trim(Artisan::output()),
         ], $code === 0 ? 200 : 500);
+    }
+
+    /**
+     * Re-encrypt the data under the current APP_KEY, for a host with no shell.
+     *
+     * Changing the encryption key is two steps (see ReencryptData). The second
+     * has to run somewhere, and on this host that is here, behind the same
+     * token as the migrations and for the same reason. It writes nothing but
+     * the same data under new ciphertext.
+     */
+    public function reencrypt(Request $request): JsonResponse
+    {
+        $this->authorise($request);
+
+        $code = Artisan::call('freshness:reencrypt');
+
+        return response()->json([
+            'ok' => $code === 0,
+            'output' => trim(Artisan::output()),
+        ], $code === 0 ? 200 : 500);
+    }
+
+    private function authorise(Request $request): void
+    {
+        $token = (string) config('freshness.deploy_token');
+        $given = (string) $request->header('X-Deploy-Token');
+
+        if (strlen($token) < 32 || ! hash_equals($token, $given)) {
+            abort(404);
+        }
     }
 }

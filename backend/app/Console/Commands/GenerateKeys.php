@@ -36,8 +36,10 @@ class GenerateKeys extends Command
         $this->line('    failure modes; one leaked key should not cost both.');
         $this->line('  - Changing BLIND_INDEX_KEY orphans every existing lookup hash:');
         $this->line('    customers become unfindable by email and cannot sign in.');
-        $this->line('  - Changing APP_KEY makes every encrypted column unreadable.');
-        $this->line('    There is no recovery. Back both up before the first order.');
+        $this->line('  - Changing APP_KEY on its own makes every encrypted column unreadable.');
+        $this->line('    To change it safely: put the old key in APP_PREVIOUS_KEYS, set the');
+        $this->line('    new APP_KEY, run `php artisan freshness:reencrypt`, then drop the old');
+        $this->line('    key. Back both up before the first order.');
         $this->newLine();
 
         return self::SUCCESS;

@@ -27,7 +27,6 @@ const cart = useCart()
 /* Tins that come in two sizes go through the quick view to pick one, so
    they never show a stepper: there is no single line for it to count. */
 const qty = computed(() => (props.product.variants ? 0 : cart.qtyOf(props.product.id)))
-const byKg = computed(() => props.product.unit?.kind === 'kg')
 
 function add (ev) {
   emit('add', { product: props.product, el: ev.currentTarget.closest('.card') })
@@ -45,7 +44,7 @@ function add (ev) {
 
       <span class="card__body">
         <span class="card__price">
-          <b>{{ money(product.price) }} ₼</b><i v-if="byKg">{{ t('ui.perkg') }}</i>
+          <b>{{ money(product.price) }} ₼</b>
         </span>
         <span class="card__name">{{ nm(product) }}</span>
         <span class="card__unit">{{ unitOf(product) }}</span>

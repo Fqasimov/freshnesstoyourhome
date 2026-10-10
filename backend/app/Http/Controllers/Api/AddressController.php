@@ -20,6 +20,9 @@ use Illuminate\Validation\Rule;
  */
 class AddressController extends Controller
 {
+    /** More than this is not a customer's addresses. */
+    private const MAX_PER_USER = 20;
+
     public function index(Request $request): JsonResponse
     {
         $addresses = $request->user()->addresses()
@@ -31,18 +34,12 @@ class AddressController extends Controller
         return response()->json(['data' => $addresses]);
     }
 
-    /** More than any household needs; few enough that a loop cannot fill the disk. */
-    public const MAX_PER_CUSTOMER = 20;
-
     public function store(Request $request): JsonResponse
     {
         $data = $this->validated($request);
 
-        if ($request->user()->addresses()->count() >= self::MAX_PER_CUSTOMER) {
-            return response()->json([
-                'message' => 'You have saved as many addresses as an account can hold. Delete one to add another.',
-                'errors' => ['line' => ['Too many saved addresses.']],
-            ], 422);
+        if ($request->user()->addresses()->count() >= self::MAX_PER_USER) {
+            return response()->json(['message' => 'You have saved as many addresses as we keep. Remove one first.'], 422);
         }
 
         $address = DB::transaction(function () use ($request, $data) {
@@ -108,7 +105,12 @@ class AddressController extends Controller
                `maps.app.goo.gl@evil.test` would pass as a prefix. */
             'map_link' => [
                 'sometimes', 'nullable', 'string', 'max:500',
-                'regex:#^https://(maps\.app\.goo\.gl/|goo\.gl/maps|(www\.|maps\.)?google\.(com|az)/)#i',
+                'regex:#^https://(maps\.app\.goo\.gl/[A-Za-z0-9_-]+|goo\.gl/maps/[A-Za-z0-9_-]+|(www\.)?google\.(com|az)/maps(/|\?)|maps\.google\.(com|az)/(maps)?(/|\?))#i',
+                // A browser resolves `/maps/../url?q=…` to Google's redirector
+                // before it fetches anything, which walks straight out of the
+                // allow-list above. No dot segments, encoded or not, and no
+                // backslashes or spaces, which some browsers read as `/`.
+                'not_regex:#(/|%2f)(\.|%2e){1,2}(/|%2f|\?|\#|$)|\\\\|%5c|\s#i',
             ],
             'lat' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
             'lng' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],

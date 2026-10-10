@@ -37,6 +37,21 @@ else
 fi
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/deploy-out"
+# The basket's "pick on the map" loads Google Maps, which the site's strict
+# Content-Security-Policy refuses. Only when a Maps key is configured is the
+# policy widened — by exactly the two Google hosts the map needs, and the blob
+# workers it uses — so a site without the key keeps the stricter policy.
+allow_maps_csp () {
+  [ -n "${VITE_GOOGLE_MAPS_KEY:-}" ] || return 0
+  sed -i \
+    -e "s|script-src 'self';|script-src 'self' https://maps.googleapis.com https://maps.gstatic.com;|" \
+    -e "s|img-src 'self' data: blob:;|img-src 'self' data: blob: https://maps.googleapis.com https://maps.gstatic.com;|" \
+    -e "s|connect-src 'self';|connect-src 'self' https://maps.googleapis.com;|" \
+    -e "s|object-src 'none';|worker-src blob:; object-src 'none';|" \
+    "$1"
+  grep -q "maps.googleapis.com" "$1" || { echo "!! could not widen the CSP for Google Maps in $1" >&2; exit 1; }
+}
+
 STAGE="$(mktemp -d)"
 TOKEN="$(head -c 12 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 
@@ -50,6 +65,7 @@ if [ "${WEBSITE_ONLY:-}" = 1 ]; then
   ( cd "$ROOT/web" && VITE_API_URL= npm run build >/dev/null )
   rm -rf "$ROOT/web/dist/cms"
   cp "$ROOT/deploy/website.htaccess" "$ROOT/web/dist/.htaccess"
+  allow_maps_csp "$ROOT/web/dist/.htaccess"
   ( cd "$ROOT/web/dist" && zip -qr "$OUT/website-only.zip" . )
   ls -lh "$OUT"
   exit 0
@@ -58,6 +74,7 @@ fi
 echo "==> website (API at $API_URL)"
 ( cd "$ROOT/web" && VITE_API_URL="$API_URL" npm run build >/dev/null )
 cp "$ROOT/deploy/website.htaccess" "$ROOT/web/dist/.htaccess"
+allow_maps_csp "$ROOT/web/dist/.htaccess"
 [ -z "${STAGE_OUT:-}" ] && ( cd "$ROOT/web/dist" && zip -qr "$OUT/website.zip" . )
 
 echo "==> backend (composer --no-dev)"

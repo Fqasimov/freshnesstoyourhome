@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 
 class PushTokenController extends Controller
 {
-    public const MAX_PER_CUSTOMER = 10;
+    private const MAX_PER_USER = 10;
 
     /**
      * Register this device for order updates.
@@ -38,6 +38,15 @@ class PushTokenController extends Controller
         $token = DB::transaction(function () use ($data, $request) {
             $row = PushToken::firstOrNew(['token' => $data['token']]);
 
+            // Every status change is sent to every token an account has, so the
+            // number is bounded: the oldest are dropped, newest kept.
+            if (! $row->exists) {
+                $mine = PushToken::where('user_id', $request->user()->id)->orderBy('id')->pluck('id');
+                if ($mine->count() >= self::MAX_PER_USER) {
+                    PushToken::whereIn('id', $mine->take($mine->count() - self::MAX_PER_USER + 1))->delete();
+                }
+            }
+
             // forceFill, because `user_id` is deliberately not fillable: there
             // must be no path where a request body names the account a device
             // belongs to. The owner comes from the access token and nowhere
@@ -49,17 +58,6 @@ class PushTokenController extends Controller
                 'failures' => 0,
                 'last_used_at' => now(),
             ])->save();
-
-            // A customer has a few phones, not hundreds. Past the cap the
-            // devices heard from longest ago go, which is also what a phone
-            // that was sold or reset looks like.
-            $stale = $request->user()->pushTokens()
-                ->orderByDesc('last_used_at')->orderByDesc('id')
-                ->pluck('id')
-                ->slice(self::MAX_PER_CUSTOMER);
-            if ($stale->isNotEmpty()) {
-                PushToken::whereIn('id', $stale)->delete();
-            }
 
             return $row;
         });

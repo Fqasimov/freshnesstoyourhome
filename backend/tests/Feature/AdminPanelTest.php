@@ -187,8 +187,11 @@ class AdminPanelTest extends TestCase
             ->firstWhere('id', $bundle->id);
 
         $this->assertSame($expected, $body['full_minor']);
+        // Each unit is discounted on its own, the rule orders are written by.
         $this->assertSame(
-            (int) round($expected * (100 - $bundle->discount_percent) / 100),
+            (int) $bundle->items->sum(fn ($i) => (int) round(
+                \App\Services\PricingService::bundleUnitMinor($i->product->price_minor, $bundle->discount_percent) * (float) $i->qty,
+            )),
             $body['price_minor'],
         );
     }

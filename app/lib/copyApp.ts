@@ -65,6 +65,7 @@ export const APP_COPY: Record<Lang, Record<string, string>> = {
     'apple': 'Apple ilə davam et',
     'social.off': 'Bu giriş üsulu tezliklə aktiv olacaq.',
     'social.exists': 'Bu e-poçtla hesab artıq var. Əvvəlcə şifrə və ya e-poçt kodu ilə daxil olun.',
+    'social.signup': 'Bu e-poçtla əvvəlcə qeydiyyatdan keçin (e-poçt kodu ilə). Sonra bu üsulla da daxil ola bilərsiniz.',
     'terms': 'Davam etməklə {policy} ilə razılaşırsınız.',
     'terms.policy': 'Məxfilik siyasəti',
 
@@ -193,6 +194,7 @@ export const APP_COPY: Record<Lang, Record<string, string>> = {
     'apple': 'Продолжить с Apple',
     'social.off': 'Этот способ входа скоро заработает.',
     'social.exists': 'Аккаунт с этой почтой уже есть. Сначала войдите по паролю или коду из письма.',
+    'social.signup': 'Сначала зарегистрируйтесь по этой почте (с кодом из письма). Потом можно будет входить и так.',
     'terms': 'Продолжая, вы соглашаетесь с {policy}.',
     'terms.policy': 'Политикой конфиденциальности',
 
@@ -321,6 +323,7 @@ export const APP_COPY: Record<Lang, Record<string, string>> = {
     'apple': 'Continue with Apple',
     'social.off': 'This way of signing in is coming soon.',
     'social.exists': 'An account with this email already exists. Sign in with your password or an emailed code first.',
+    'social.signup': 'Sign up with this email first (with an emailed code). You can use this sign-in option afterwards.',
     'terms': 'By continuing you agree to the {policy}.',
     'terms.policy': 'Privacy policy',
 

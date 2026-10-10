@@ -48,7 +48,7 @@ class OrderService
         return $this->write(null, $input, Order::SOURCE_WEB, [
             'contact_name' => $input['contact_name'],
             'contact_phone' => $input['contact_phone'],
-            'address_line' => $input['address_line'],
+            'address_line' => $input['address_line'] ?? null,
             'address_notes' => $input['address_notes'] ?? null,
             'address_map_link' => $input['map_link'] ?? null,
             'delivery_zone_id' => $input['zone_id'],
@@ -139,15 +139,16 @@ class OrderService
         if ($basket->hasUnavailable()) {
             throw new OrderRejected(
                 'Some items are no longer available.',
-                [
-                    'unavailable_product_ids' => $basket->unavailableProductIds,
-                    'unavailable_bundle_ids' => $basket->unavailableBundleIds,
-                ],
+                ['unavailable_product_ids' => $basket->unavailableProductIds],
             );
         }
 
         if ($basket->isEmpty()) {
             throw new OrderRejected('Your basket is empty.');
+        }
+
+        if ($basket->subtotalMinor < 1) {
+            throw new OrderRejected('The basket comes to nothing. Please choose a larger amount.');
         }
 
         if (! $basket->meetsMinimum()) {
@@ -241,6 +242,14 @@ class OrderService
                 throw new OrderRejected('This order is already closed.');
             }
 
+            // Only lines of this order that are sold by weight can be weighed.
+            // A key that names anything else is a mistake, not a weight.
+            $weighable = $fresh->items->where('is_weight_based', true)->pluck('id')->map(fn ($id) => (string) $id)->all();
+            $unknown = array_diff(array_map('strval', array_keys($confirmed)), $weighable);
+            if ($unknown !== []) {
+                throw new OrderRejected('Those weights do not belong to goods sold by weight on this order.');
+            }
+
             $subtotal = 0;
             $weighedEstimate = 0;
             $weighedFinal = 0;
@@ -258,7 +267,10 @@ class OrderService
                     continue;
                 }
 
-                $qty = (float) ($confirmed[(string) $item->id] ?? $item->qty);
+                // A line left out of this request keeps the weight already
+                // recorded for it (or the estimate, if it was never weighed):
+                // sending part of an order must not undo the rest.
+                $qty = (float) ($confirmed[(string) $item->id] ?? $item->confirmed_qty ?? $item->qty);
 
                 if ($qty <= 0) {
                     throw new OrderRejected("A confirmed weight must be greater than zero (line {$item->id}).");
@@ -287,6 +299,21 @@ class OrderService
                     'The weighed goods come to %s, more than the %s the customer agreed to. Ask the customer first, or weigh again.',
                     Money::format($weighedFinal),
                     Money::format($ceiling),
+                ));
+            }
+
+            // The tolerance runs both ways. Less than the estimate by more than
+            // it is a real possibility — a smaller fish — but it is also how a
+            // courier's token would bill 5 kg of salmon at a few qəpik. So
+            // only the admin, whose session needs the second factor, may
+            // record a weight that far under.
+            $floor = $weighedEstimate - (int) floor($weighedEstimate * $tolerance / 100);
+
+            if ($weighedFinal < $floor && ! $actor->isAdmin()) {
+                throw new OrderRejected(sprintf(
+                    'The weighed goods come to %s, less than the %s the order allows. Weigh again, or ask the shop to record it.',
+                    Money::format($weighedFinal),
+                    Money::format($floor),
                 ));
             }
 

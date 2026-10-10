@@ -238,13 +238,17 @@ error, which is what made it safe to send our own ids before the table knew
 them. It knows them now: the zone seeder reads the same `shared/delivery.json`,
 so all fifty-one are rows, and the two original placeholders are switched off.
 
-**The map field** takes the share link a phone produces, which already
-resolves to an exact point and costs nothing. An embedded pin picker needs a
-billed Google Maps key; `VITE_GOOGLE_MAPS_KEY` is the hook for it and the
-picker slots in above the field, writing its pin into the same `mapLink`. The
-app's address form carries the same field, in the same words — they are in
-`shared/copy.json` — and stores it encrypted against the address, so a signed-in
-customer fills it in once.
+**The map field** is a point, not a pasted link. "Use my location" takes the
+phone's position and needs nothing; "Pick on the map" shows a Google map with a
+pin to tap or drag, and appears when `VITE_GOOGLE_MAPS_KEY` is set (on the
+deploy: the repository variable `GOOGLE_MAPS_KEY`). Either way the result is the
+same `https://www.google.com/maps?q=lat,lng` link in `mapLink`, so the order,
+the WhatsApp message and the panel are unchanged, and the customer can open the
+point in Google Maps to check it. The page's security policy allows
+`maps.googleapis.com` and `maps.gstatic.com` for exactly this
+(`deploy/website.htaccess`). The app's address form still carries its own map
+link field, in the same words — they are in `shared/copy.json` — and stores it
+encrypted against the address, so a signed-in customer fills it in once.
 
 One structural note: the drawer's body and foot scroll **together**. The foot
 was a fixed block at the bottom of a flex column, which was fine while it held

@@ -56,7 +56,10 @@ class OrderController extends Controller
             'lines' => ['required_without:bundles', 'array', 'max:'.config('freshness.order.max_lines')],
             'lines.*.product_id' => ['required', 'string', 'max:60'],
             'lines.*.qty' => ['required', 'numeric', 'min:0.001', 'max:'.config('freshness.order.max_qty_per_line')],
-            ...self::bundleRules(),
+            // Sets, bought whole: the server prices them, discount included.
+            'bundles' => ['sometimes', 'array', 'max:20'],
+            'bundles.*.id' => ['required', 'string', 'max:40', 'distinct'],
+            'bundles.*.qty' => ['required', 'integer', 'min:1', 'max:20'],
             'zone_id' => ['sometimes', 'nullable', 'string', 'max:40'],
             'locale' => ['sometimes', Rule::in(['az', 'ru', 'en'])],
         ]);
@@ -102,21 +105,42 @@ class OrderController extends Controller
         $lead = (int) config('freshness.order.lead_days');
         $maxAhead = (int) config('freshness.order.max_days_ahead');
 
+        // A page loaded before the name was split in two still sends one field.
+        if (! $request->filled('contact_first_name') && is_string($request->input('contact_name'))) {
+            $parts = preg_split('/\s+/u', trim($request->input('contact_name')), 2) ?: [];
+            $request->merge(['contact_first_name' => $parts[0] ?? '', 'contact_last_name' => $parts[1] ?? '']);
+        }
+
         $data = $request->validate([
             'lines' => ['required_without:bundles', 'array', 'max:'.config('freshness.order.max_lines')],
             'lines.*.product_id' => ['required', 'string', 'max:60', 'distinct', Rule::exists('products', 'id')],
             'lines.*.qty' => ['required', 'numeric', 'min:0.001', 'max:'.config('freshness.order.max_qty_per_line')],
-            ...self::bundleRules(),
+            // A set is sent as itself, not as its products, so the server can
+            // apply the set's discount to them.
+            'bundles' => ['sometimes', 'array', 'max:20'],
+            'bundles.*.id' => ['required', 'string', 'max:40', 'distinct', Rule::exists('bundles', 'id')],
+            'bundles.*.qty' => ['required', 'integer', 'min:1', 'max:20'],
 
             'zone_id' => ['required', 'string', Rule::exists('delivery_zones', 'id')->where('is_active', true)],
-            'contact_name' => ['required', 'string', 'min:2', 'max:80'],
+            // First name and surname, both required, letters only (plus space,
+            // hyphen, apostrophe and full stop): no digits, links or markup.
+            'contact_first_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L} '’.-]*\z/u"],
+            'contact_last_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L} '’.-]*\z/u"],
             // Digits, spaces, dashes, brackets and an optional leading +.
-            'contact_phone' => ['required', 'string', 'regex:/^\+?[0-9 ()-]{7,20}$/'],
-            'address_line' => ['required', 'string', 'min:5', 'max:300'],
+            'contact_phone' => ['required', 'string', 'regex:/^\+?[0-9 ()-]{7,20}\z/'],
+            // Optional: the shop phones for the address if it is missing. When it
+            // is given it is plain typed text — a link or a string of numbers
+            // is not an address (the map link has its own field).
+            'address_line' => ['sometimes', 'nullable', 'string', 'min:5', 'max:300', 'regex:/\p{L}/u', 'not_regex:/[<>]|https?:\/\//i'],
             'address_notes' => ['sometimes', 'nullable', 'string', 'max:200'],
             'map_link' => [
                 'sometimes', 'nullable', 'string', 'max:500',
-                'regex:#^https://(maps\.app\.goo\.gl/|goo\.gl/maps|(www\.|maps\.)?google\.(com|az)/)#i',
+                'regex:#^https://(maps\.app\.goo\.gl/[A-Za-z0-9_-]+|goo\.gl/maps/[A-Za-z0-9_-]+|(www\.)?google\.(com|az)/maps(/|\?)|maps\.google\.(com|az)/(maps)?(/|\?))#i',
+                // A browser resolves `/maps/../url?q=…` to Google's redirector
+                // before it fetches anything, which walks straight out of the
+                // allow-list above. No dot segments, encoded or not, and no
+                // backslashes or spaces, which some browsers read as `/`.
+                'not_regex:#(/|%2f)(\.|%2e){1,2}(/|%2f|\?|\#|$)|\\\\|%5c|\s#i',
             ],
             'delivery_date' => [
                 'sometimes', 'nullable', 'date_format:Y-m-d',
@@ -127,14 +151,15 @@ class OrderController extends Controller
         ]);
 
         // Whole units only for things sold by the piece, as in the app.
-        $data['lines'] ??= [];
-        $kinds = \App\Models\Product::whereIn('id', array_column($data['lines'], 'product_id'))->pluck('unit_kind', 'id');
-        foreach ($data['lines'] as $i => $line) {
+        $kinds = \App\Models\Product::whereIn('id', array_column($data['lines'] ?? [], 'product_id'))->pluck('unit_kind', 'id');
+        foreach ($data['lines'] ?? [] as $i => $line) {
             $qty = (float) $line['qty'];
             if (($kinds[$line['product_id']] ?? null) !== \App\Models\Product::UNIT_KG && floor($qty) !== $qty) {
                 throw \Illuminate\Validation\ValidationException::withMessages(["lines.{$i}.qty" => 'This item is sold in whole units.']);
             }
         }
+
+        $data['contact_name'] = trim($data['contact_first_name'].' '.$data['contact_last_name']);
 
         $order = $this->orders->placeFromWebsite($data);
 
@@ -169,18 +194,5 @@ class OrderController extends Controller
         $order = $this->orders->transition($order, Order::CANCELLED, $request->user(), $reason, byCustomer: true);
 
         return response()->json(new OrderResource($order->load('items')));
-    }
-
-    /**
-     * Sets in a basket: which one and how many, nothing else. What is in a
-     * set and what it costs are the panel's, read when the basket is priced.
-     */
-    public static function bundleRules(): array
-    {
-        return [
-            'bundles' => ['required_without:lines', 'array', 'max:10'],
-            'bundles.*.bundle_id' => ['required', 'string', 'max:60', 'distinct'],
-            'bundles.*.qty' => ['required', 'integer', 'min:1', 'max:20'],
-        ];
     }
 }

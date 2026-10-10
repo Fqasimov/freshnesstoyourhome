@@ -5,6 +5,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { api, type BasketLine, type BasketSet, type Quote } from './api'
 import { useLang } from './i18n'
+import { useAuth } from './auth'
+import { useCatalogue } from './catalogue'
 import { round3 } from './money'
 
 /**
@@ -20,7 +22,7 @@ import { round3 } from './money'
  * takes off are the panel's, and the server prices them.
  */
 const CART_KEY = 'cart_v1'
-const SETS_KEY = 'cart_sets_v1'
+const SETS_KEY = 'cart_sets_v2'
 
 type CartValue = {
   lines: BasketLine[]
@@ -35,7 +37,7 @@ type CartValue = {
   remove: (productId: string) => Promise<void>
   clear: () => Promise<void>
   setZone: (zoneId: string | null) => void
-  dropUnavailable: (ids: string[], bundleIds?: string[]) => Promise<void>
+  dropUnavailable: (ids: string[]) => Promise<void>
   setsOf: (bundleId: string) => number
   setSetQty: (bundleId: string, qty: number) => void
 }
@@ -52,6 +54,12 @@ export function CartProvider ({ children }: PropsWithChildren) {
 
   const lang = useLang()
 
+  // What is in each set, so a set whose product sold out leaves the basket
+  // with it. Read through a ref: the catalogue refreshes every minute.
+  const catalogue = useCatalogue()
+  const bundleItems = useRef<Record<string, string[]>>({})
+  bundleItems.current = Object.fromEntries(catalogue.bundles.map(b => [b.id, b.items.map(i => i.product_id)]))
+
   // Guards against an older quote landing after a newer one and overwriting it.
   const requestId = useRef(0)
 
@@ -66,6 +74,24 @@ export function CartProvider ({ children }: PropsWithChildren) {
       setHydrated(true)
     })()
   }, [])
+
+  /* One person's basket is not the next person's. When the signed-in account
+     changes — signing out, or someone else signing in on a shared phone — the
+     basket and its saved copy are emptied. The first value is only noted:
+     opening the app signed in must not lose the basket. */
+  const { user } = useAuth()
+  const owner = useRef<string | null | undefined>(undefined)
+  useEffect(() => {
+    const id = user?.id ?? null
+    if (owner.current !== undefined && owner.current !== null && owner.current !== id) {
+      setLines([])
+      setSets([])
+      setQuote(null)
+      AsyncStorage.removeItem(CART_KEY).catch(() => {})
+      AsyncStorage.removeItem(SETS_KEY).catch(() => {})
+    }
+    if (id !== null || owner.current !== undefined) owner.current = id
+  }, [user?.id])
 
   useEffect(() => {
     if (!hydrated) return
@@ -134,9 +160,9 @@ export function CartProvider ({ children }: PropsWithChildren) {
   const setSetQty = useCallback((bundleId: string, qty: number) => {
     const next = Math.max(0, Math.round(qty))
     setSets(prev => {
-      if (next === 0) return prev.filter(x => x.bundle_id !== bundleId)
-      if (!prev.some(x => x.bundle_id === bundleId)) return [...prev, { bundle_id: bundleId, qty: next }]
-      return prev.map(x => (x.bundle_id === bundleId ? { ...x, qty: next } : x))
+      if (next === 0) return prev.filter(x => x.id !== bundleId)
+      if (!prev.some(x => x.id === bundleId)) return [...prev, { id: bundleId, qty: next }]
+      return prev.map(x => (x.id === bundleId ? { ...x, qty: next } : x))
     })
   }, [])
 
@@ -146,9 +172,13 @@ export function CartProvider ({ children }: PropsWithChildren) {
    * Called when the server reports unavailable lines, so the basket matches
    * what the customer was just told rather than failing again on the next tap.
    */
-  const dropUnavailable = useCallback(async (ids: string[], bundleIds: string[] = []) => {
+  const dropUnavailable = useCallback(async (ids: string[]) => {
+    // The server names a switched-off set as `bundle:<id>`, and a set whose
+    // product sold out by that product's id — either way the set goes.
+    const goneSets = new Set(ids.filter(i => i.startsWith('bundle:')).map(i => i.slice(7)))
     setLines(prev => prev.filter(l => !ids.includes(l.product_id)))
-    setSets(prev => prev.filter(x => !bundleIds.includes(x.bundle_id)))
+    setSets(prev => prev.filter(x => !goneSets.has(x.id) &&
+      !(bundleItems.current[x.id] ?? []).some(p => ids.includes(p))))
   }, [])
 
   const value = useMemo<CartValue>(() => ({
@@ -159,7 +189,7 @@ export function CartProvider ({ children }: PropsWithChildren) {
     add, setQty, remove, clear,
     setZone: setZoneId,
     dropUnavailable,
-    setsOf: (id) => sets.find(x => x.bundle_id === id)?.qty ?? 0,
+    setsOf: (id) => sets.find(x => x.id === id)?.qty ?? 0,
     setSetQty,
   }), [lines, sets, quote, quoting, add, setQty, remove, clear, dropUnavailable, setSetQty])
 

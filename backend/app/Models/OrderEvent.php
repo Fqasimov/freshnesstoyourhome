@@ -18,6 +18,10 @@ class OrderEvent extends Model
 
     protected function casts(): array
     {
-        return ['created_at' => 'datetime'];
+        return [
+            'created_at' => 'datetime',
+            // What a customer or courier typed against a status change.
+            'note' => \App\Casts\EncryptedText::class,
+        ];
     }
 }
