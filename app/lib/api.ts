@@ -162,10 +162,25 @@ export type Product = {
   unit_qty: number
   is_weight_based: boolean
   is_popular: boolean
+  /** The picture that ships with the app, by file name. */
   image: string | null
+  /** A photograph uploaded in the panel. Wins over the bundled picture. */
+  image_url?: string | null
+  thumb_url?: string | null
   name: LocaleMap
   description: LocaleMap
   unit_label: LocaleMap
+}
+
+/** A set the shop sells at a discount to its parts, as the panel defines it. */
+export type Bundle = {
+  id: string
+  discount_percent: number
+  image_url: string | null
+  thumb_url: string | null
+  name: LocaleMap
+  description: LocaleMap
+  items: { product_id: string; qty: number }[]
 }
 
 export type Category = { id: string; name: LocaleMap }
@@ -180,6 +195,8 @@ export type Zone = {
 export type CatalogueResponse = {
   categories: Category[]
   products: Product[]
+  /** Only the sets switched on in the panel whose every product is in stock. */
+  bundles?: Bundle[]
   zones: Zone[]
   currency: string
   delivery: {
@@ -231,11 +248,25 @@ export type QuoteLine = {
   unit_price_minor: number
   line_total_minor: number
   is_weight_based: boolean
+  /** The set this line is part of; null for a product bought on its own. */
+  bundle_id?: string | null
+}
+
+export type QuoteSet = {
+  bundle_id: string
+  name: string
+  qty: number
+  discount_percent: number
+  full_minor: number
+  discount_minor: number
+  price_minor: number
 }
 
 export type Quote = {
   lines: QuoteLine[]
+  bundles?: QuoteSet[]
   unavailable_product_ids: string[]
+  unavailable_bundle_ids?: string[]
   subtotal_minor: number
   delivery_fee_minor: number
   discount_minor: number
@@ -291,6 +322,7 @@ export type Order = {
 }
 
 export type BasketLine = { product_id: string; qty: number }
+export type BasketSet = { bundle_id: string; qty: number }
 
 /* ── Endpoints ────────────────────────────────────────────────────────── */
 
@@ -343,9 +375,9 @@ export const api = {
    * no account to read a preference from, and a customer who has just switched
    * language expects their basket to follow before that choice is saved.
    */
-  quote: (lines: BasketLine[], zone_id: string | null) =>
+  quote: (lines: BasketLine[], bundles: BasketSet[], zone_id: string | null) =>
     request<Quote>('orders/quote', {
-      method: 'POST', body: { lines, zone_id, locale: getLang() }, auth: false,
+      method: 'POST', body: { lines, bundles, zone_id, locale: getLang() }, auth: false,
     }),
 
   registerPushToken: (body: { token: string; platform?: string; device_name?: string }) =>

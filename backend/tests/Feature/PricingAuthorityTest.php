@@ -145,7 +145,7 @@ class PricingAuthorityTest extends TestCase
         $lines = [['product_id' => 'smoked-salmon', 'qty' => 1]];
 
         $expected = [
-            'az' => 'Hisə verilmiş qızıl balıq',
+            'az' => 'Hisə verilmiş Qızıl balıq (Smoked Salmon)',
             'ru' => 'Лосось холодного копчения',
             'en' => 'Smoked Salmon',
         ];
@@ -161,7 +161,7 @@ class PricingAuthorityTest extends TestCase
     {
         $this->postJson('/api/orders/quote', [
             'lines' => [['product_id' => 'smoked-salmon', 'qty' => 1]],
-        ])->assertOk()->assertJsonPath('lines.0.name', 'Hisə verilmiş qızıl balıq');
+        ])->assertOk()->assertJsonPath('lines.0.name', 'Hisə verilmiş Qızıl balıq (Smoked Salmon)');
     }
 
     public function test_a_basket_can_be_priced_without_signing_in(): void

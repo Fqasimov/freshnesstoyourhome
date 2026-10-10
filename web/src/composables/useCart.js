@@ -52,18 +52,24 @@ watch(items, v => {
 
 const keyOf = (id, v, kind) => kind + ':' + id + '::' + (v == null ? '-' : v)
 
-/* Ask the server what the basket costs.
-   Sets are excluded: they are a website-only construct with a discount the
-   business has not confirmed, and the API deliberately has no opinion about
-   them. Their lines still appear in the message at the price shown here. */
+/* What the order is made of, as the server understands it: products, and
+   sets by name. A set's contents and its discount are the panel's, so the
+   server prices it — the total here, in the message and in the panel is one
+   figure. */
+function orderBody () {
+  return {
+    lines: items.value.filter(it => it.kind !== 'set').map(it => ({ product_id: it.id, qty: it.qty })),
+    bundles: items.value.filter(it => it.kind === 'set').map(it => ({ bundle_id: it.id, qty: it.qty })),
+  }
+}
+
+/* Ask the server what the basket costs. */
 async function refreshQuote () {
   if (!API) return
 
-  const basket = items.value
-    .filter(it => it.kind !== 'set')
-    .map(it => ({ product_id: it.id, qty: it.qty }))
+  const basket = orderBody()
 
-  if (basket.length === 0) { quote.value = null; return }
+  if (basket.lines.length === 0 && basket.bundles.length === 0) { quote.value = null; return }
 
   const id = ++quoteId
   quoting.value = true
@@ -73,7 +79,7 @@ async function refreshQuote () {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
-        lines: basket,
+        ...basket,
         /* The endpoint has always taken this; the site simply never sent it,
            so every basket was priced as though delivery were free. An id the
            table does not know resolves to no zone and no fee, which is why
@@ -214,21 +220,6 @@ export function useCart () {
 
   const whatsapp = computed(() => messageFor(placedCode.value))
 
-  /* What the order is made of, as the server understands it: plain products,
-     and each set as the products inside it. */
-  function orderLines () {
-    const qty = new Map()
-    for (const it of items.value) {
-      if (it.kind === 'set') {
-        const set = SETS.find(x => x.id === it.id)
-        for (const p of set?.items ?? []) qty.set(p.id, (qty.get(p.id) ?? 0) + (p.qty ?? 1) * it.qty)
-      } else {
-        qty.set(it.id, (qty.get(it.id) ?? 0) + it.qty)
-      }
-    }
-    return [...qty].map(([product_id, q]) => ({ product_id, qty: q }))
-  }
-
   /**
    * Place the order, then open WhatsApp.
    *
@@ -253,7 +244,7 @@ export function useCart () {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({
-            lines: orderLines(),
+            ...orderBody(),
             zone_id: zoneId.value,
             contact_name: name.value.trim(),
             contact_phone: phone.value.trim(),

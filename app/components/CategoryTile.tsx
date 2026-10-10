@@ -4,6 +4,9 @@ import { useRouter } from 'expo-router'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 
 import { productImage } from '@/assets/products'
+import type { Product } from '@/lib/api'
+import { useCatalogue } from '@/lib/catalogue'
+import { productPhoto } from '@/lib/photos'
 import { CATEGORY_LOOK, FALLBACK_LOOK } from '@/lib/categoryStyle'
 import { duration, ease, STAGGER } from '@/lib/motion'
 import { PressableScale } from './PressableScale'
@@ -13,12 +16,15 @@ import { color, font, space } from '@/theme/tokens'
  * A category as a tile: its name top-left on a soft ground, and its
  * photograph in a round plate breaking out of the bottom-right corner.
  */
-export function CategoryTile ({ id, name, count, fallbackPhoto, index, width }: {
-  id: string; name: string; count: number; fallbackPhoto?: string; index: number; width: number
+export function CategoryTile ({ id, name, count, fallback, index, width }: {
+  id: string; name: string; count: number; fallback?: Product; index: number; width: number
 }) {
   const router = useRouter()
   const look = CATEGORY_LOOK[id] ?? FALLBACK_LOOK
-  const photo = productImage(look.photo) ?? (fallbackPhoto ? productImage(fallbackPhoto) : undefined)
+  const catalogue = useCatalogue()
+  // The category's own product, with its uploaded photo if it has one; a
+  // category added in the panel shows its first product.
+  const photo = productPhoto(catalogue.byId(look.photo)) ?? productImage(look.photo) ?? productPhoto(fallback)
   const plate = width * 0.78
 
   return (

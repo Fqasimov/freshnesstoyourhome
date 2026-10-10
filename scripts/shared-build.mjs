@@ -284,7 +284,7 @@ export const isRange = (zone: SharedZone | null | undefined): boolean =>
       const products = shared.catalogue.products.filter(p => p.is_active !== false)
       const count = id => products.filter(p => p.category_id === id).length
       const pad = n => String(n).padStart(2, '0')
-      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
+      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n').replace(/[\u2028\u2029]/g, c => '\\u' + c.charCodeAt(0).toString(16)) + "'"
 
       const cats = [
         `  { id: 'all', en: 'Everything', az: 'Hamısı', ru: 'Всё', kicker: '${pad(products.length)}' },`,
@@ -342,7 +342,7 @@ ${sets.join('\n')}
       // real price yet — never shipped to a customer with no signal, so it
       // never reaches this fallback. /api/catalogue applies the same rule.
       const products = shared.catalogue.products.filter(p => p.is_active !== false)
-      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
+      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n').replace(/[\u2028\u2029]/g, c => '\\u' + c.charCodeAt(0).toString(16)) + "'"
       const map = (a, b, c) => `{ az: ${q(a)}, ru: ${q(b)}, en: ${q(c)} }`
 
       const cats = categories.map(c =>
@@ -400,7 +400,7 @@ ${zones.join('\n')}
   {
     path: 'web/src/data/copy.generated.js',
     build: () => {
-      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
+      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n').replace(/[\u2028\u2029]/g, c => '\\u' + c.charCodeAt(0).toString(16)) + "'"
       const rows = Object.entries(shared.copy).filter(([k]) => !k.startsWith('_'))
       const table = l => rows.map(([k, v]) => `  ${q(k)}: ${q(v[l])},`).join('\n')
 
@@ -426,7 +426,7 @@ ${table('en')}
   {
     path: 'app/lib/sharedCopy.ts',
     build: () => {
-      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
+      const q = str => "'" + String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n').replace(/[\u2028\u2029]/g, c => '\\u' + c.charCodeAt(0).toString(16)) + "'"
       const rows = Object.entries(shared.copy).filter(([k]) => !k.startsWith('_'))
       const table = l => rows.map(([k, v]) => `    ${q(k)}: ${q(v[l])},`).join('\n')
 

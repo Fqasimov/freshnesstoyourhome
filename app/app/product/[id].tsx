@@ -13,7 +13,7 @@ import { useCatalogue } from '@/lib/catalogue'
 import { pick, t, useLang } from '@/lib/i18n'
 import { price } from '@/lib/money'
 import { duration, ease, spring } from '@/lib/motion'
-import { productImage } from '@/assets/products'
+import { productPhoto } from '@/lib/photos'
 import { Icon } from '@/components/Icon'
 import { PressableScale } from '@/components/PressableScale'
 import { color, font, space } from '@/theme/tokens'
@@ -33,7 +33,7 @@ export default function ProductSheet () {
 
   const product = catalogue.byId(id ?? '')
   const category = catalogue.categories.find(c => c.id === product?.category_id)
-  const image = product ? productImage(product.id) : undefined
+  const image = productPhoto(product, 'full')
   const qty = product ? cart.qtyOf(product.id) : 0
   const step = product?.is_weight_based ? 0.5 : 1
 

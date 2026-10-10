@@ -53,14 +53,15 @@ class OrderController extends Controller
     public function quote(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'lines' => ['required', 'array', 'min:1', 'max:'.config('freshness.order.max_lines')],
+            'lines' => ['required_without:bundles', 'array', 'max:'.config('freshness.order.max_lines')],
             'lines.*.product_id' => ['required', 'string', 'max:60'],
             'lines.*.qty' => ['required', 'numeric', 'min:0.001', 'max:'.config('freshness.order.max_qty_per_line')],
+            ...self::bundleRules(),
             'zone_id' => ['sometimes', 'nullable', 'string', 'max:40'],
             'locale' => ['sometimes', Rule::in(['az', 'ru', 'en'])],
         ]);
 
-        $basket = $this->pricing->quote($data['lines'], $data['zone_id'] ?? null);
+        $basket = $this->pricing->quote($data['lines'] ?? [], $data['zone_id'] ?? null, $data['bundles'] ?? []);
 
         // The language comes from the request, not from the account. This
         // endpoint is public, so there may be no account at all — and a
@@ -102,9 +103,10 @@ class OrderController extends Controller
         $maxAhead = (int) config('freshness.order.max_days_ahead');
 
         $data = $request->validate([
-            'lines' => ['required', 'array', 'min:1', 'max:'.config('freshness.order.max_lines')],
+            'lines' => ['required_without:bundles', 'array', 'max:'.config('freshness.order.max_lines')],
             'lines.*.product_id' => ['required', 'string', 'max:60', 'distinct', Rule::exists('products', 'id')],
             'lines.*.qty' => ['required', 'numeric', 'min:0.001', 'max:'.config('freshness.order.max_qty_per_line')],
+            ...self::bundleRules(),
 
             'zone_id' => ['required', 'string', Rule::exists('delivery_zones', 'id')->where('is_active', true)],
             'contact_name' => ['required', 'string', 'min:2', 'max:80'],
@@ -125,6 +127,7 @@ class OrderController extends Controller
         ]);
 
         // Whole units only for things sold by the piece, as in the app.
+        $data['lines'] ??= [];
         $kinds = \App\Models\Product::whereIn('id', array_column($data['lines'], 'product_id'))->pluck('unit_kind', 'id');
         foreach ($data['lines'] as $i => $line) {
             $qty = (float) $line['qty'];
@@ -166,5 +169,18 @@ class OrderController extends Controller
         $order = $this->orders->transition($order, Order::CANCELLED, $request->user(), $reason, byCustomer: true);
 
         return response()->json(new OrderResource($order->load('items')));
+    }
+
+    /**
+     * Sets in a basket: which one and how many, nothing else. What is in a
+     * set and what it costs are the panel's, read when the basket is priced.
+     */
+    public static function bundleRules(): array
+    {
+        return [
+            'bundles' => ['required_without:lines', 'array', 'max:10'],
+            'bundles.*.bundle_id' => ['required', 'string', 'max:60', 'distinct'],
+            'bundles.*.qty' => ['required', 'integer', 'min:1', 'max:20'],
+        ];
     }
 }

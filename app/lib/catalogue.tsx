@@ -4,7 +4,7 @@ import {
 } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { AppState } from 'react-native'
-import { api, type CatalogueResponse, type Category, type Product, type Zone } from './api'
+import { api, type Bundle, type CatalogueResponse, type Category, type Product, type Zone } from './api'
 import { FALLBACK_CATALOGUE } from './fallbackCatalogue'
 
 /**
@@ -29,6 +29,8 @@ const CACHE_KEY = 'catalogue_cache_v1'
 type CatalogueValue = {
   categories: Category[]
   products: Product[]
+  /** Sets switched on in the panel, every product in stock. */
+  bundles: Bundle[]
   zones: Zone[]
   delivery: CatalogueResponse['delivery'] | null
   currency: string
@@ -37,6 +39,7 @@ type CatalogueValue = {
   stale: boolean
   refresh: () => Promise<void>
   byId: (id: string) => Product | undefined
+  bundleById: (id: string) => Bundle | undefined
   popular: Product[]
   inCategory: (categoryId: string) => Product[]
 }
@@ -104,6 +107,7 @@ export function CatalogueProvider ({ children }: PropsWithChildren) {
     return {
       categories: data.categories,
       products,
+      bundles: data.bundles ?? [],
       zones: data.zones,
       delivery: data.delivery,
       currency: data.currency,
@@ -111,6 +115,7 @@ export function CatalogueProvider ({ children }: PropsWithChildren) {
       stale,
       refresh,
       byId: (id) => products.find(p => p.id === id),
+      bundleById: (id) => data.bundles?.find(b => b.id === id),
       popular: products.filter(p => p.is_popular),
       inCategory: (categoryId) =>
         categoryId === 'all' ? products : products.filter(p => p.category_id === categoryId),

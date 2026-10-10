@@ -11,12 +11,13 @@ import { useAuth } from '@/lib/auth'
 import { useCatalogue } from '@/lib/catalogue'
 import { pick, t, useLang } from '@/lib/i18n'
 import { duration, ease } from '@/lib/motion'
-import { productImage } from '@/assets/products'
+import { productPhoto, type PhotoSource } from '@/lib/photos'
 import { BrandMark } from '@/components/BrandMark'
 import { CategoryTile } from '@/components/CategoryTile'
 import { Icon } from '@/components/Icon'
 import { PressableScale } from '@/components/PressableScale'
 import { ProductCard } from '@/components/ProductCard'
+import { SetCard } from '@/components/SetCard'
 import { Note } from '@/components/ui'
 import type { Product } from '@/lib/api'
 import { color, font, space } from '@/theme/tokens'
@@ -49,6 +50,7 @@ export default function Shop () {
   const inner = Math.min(width, 560) - space.gutter * 2
   const tileW = Math.floor((inner - GAP * 2) / 3)
   const shelfCard = Math.min(156, Math.floor(inner / 2.35))
+  const setCard = Math.min(300, Math.floor(inner * 0.86))
 
   const shelves = useMemo(() => catalogue.categories
     .map(c => ({ category: c, products: catalogue.inCategory(c.id) }))
@@ -119,7 +121,7 @@ export default function Shop () {
                   id={c.id}
                   name={pick(c.name)}
                   count={items.length}
-                  fallbackPhoto={items[0]?.id}
+                  fallback={items[0]}
                   index={i}
                   width={tileW}
                 />
@@ -138,6 +140,28 @@ export default function Shop () {
             <Icon name="chevron-right" size={14} color={color.ink3} />
           </PressableScale>
         </View>
+
+        {/* Sets come from the panel: switched on there, they appear here and on
+            the website together, at the discount set there. */}
+        {catalogue.bundles.length > 0 ? (
+          <View style={{ marginTop: 26 }}>
+            <View style={s.shelfHead}>
+              <View style={{ flexShrink: 1 }}>
+                <Text style={s.shelfTitle} numberOfLines={1}>{t('sets.title')}</Text>
+                <Text style={s.shelfLead}>{t('sets.lead')}</Text>
+              </View>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: space.gutter, gap: 12 }}
+              decelerationRate="fast"
+              snapToInterval={setCard + 12}
+            >
+              {catalogue.bundles.map(b => <SetCard key={b.id} bundle={b} width={setCard} />)}
+            </ScrollView>
+          </View>
+        ) : null}
 
         {catalogue.popular.length > 0 ? (
           <Shelf
@@ -164,7 +188,7 @@ export default function Shop () {
 
 /** Best sellers as one wide tile: three of them fanned out on forest green. */
 function PopularTile ({ products, onPress }: { products: Product[]; onPress: () => void }) {
-  const photos = products.map(p => productImage(p.id)).filter(Boolean).slice(0, 3) as number[]
+  const photos = products.map(p => productPhoto(p)).filter(Boolean).slice(0, 3) as NonNullable<PhotoSource>[]
 
   return (
     <Animated.View entering={FadeInDown.delay(40).duration(duration.base).easing(ease.out)}>
@@ -268,6 +292,7 @@ const s = StyleSheet.create({
 
   shelfHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.gutter, marginBottom: 12 },
   shelfTitle: { fontFamily: font.displaySemi, fontSize: 24, color: color.ink, flexShrink: 1 },
+  shelfLead: { fontFamily: font.body, fontSize: 12.5, color: color.ink3, marginTop: 1 },
   seeAll: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 999, backgroundColor: color.leafXl },
   seeAllText: { fontFamily: font.semi, fontSize: 13, color: color.forest2 },
 })

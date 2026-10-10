@@ -70,9 +70,11 @@ export function setPricing (set) {
      bundled fallback sets have none, so the default keeps their arithmetic
      exactly as it was. */
   const qty = id => set.qty?.[id] ?? 1
-  const full = items.reduce((sum, p) => sum + p.price * qty(p.id), 0)
-  const price = Math.round(full * (1 - set.off / 100))
-  return { items, full, price, saving: full - price }
+  /* In qəpik and rounded exactly as the server rounds it — the discount is
+     taken down to the qəpik — so the price on the card is the price charged. */
+  const fullMinor = items.reduce((sum, p) => sum + Math.round((p.priceMinor ?? Math.round(p.price * 100)) * qty(p.id)), 0)
+  const priceMinor = fullMinor - Math.floor(fullMinor * set.off / 100)
+  return { items, full: fullMinor / 100, price: priceMinor / 100, saving: (fullMinor - priceMinor) / 100 }
 }
 
 export function perKg (p) {

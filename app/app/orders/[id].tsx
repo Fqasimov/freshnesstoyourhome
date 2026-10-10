@@ -161,10 +161,13 @@ export default function OrderDetail () {
           <Row
             label={t('cart.subtotal')}
             value={money(
-              weighed ? order.final_total_minor! - order.delivery_fee_minor : order.subtotal_minor,
+              weighed ? order.final_total_minor! - order.delivery_fee_minor + order.discount_minor : order.subtotal_minor,
               order.currency,
             )}
           />
+          {order.discount_minor > 0 ? (
+            <Row label={t('sets.discount')} value={`−${money(order.discount_minor, order.currency)}`} />
+          ) : null}
           {order.delivery_fee_minor > 0 ? (
             <Row label={t('cart.delivery')} value={money(order.delivery_fee_minor, order.currency)} />
           ) : null}

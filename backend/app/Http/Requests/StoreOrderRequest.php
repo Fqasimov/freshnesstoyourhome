@@ -30,8 +30,9 @@ class StoreOrderRequest extends FormRequest
         return [
             'address_id' => ['required', 'uuid'],
 
-            'lines' => ['required', 'array', 'min:1', 'max:'.config('freshness.order.max_lines')],
+            'lines' => ['required_without:bundles', 'array', 'max:'.config('freshness.order.max_lines')],
             'lines.*.product_id' => ['required', 'string', 'max:60', Rule::exists('products', 'id')],
+            ...\App\Http\Controllers\Api\OrderController::bundleRules(),
             'lines.*.qty' => [
                 'required', 'numeric',
                 // Three decimals is the finest weight the scales report; a

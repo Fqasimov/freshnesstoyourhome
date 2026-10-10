@@ -56,6 +56,42 @@
         "ru": "Выпечка и сладости",
         "en": "Pastry & Pantry"
       }
+    },
+    {
+      "id": "souslar",
+      "sort": 70,
+      "names": {
+        "az": "Souslar",
+        "ru": "Соусы",
+        "en": "Sauces"
+      }
+    },
+    {
+      "id": "diger",
+      "sort": 80,
+      "names": {
+        "az": "Digər",
+        "ru": "Другие",
+        "en": "Others"
+      }
+    },
+    {
+      "id": "avropa-pendirleri",
+      "sort": 90,
+      "names": {
+        "az": "Avropa Pendirləri",
+        "ru": "Европейские сыры",
+        "en": "European cheese"
+      }
+    },
+    {
+      "id": "kuruler",
+      "sort": 100,
+      "names": {
+        "az": "Kürü",
+        "ru": "Икра",
+        "en": "Caviar"
+      }
     }
   ],
   "products": [
@@ -69,18 +105,18 @@
       "sort": 10,
       "translations": {
         "az": {
-          "name": "Hisə verilmiş qızıl balıq",
-          "description": "Soyuq üsulla hisə verilmiş qızıl balıq, nazik dilimlənmiş.",
+          "name": "Hisə verilmiş Qızıl balıq (Smoked Salmon)",
+          "description": "Soyuq üsulla hisə verilmiş Norveç qızıl balıq, nazik dilimlənmiş və ya bütov şəkildə sifarış olunur.\nMinimum Sifariş Miqdarı 300 qr.\nBakida hise verilir.",
           "unit_label": "1 kg"
         },
         "ru": {
           "name": "Лосось холодного копчения",
-          "description": "Атлантический лосось холодного копчения, нарезанный вручную.",
+          "description": "Норвежский лосось холодного копчения; в наличии — нарезанный или целым куском.\nМинимальный заказ: 300 г.\nКопчение: Баку.",
           "unit_label": "1 кг"
         },
         "en": {
           "name": "Smoked Salmon",
-          "description": "Cold-smoked Atlantic salmon, hand-sliced and ready for the board.",
+          "description": "Cold-smoked Norwegian salmon; available sliced ​​or whole.\nMinimum order quantity: 300g.\nSmoked in Baku.",
           "unit_label": "1 kg"
         }
       }
@@ -96,17 +132,17 @@
       "translations": {
         "az": {
           "name": "Hisə verilmiş beluqa",
-          "description": "Xəzər beluqası, bütöv halda yavaş hisə verilmiş. Evin bəzəyi.",
+          "description": "Soyuq hisə verilmiş beluqa balığı \nBütov ya dilimlınmiş halda təqdim sifariş etmək mumkundur",
           "unit_label": "1 kg"
         },
         "ru": {
           "name": "Белуга копчёная",
-          "description": "Каспийская белуга медленного копчения целиком. Гордость прилавка.",
+          "description": "Белуга холодного копчения\nДоступна для заказа целиком или в нарезке.",
           "unit_label": "1 кг"
         },
         "en": {
           "name": "Smoked Beluga",
-          "description": "Caspian beluga sturgeon, slow-smoked whole. The house showpiece.",
+          "description": "Cold-smoked beluga sturgeon\nAvailable to order whole or sliced.",
           "unit_label": "1 kg"
         }
       }
@@ -173,8 +209,8 @@
       "sort": 50,
       "translations": {
         "az": {
-          "name": "Qızıl balıq steyki",
-          "description": "Sifarişlə kəsilmiş qızıl balıq steyki, buz üzərində çatdırılır. 1 kq-da təxminən 2–3 steyk olur, hər biri 300–500 qram.",
+          "name": "Norveç Salmon Balığı (Qızıl Balıq)",
+          "description": "Yüksək keyfiyyətli Norveç salmon balığı – steyk və antrikot kəsimində təqdim olunur. Zərif dadı və yüksək qida dəyəri ilə seçilir, sağlam və ləzzətli seçimdir.  1 steyk 300-500 qram arası olur.",
           "unit_label": "1 kg"
         },
         "ru": {
@@ -225,18 +261,18 @@
       "sort": 70,
       "translations": {
         "az": {
-          "name": "Təzə dorado",
-          "description": "Bütöv dorado, sifarişlə təmizlənir.",
+          "name": "Dorado (Çupra)",
+          "description": "Bütöv dorado, sifarişlə, təmizlənir.\n1 baliq 400 - 600 və ya 600 - 800 qr olur",
           "unit_label": "1 kg"
         },
         "ru": {
-          "name": "Дорадо свежая",
-          "description": "Дорадо целиком, чистим и потрошим по запросу.",
+          "name": "Дорадо",
+          "description": "Дорадо целиком, чистим и потрошим по запросу.\n1 рыба весит либо 400 - 600 гр, либо 600 - 800 гр",
           "unit_label": "1 кг"
         },
         "en": {
-          "name": "Fresh Dorado",
-          "description": "Whole gilt-head bream, gutted and scaled on request.",
+          "name": "Dorado",
+          "description": "Whole sea bream (dorado), cleaned to order.\nEach fish weighs 400–600 g or 600–800 g.",
           "unit_label": "1 kg"
         }
       }
@@ -251,18 +287,18 @@
       "sort": 80,
       "translations": {
         "az": {
-          "name": "Təzə levrek",
-          "description": "Bütöv levrek — yumşaq dadlı, limonla bişirmək üçün əla.",
+          "name": "Levrek",
+          "description": "Bütöv Levrek, sifarişlə, təmizlənir.\n1 baliq 400 - 600 olur.",
           "unit_label": "1 kg"
         },
         "ru": {
           "name": "Сибас свежий",
-          "description": "Сибас целиком — мягкий, нежный, отлично запекается с лимоном.",
+          "description": "Целый сибас, очищенный по заказу.\nВес каждой рыбы — от 400 до 600 граммов.",
           "unit_label": "1 кг"
         },
         "en": {
-          "name": "Fresh Sea Bass",
-          "description": "Whole sea bass — mild, flaky, excellent baked with lemon.",
+          "name": "Sea Bass",
+          "description": "Whole sea bass, cleaned to order.\nEach fish weighs between 400 and 600 grams.",
           "unit_label": "1 kg"
         }
       }
@@ -277,70 +313,18 @@
       "sort": 90,
       "translations": {
         "az": {
-          "name": "Təzə forel",
+          "name": "Forel",
           "description": "1 ədəd bütöv forel balığı (çəki: 2,5–3,5 kq). İstəyinizə uyğun olaraq file və ya steyk formasında doğranır — balığın bütün hissələri birlikdə göndərilir.",
           "unit_label": "1 kg"
         },
         "ru": {
-          "name": "Свежая форель",
+          "name": "Форель",
           "description": "Целая форель (вес: 2,5–3,5 кг). Нарезаем на филе или стейки по вашему желанию — отправляем со всеми частями рыбы.",
           "unit_label": "1 кг"
         },
         "en": {
-          "name": "Fresh Trout",
+          "name": "Trout",
           "description": "One whole trout (weight: 2.5–3.5 kg). Cut into fillets or steaks to your preference — every part of the fish ships together.",
-          "unit_label": "1 kg"
-        }
-      }
-    },
-    {
-      "id": "tuna-loin",
-      "category_id": "seafood",
-      "price_minor": 5000,
-      "unit_kind": "kg",
-      "unit_qty": 1,
-      "is_popular": true,
-      "sort": 100,
-      "translations": {
-        "az": {
-          "name": "Tunes filesi",
-          "description": "Bütöv tunes filesi, tünd qırmızı, sashimi keyfiyyətli.",
-          "unit_label": "1 kg"
-        },
-        "ru": {
-          "name": "Филе тунца, лоин",
-          "description": "Цельный лоин жёлтопёрого тунца, тёмно-красный, качества сашими.",
-          "unit_label": "1 кг"
-        },
-        "en": {
-          "name": "Tuna Loin",
-          "description": "Whole yellowfin loin, deep red and sashimi-grade when fresh.",
-          "unit_label": "1 kg"
-        }
-      }
-    },
-    {
-      "id": "tuna-frozen",
-      "category_id": "seafood",
-      "price_minor": 6800,
-      "unit_kind": "kg",
-      "unit_qty": 1,
-      "is_popular": false,
-      "sort": 110,
-      "translations": {
-        "az": {
-          "name": "Dondurulmuş tunes",
-          "description": "Vakuumda dondurulmuş tunes porsiyaları.",
-          "unit_label": "1 kg"
-        },
-        "ru": {
-          "name": "Тунец, порции",
-          "description": "Порции тунца в вакууме, замороженные прямо в море.",
-          "unit_label": "1 кг"
-        },
-        "en": {
-          "name": "Tuna, Frozen Portions",
-          "description": "Vacuum-packed tuna portions, individually frozen at sea.",
           "unit_label": "1 kg"
         }
       }
@@ -352,7 +336,7 @@
       "unit_kind": "g",
       "unit_qty": 350,
       "is_popular": false,
-      "sort": 120,
+      "sort": 100,
       "translations": {
         "az": {
           "name": "Atlantik omar",
@@ -378,7 +362,7 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 130,
+      "sort": 110,
       "translations": {
         "az": {
           "name": "Salqado osminoq",
@@ -404,7 +388,7 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 140,
+      "sort": 120,
       "translations": {
         "az": {
           "name": "Balaca osminoq",
@@ -424,39 +408,13 @@
       }
     },
     {
-      "id": "unagi-frozen",
-      "category_id": "seafood",
-      "price_minor": 7000,
-      "unit_kind": "kg",
-      "unit_qty": 1,
-      "is_popular": false,
-      "sort": 150,
-      "translations": {
-        "az": {
-          "name": "Unaqi — dondurulmuş ilan balığı",
-          "description": "Yapon üsulu qrildə bişmiş ilan balığı, kabayaki sousunda.",
-          "unit_label": "1 kg"
-        },
-        "ru": {
-          "name": "Унаги, угорь в глазури",
-          "description": "Угорь на гриле по-японски в соусе кабаяки. Разогреть и подавать.",
-          "unit_label": "1 кг"
-        },
-        "en": {
-          "name": "Unagi, Glazed Eel",
-          "description": "Japanese-style grilled eel in kabayaki glaze. Heat and serve.",
-          "unit_label": "1 kg"
-        }
-      }
-    },
-    {
       "id": "mussel-meat",
       "category_id": "seafood",
       "price_minor": 2000,
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 160,
+      "sort": 130,
       "translations": {
         "az": {
           "name": "Midyə əti",
@@ -482,7 +440,7 @@
       "unit_kind": "g",
       "unit_qty": 800,
       "is_popular": false,
-      "sort": 170,
+      "sort": 140,
       "translations": {
         "az": {
           "name": "Yaşıl midyə",
@@ -508,7 +466,7 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": true,
-      "sort": 180,
+      "sort": 150,
       "translations": {
         "az": {
           "name": "Black tiger krevet, başlı",
@@ -534,7 +492,7 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 190,
+      "sort": 160,
       "translations": {
         "az": {
           "name": "Langustin",
@@ -555,26 +513,26 @@
     },
     {
       "id": "red-caviar",
-      "category_id": "seafood",
-      "price_minor": 6500,
+      "category_id": "kuruler",
+      "price_minor": 9000,
       "unit_kind": "g",
       "unit_qty": 200,
       "is_popular": true,
-      "sort": 200,
+      "sort": 170,
       "translations": {
         "az": {
           "name": "Qırmızı ikra",
-          "description": "Az duzlu qızıl balıq kürüsü, bağlı qabda. İki ölçüdə.",
+          "description": "Az duzlu keta balıq kürüsü, şüşə qabda\nRusiya istehsalı\nPremium keyfiyyət",
           "unit_label": "200 gr"
         },
         "ru": {
           "name": "Красная икра",
-          "description": "Икра лосося слабого посола в запечатанной банке. Две фасовки.",
+          "description": "Слабосоленая икра кеты в стеклянной банке\nПроизведено в России\nПремиальное качество",
           "unit_label": "200 г"
         },
         "en": {
           "name": "Red Caviar",
-          "description": "Salmon roe, lightly salted, in a sealed tin. Two tin sizes.",
+          "description": "Lightly salted chum salmon roe, in a glass jar\nMade in Russia\nPremium quality",
           "unit_label": "200 gr"
         }
       }
@@ -586,7 +544,7 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 210,
+      "sort": 180,
       "translations": {
         "az": {
           "name": "Kalmar",
@@ -612,7 +570,7 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 220,
+      "sort": 190,
       "translations": {
         "az": {
           "name": "Dəniz məhsulları qarışığı",
@@ -638,7 +596,7 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 230,
+      "sort": 200,
       "translations": {
         "az": {
           "name": "Qara midyə",
@@ -658,39 +616,13 @@
       }
     },
     {
-      "id": "french-chicken",
-      "category_id": "poultry",
-      "price_minor": 3000,
-      "unit_kind": "kg",
-      "unit_qty": 1,
-      "is_popular": false,
-      "sort": 240,
-      "translations": {
-        "az": {
-          "name": "Fransız toyuğu",
-          "description": "Fransadan sertifikatlı bütöv toyuq.",
-          "unit_label": "1 kg"
-        },
-        "ru": {
-          "name": "Французская курица",
-          "description": "Сертифицированный цыплёнок из Франции, целиком в упаковке.",
-          "unit_label": "1 кг"
-        },
-        "en": {
-          "name": "French Chicken",
-          "description": "Certified Label Rouge poussin from France, whole in the bag.",
-          "unit_label": "1 kg"
-        }
-      }
-    },
-    {
       "id": "kend-colpa-700",
       "category_id": "poultry",
       "price_minor": 900,
       "unit_kind": "pc",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 250,
+      "sort": 210,
       "translations": {
         "az": {
           "name": "Kənd çolpası, kiçik",
@@ -716,7 +648,7 @@
       "unit_kind": "pc",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 260,
+      "sort": 220,
       "translations": {
         "az": {
           "name": "Kənd çolpası, iri",
@@ -742,22 +674,22 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": true,
-      "sort": 270,
+      "sort": 230,
       "translations": {
         "az": {
           "name": "Pekin ördəyi",
           "description": "Bütöv pekin ördəyi, sobaya hazır.",
-          "unit_label": "1 kg"
+          "unit_label": "2.3 kg"
         },
         "ru": {
           "name": "Пекинская утка",
           "description": "Пекинская утка целиком, подготовлена для духовки — корочка гарантирована.",
-          "unit_label": "1 кг"
+          "unit_label": "2.3 кг"
         },
         "en": {
           "name": "Peking Duck",
           "description": "Whole Peking duck, prepared for the oven — crisp skin guaranteed.",
-          "unit_label": "1 kg"
+          "unit_label": "2.3 kg"
         }
       }
     },
@@ -768,22 +700,22 @@
       "unit_kind": "pack",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 280,
+      "sort": 240,
       "translations": {
         "az": {
           "name": "Ördək filesi",
           "description": "Dərili ördək döş filesi, vakuum qablaşdırmada.",
-          "unit_label": "1 paket"
+          "unit_label": "1 kg"
         },
         "ru": {
           "name": "Филе утиной грудки",
           "description": "Утиная грудка магре на коже, в вакууме, по две штуки.",
-          "unit_label": "1 упак"
+          "unit_label": "1 кг"
         },
         "en": {
           "name": "Duck Breast Fillet",
           "description": "Skin-on magret duck breast, vacuum-packed in pairs.",
-          "unit_label": "1 pack"
+          "unit_label": "1 kg"
         }
       }
     },
@@ -794,7 +726,7 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 290,
+      "sort": 250,
       "translations": {
         "az": {
           "name": "Ördək budu",
@@ -815,121 +747,95 @@
     },
     {
       "id": "camembert",
-      "category_id": "cheese",
-      "price_minor": 1800,
+      "category_id": "avropa-pendirleri",
+      "price_minor": 1600,
       "unit_kind": "g",
       "unit_qty": 125,
       "is_popular": false,
-      "sort": 300,
+      "sort": 260,
       "translations": {
         "az": {
           "name": "Kamamber pendiri",
-          "description": "Normandiyadan yumşaq inək pendiri. Otaq temperaturunda verin.",
+          "description": "Kamaber pendiri 125 qr. Almaniya istehsalı",
           "unit_label": "125 gr"
         },
         "ru": {
           "name": "Камамбер",
-          "description": "Мягкий сыр с белой плесенью из Нормандии. Подавать комнатной температуры.",
+          "description": "Сыр камамбер, 125 г. Произведено в Германии.",
           "unit_label": "125 г"
         },
         "en": {
           "name": "Camembert",
-          "description": "Soft bloomy-rind cow cheese from Normandy. Serve at room temperature.",
-          "unit_label": "125 gr"
-        }
-      }
-    },
-    {
-      "id": "brie",
-      "category_id": "cheese",
-      "price_minor": 1800,
-      "unit_kind": "g",
-      "unit_qty": 125,
-      "is_popular": false,
-      "sort": 310,
-      "translations": {
-        "az": {
-          "name": "Bri pendiri",
-          "description": "Ağ qabıqlı, yumşaq və kremvari pendir.",
-          "unit_label": "125 gr"
-        },
-        "ru": {
-          "name": "Бри",
-          "description": "Мягкий, сливочный, с белой корочкой. Основа любой сырной тарелки.",
-          "unit_label": "125 г"
-        },
-        "en": {
-          "name": "Brie",
-          "description": "Mild, buttery and creamy under a white rind. A board essential.",
+          "description": "Camembert cheese, 125g. Made in Germany.",
           "unit_label": "125 gr"
         }
       }
     },
     {
       "id": "parmigiano-reggiano",
-      "category_id": "cheese",
+      "category_id": "avropa-pendirleri",
       "price_minor": 2700,
       "unit_kind": "g",
       "unit_qty": 230,
       "is_popular": true,
-      "sort": 320,
+      "sort": 270,
       "translations": {
         "az": {
-          "name": "Parmicano Recano",
-          "description": "DOP sertifikatlı, Emiliya-Romanyada yetişdirilmiş bərk pendir.",
-          "unit_label": "230 gr"
+          "name": "Parmezan pendiri",
+          "description": "Zanetti firması. İtaliya istehsalı.",
+          "unit_label": "250 gr"
         },
         "ru": {
           "name": "Пармиджано Реджано",
-          "description": "Твёрдый сыр DOP, выдержанный в Эмилии-Романье. Отрезаем от головы.",
-          "unit_label": "230 г"
+          "description": "Компания Zanetti. Сделано в Италии.",
+          "unit_label": "250 г"
         },
         "en": {
           "name": "Parmigiano Reggiano",
-          "description": "DOP hard cheese aged in Emilia-Romagna. Cut from the wheel.",
-          "unit_label": "230 gr"
+          "description": "Zanetti company. Made in Italy.",
+          "unit_label": "250 gr"
         }
       }
     },
     {
       "id": "baby-truffle",
-      "category_id": "cheese",
-      "price_minor": 4600,
+      "category_id": "avropa-pendirleri",
+      "price_minor": 4500,
       "unit_kind": "g",
       "unit_qty": 280,
       "is_popular": false,
-      "sort": 330,
+      "sort": 280,
       "translations": {
         "az": {
-          "name": "Qara trüflü pendir",
-          "description": "Qara trüf əlavəli Hollandiya pendiri. Zəngin ətirli.",
-          "unit_label": "280 gr"
+          "name": "Qara trufel pendir",
+          "description": "Henry Willig Baby Black Truffle pendiri.  Hollandi isehsalı",
+          "unit_label": "320 gr"
         },
         "ru": {
-          "name": "Гауда с чёрным трюфелем",
-          "description": "Голландская молодая гауда с чёрным трюфелем. Глубокий землистый вкус.",
+          "name": "Сыр с Черным Трюфелем",
+          "description": "Henry Willig сыр с чёрным трюфелем. Произведено в Голландии.",
           "unit_label": "280 г"
         },
         "en": {
-          "name": "Black Truffle Gouda",
-          "description": "Dutch baby gouda studded with black truffle. Deep and earthy.",
-          "unit_label": "280 gr"
+          "name": "Black Truffle Baby Cheese",
+          "description": "Henry Willig Baby Black Truffle Cheese. Made in Nederland.",
+          "unit_label": "320 gr"
         }
       }
     },
     {
       "id": "baby-green-pesto",
-      "category_id": "cheese",
+      "category_id": "avropa-pendirleri",
       "price_minor": 4300,
       "unit_kind": "g",
       "unit_qty": 280,
       "is_popular": false,
-      "sort": 340,
+      "sort": 290,
       "translations": {
         "az": {
           "name": "Yaşıl pesto pendiri",
           "description": "Reyhan pestosu ilə hazırlanmış pendir — parlaq yaşıl rəngli.",
-          "unit_label": "280 gr"
+          "unit_label": "320 gr"
         },
         "ru": {
           "name": "Гауда с зелёным песто",
@@ -944,53 +850,27 @@
       }
     },
     {
-      "id": "grana-padano",
-      "category_id": "cheese",
-      "price_minor": 2100,
-      "unit_kind": "g",
-      "unit_qty": 200,
-      "is_popular": false,
-      "sort": 350,
-      "translations": {
-        "az": {
-          "name": "Qrana Padano",
-          "description": "Yetişdirilmiş İtalyan pendiri — parmicanodan yumşaqdır.",
-          "unit_label": "200 gr"
-        },
-        "ru": {
-          "name": "Грана Падано",
-          "description": "Выдержанный итальянский сыр для тёрки — мягче и нежнее пармезана.",
-          "unit_label": "200 г"
-        },
-        "en": {
-          "name": "Grana Padano",
-          "description": "Aged Italian grating cheese — milder and softer than Parmigiano.",
-          "unit_label": "200 gr"
-        }
-      }
-    },
-    {
       "id": "butter",
       "category_id": "cheese",
       "price_minor": 2500,
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 360,
+      "sort": 300,
       "translations": {
         "az": {
           "name": "Kərə yağı",
-          "description": "Təbii kərə yağı, kiloqramla kəsilir.",
+          "description": "Təbii kərə yağı, kiloqramla kəsilir.\nSifarış 1 gün əvvəl qəbul olunur\nKonservantsız təbii süddən hazırlanır",
           "unit_label": "1 kg"
         },
         "ru": {
           "name": "Сливочное масло",
-          "description": "Сливочное масло брусками, режем на килограммы. Для выпечки и на стол.",
+          "description": "Натуральное сливочное масло, продается на развес.\nЗаказы принимаются за день.\nИзготовлено из натурального молока, без консервантов.",
           "unit_label": "1 кг"
         },
         "en": {
           "name": "Butter",
-          "description": "Cultured block butter, cut to the kilo. For baking and the table.",
+          "description": "Natural butter, sold by the kilogram.\nOrders accepted one day in advance.\nMade from natural milk without preservatives.",
           "unit_label": "1 kg"
         }
       }
@@ -1002,21 +882,21 @@
       "unit_kind": "g",
       "unit_qty": 200,
       "is_popular": true,
-      "sort": 370,
+      "sort": 310,
       "translations": {
         "az": {
-          "name": "Trüflü burrata",
-          "description": "İçi trüflü kremli təzə burrata. Gəldiyi gün yeyin.",
+          "name": "Buratta Truffle Pendiri",
+          "description": "Buratta truffle pendiri 200 qr - 15 azn\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Saxlama müddəti 5-7 gün\n* Konservantsız təbii süddən hazırlanır",
           "unit_label": "200 gr"
         },
         "ru": {
           "name": "Буррата с трюфелем",
-          "description": "Свежая буррата с трюфельными сливками внутри. Съесть в день доставки.",
+          "description": "Сыр буррата с трюфелем.\n* Заказы необходимо оформлять за день, так как сыр производится рано утром.\n* Срок годности: 5–7 дней.\n* Изготовлено из натурального молока без консервантов.",
           "unit_label": "200 г"
         },
         "en": {
           "name": "Truffle Burrata",
-          "description": "Fresh burrata with a truffled cream centre. Eat the day it lands.",
+          "description": "Truffle Burrata cheese \n* Orders must be placed one day in advance, as the cheese is produced early in the morning.\n* Shelf life: 5–7 days.\n* Made from natural milk without preservatives.",
           "unit_label": "200 gr"
         }
       }
@@ -1028,20 +908,20 @@
       "unit_kind": "g",
       "unit_qty": 250,
       "is_popular": false,
-      "sort": 380,
+      "sort": 320,
       "translations": {
         "az": {
           "name": "Hellim pendiri",
-          "description": "Qrildə formasını saxlayan pendir. Duzlu dadlı.",
+          "description": "Hellim pediri \n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Saxlama müddəti 5-7 gün\n* Konservantsız təbii süddən hazırlanır",
           "unit_label": "250 gr"
         },
         "ru": {
           "name": "Халуми",
-          "description": "Сыр для гриля, держит форму на сковороде. Солёный, поскрипывает.",
+          "description": "Сыр халуми \n* Заказы необходимо оформлять за день, так как сыр производится рано утром.\n* Срок хранения: 5–7 дней.\n* Изготовлен из натурального молока без консервантов.",
           "unit_label": "250 г"
         },
         "en": {
-          "name": "Halloumi",
+          "name": "Halloumi cheese",
           "description": "Grilling cheese that holds its shape in the pan. Squeaky and salty.",
           "unit_label": "250 gr"
         }
@@ -1054,21 +934,21 @@
       "unit_kind": "g",
       "unit_qty": 250,
       "is_popular": false,
-      "sort": 390,
+      "sort": 330,
       "translations": {
         "az": {
-          "name": "Orqanik feta",
-          "description": "Duzlu suda saxlanan orqanik feta — salat və xəmir üçün.",
+          "name": "Feta Pendiri",
+          "description": "Feta pendiri \n\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Konservantsız təbii süddən hazırlanır",
           "unit_label": "250 gr"
         },
         "ru": {
-          "name": "Органическая фета",
-          "description": "Органическая фета в рассоле — крошится, кислит, для салатов и выпечки.",
+          "name": "Сыр Фета",
+          "description": "Сыр фета.\n\n* Заказы необходимо оформлять за день, так как сыр производится рано утром.\n* Изготовлен из натурального молока без консервантов.",
           "unit_label": "250 г"
         },
         "en": {
-          "name": "Organic Feta",
-          "description": "Brined organic feta — crumbly, tangy, for salads and pastry.",
+          "name": "Feta cheese",
+          "description": "Feta cheese \n\n* Orders must be placed one day in advance, as the cheese is produced early in the morning.\n* Made from natural milk without preservatives.",
           "unit_label": "250 gr"
         }
       }
@@ -1080,21 +960,21 @@
       "unit_kind": "pack",
       "unit_qty": 10,
       "is_popular": true,
-      "sort": 400,
+      "sort": 340,
       "translations": {
         "az": {
           "name": "Dondurulmuş kruassan",
-          "description": "Çiy kərə yağlı kruassan — gecə açılır, səhər bişirilir.",
+          "description": "Dondurulmuş Kroasanlar\nMin sifariş 10 əd - 25 azn\nYerli istehsal\nSifariş 1 gün əvvəl qəbul olunur",
           "unit_label": "min. 10 əd"
         },
         "ru": {
           "name": "Круассаны замороженные",
-          "description": "Сырые масляные круассаны — расстоять ночью, испечь утром.",
+          "description": "Замороженные круассаны\nМинимальный заказ: 10 штук — 25 AZN\nМестное производство\nЗаказы принимаются за 1 день",
           "unit_label": "от 10 шт"
         },
         "en": {
           "name": "Frozen Croissants",
-          "description": "Raw butter croissants — prove overnight, bake in the morning.",
+          "description": "Frozen Croissants\nMinimum order: 10 pieces – 25 AZN\nLocally produced\nOrders accepted 1 day in advance",
           "unit_label": "min. 10 pcs"
         }
       }
@@ -1106,21 +986,21 @@
       "unit_kind": "pack",
       "unit_qty": 10,
       "is_popular": false,
-      "sort": 410,
+      "sort": 350,
       "translations": {
         "az": {
-          "name": "Dondurulmuş beygel",
-          "description": "Yarımbişmiş beygel — sobada tamamlayın.",
+          "name": "Dondurulmuş beygelslər",
+          "description": "Dondurulmuş beygel\nMin sifariş 10 əd - 25 azn\nYerli istehsal\nSifariş 1 gün əvvəl qəbul olunur",
           "unit_label": "min. 10 əd"
         },
         "ru": {
           "name": "Бейглы замороженные",
-          "description": "Бейглы полуготовые — доводятся в духовке до правильной корочки.",
+          "description": "Замороженные бейглы\nМинимальный заказ: 10 штук — 25 AZN\nМестное производство\nЗаказы принимаются за 1 день",
           "unit_label": "от 10 шт"
         },
         "en": {
           "name": "Frozen Bagels",
-          "description": "Par-baked bagels — finish in the oven for a proper crust.",
+          "description": "Frozen bagels\nMinimum order: 10 pieces – 25 AZN\nLocally produced\nOrders accepted 1 day in advance",
           "unit_label": "min. 10 pcs"
         }
       }
@@ -1132,74 +1012,22 @@
       "unit_kind": "kg",
       "unit_qty": 1.5,
       "is_popular": false,
-      "sort": 420,
+      "sort": 360,
       "translations": {
         "az": {
           "name": "Tortilla lavaş",
-          "description": "1.5 kq-lıq paketdə yumşaq buğda lavaşı.",
-          "unit_label": "1.5 kg"
+          "description": "0.93 kq-lıq paketdə yumşaq buğda lavaşı.",
+          "unit_label": "0.93 kg"
         },
         "ru": {
           "name": "Тортилья лаваш",
-          "description": "Мягкие пшеничные тортильи в упаковке 1,5 кг. Для роллов и шаурмы.",
-          "unit_label": "1,5 кг"
+          "description": "Мягкие пшеничные тортильи в упаковке 0.93 кг. Для роллов и шаурмы.",
+          "unit_label": "0.93 кг"
         },
         "en": {
           "name": "Tortilla Lavash",
-          "description": "Soft wheat tortillas in a 1.5 kg catering pack. For wraps and shawarma.",
-          "unit_label": "1.5 kg"
-        }
-      }
-    },
-    {
-      "id": "kitkat-matcha",
-      "category_id": "pantry",
-      "price_minor": 1300,
-      "unit_kind": "pack",
-      "unit_qty": 1,
-      "is_popular": false,
-      "sort": 430,
-      "translations": {
-        "az": {
-          "name": "KitKat matça",
-          "description": "Yapon mini KitKat, tünd matça dadında.",
-          "unit_label": "1 paket"
-        },
-        "ru": {
-          "name": "KitKat матча",
-          "description": "Японский мини-KitKat с тёмной матчей — горчинка зелёного чая, меньше сахара.",
-          "unit_label": "1 упак"
-        },
-        "en": {
-          "name": "KitKat Matcha",
-          "description": "Japanese mini KitKat in dark matcha — bitter green tea, less sugar.",
-          "unit_label": "1 pack"
-        }
-      }
-    },
-    {
-      "id": "kitkat-matcha-latte",
-      "category_id": "pantry",
-      "price_minor": 900,
-      "unit_kind": "pack",
-      "unit_qty": 1,
-      "is_popular": false,
-      "sort": 440,
-      "translations": {
-        "az": {
-          "name": "KitKat matça latte",
-          "description": "Daha şirin və südlü matça versiyası.",
-          "unit_label": "1 paket"
-        },
-        "ru": {
-          "name": "KitKat матча латте",
-          "description": "Более сладкая и молочная версия матчи из японской линейки.",
-          "unit_label": "1 упак"
-        },
-        "en": {
-          "name": "KitKat Matcha Latte",
-          "description": "Sweeter, milkier matcha edition from the Japanese range.",
-          "unit_label": "1 pack"
+          "description": "Soft wheat tortillas in a 0.93 kg catering pack. For wraps and shawarma.",
+          "unit_label": "0.93 kg"
         }
       }
     },
@@ -1210,74 +1038,22 @@
       "unit_kind": "pack",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 450,
+      "sort": 370,
       "translations": {
         "az": {
           "name": "KitKat çiyələk",
-          "description": "Yapon çiyələkli KitKat — ayrı-ayrı bükülmüş.",
-          "unit_label": "1 paket"
+          "description": "Yapon çiyələkli KitKat — ayrı-ayrı bükülmüş.\nBağlamada 10 ədəd balaca kit katlar",
+          "unit_label": "1 bağlama"
         },
         "ru": {
           "name": "KitKat клубника",
-          "description": "Японский клубничный KitKat — розовый, фруктовый, в индивидуальной упаковке.",
-          "unit_label": "1 упак"
+          "description": "Японский клубничный KitKat — розовый, фруктовый, в индивидуальной упаковке.\nВ упаковке 10 мини-батончиков KitKat.",
+          "unit_label": "1 упаковка"
         },
         "en": {
           "name": "KitKat Strawberry",
-          "description": "Japanese strawberry KitKat — pink, fruity, individually wrapped.",
+          "description": "Japanese strawberry KitKat — pink, fruity, individually wrapped.\nThe package contains 10 mini KitKats.",
           "unit_label": "1 pack"
-        }
-      }
-    },
-    {
-      "id": "smoked-mackerel-fillet",
-      "category_id": "smoked",
-      "price_minor": 3500,
-      "unit_kind": "kg",
-      "unit_qty": 1,
-      "is_popular": false,
-      "sort": 460,
-      "translations": {
-        "az": {
-          "name": "Hisə verilmiş skumbriya filesi",
-          "description": "İsti hisə verilmiş skumbriya filesi — yağlı, dadlı, salataya və ya bilavasitə yeməyə hazır.",
-          "unit_label": "1 kg"
-        },
-        "ru": {
-          "name": "Скумбрия копчёная, филе",
-          "description": "Филе скумбрии горячего копчения на коже — жирное, насыщенное, готово к столу или в салаты.",
-          "unit_label": "1 кг"
-        },
-        "en": {
-          "name": "Smoked Mackerel Fillets",
-          "description": "Hot-smoked mackerel fillets, skin-on — rich, oily, ready to eat or flake into salads.",
-          "unit_label": "1 kg"
-        }
-      }
-    },
-    {
-      "id": "smoked-herring",
-      "category_id": "smoked",
-      "price_minor": 800,
-      "unit_kind": "pc",
-      "unit_qty": 1,
-      "is_popular": false,
-      "sort": 470,
-      "translations": {
-        "az": {
-          "name": "Hisə verilmiş siyənək",
-          "description": "Bütöv isti hisə verilmiş siyənək — qızılı dərili, zərif ətli.",
-          "unit_label": "1 ədəd"
-        },
-        "ru": {
-          "name": "Сельдь копчёная",
-          "description": "Сельдь горячего копчения целиком — золотистая кожа, нежная мякоть, классика.",
-          "unit_label": "1 шт"
-        },
-        "en": {
-          "name": "Smoked Herring",
-          "description": "Whole hot-smoked herring — golden skin, tender flesh, a classic Eastern European favourite.",
-          "unit_label": "1 piece"
         }
       }
     },
@@ -1288,7 +1064,7 @@
       "unit_kind": "pc",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 480,
+      "sort": 380,
       "translations": {
         "az": {
           "name": "Hisə verilmiş skumbriya",
@@ -1314,47 +1090,73 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 490,
+      "sort": 390,
       "translations": {
         "az": {
-          "name": "Eskolar",
+          "name": "Hise verilmiş Eskolar (Maslyanoy)",
           "description": "Yağlı ağ balıq, hisə verilmiş və dilimlənmiş halda.",
           "unit_label": "1 kg"
         },
         "ru": {
-          "name": "Эсколар",
+          "name": "Копченный Эсколар",
           "description": "Маслянистая белая рыба, копчёная и нарезанная в готовый лоток.",
           "unit_label": "1 кг"
         },
         "en": {
-          "name": "Escolar",
+          "name": "Smoked Escolar",
           "description": "Buttery white fish, smoked and sliced into a ready tray.",
           "unit_label": "1 kg"
         }
       }
     },
     {
+      "id": "hise-verilmis-qizil-baliq-flagman-smoked-salmon",
+      "category_id": "smoked",
+      "price_minor": 6500,
+      "unit_kind": "pc",
+      "unit_qty": 1,
+      "is_popular": true,
+      "sort": 400,
+      "translations": {
+        "az": {
+          "name": "Hise verilmiş Qızıl balıq Flagman (Smoked Salmon)",
+          "description": "Hise verilmiş Norveç qızıl balıq \nFlagman brendi\nStandart 1 kg liq bağlamada\nDondurulmuş və nazik dilimlənmiş.\nUkraina İstehsalı",
+          "unit_label": "1 ədəd"
+        },
+        "ru": {
+          "name": "Копченный Салмон Flagman",
+          "description": "Норвежский лосось холодного копчения\nТорговая марка Flagman\nСтандартная упаковка 1 кг\nЗамороженный, тонкая нарезка.\nСделано в Украине",
+          "unit_label": "1 шт"
+        },
+        "en": {
+          "name": "Smoked salmon Flagman",
+          "description": "Smoked Norwegian salmon\nFlagman brand\nStandard 1 kg package\nFrozen and thinly sliced.",
+          "unit_label": "1 piece"
+        }
+      }
+    },
+    {
       "id": "salmon-trout-fillet",
-      "category_id": "fresh",
-      "price_minor": 2200,
+      "category_id": "seafood",
+      "price_minor": 4500,
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 500,
+      "sort": 410,
       "translations": {
         "az": {
-          "name": "Qızılı alabalıq filesi",
-          "description": "Norvec qızılı alabalıq filesi, dərili, omega-3 zəngin. Vakuumda təzə qablaşdırılmış.",
+          "name": "Dondurulmuş Salmon Filesi",
+          "description": "Dondurulmuş Norveç qızılı balıq filesi\n2-2.5 kg olur.",
           "unit_label": "1 kg"
         },
         "ru": {
-          "name": "Филе форели лосося",
-          "description": "Филе норвежской форели-лосося на коже, богатое омега-3. Упаковано в вакуум.",
+          "name": "Замороженное Филе Лосося",
+          "description": "Замороженное филе норвежского морского лосося\nВес — 2–2,5 кг.",
           "unit_label": "1 кг"
         },
         "en": {
-          "name": "Salmon Trout Fillet",
-          "description": "Premium Norwegian salmon trout fillet, skin-on, rich in omega-3. Vacuum-packed fresh.",
+          "name": "Frozen Salmon Fillet",
+          "description": "Frozen Norwegian Salmon fillet\nThey weigh 2–2.5 kg.",
           "unit_label": "1 kg"
         }
       }
@@ -1366,7 +1168,7 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 510,
+      "sort": 420,
       "translations": {
         "az": {
           "name": "Sudak",
@@ -1392,7 +1194,7 @@
       "unit_kind": "g",
       "unit_qty": 100,
       "is_popular": true,
-      "sort": 520,
+      "sort": 430,
       "translations": {
         "az": {
           "name": "Qara ikra",
@@ -1412,39 +1214,13 @@
       }
     },
     {
-      "id": "vannamei-shrimp",
-      "category_id": "seafood",
-      "price_minor": 3200,
-      "unit_kind": "kg",
-      "unit_qty": 1,
-      "is_popular": false,
-      "sort": 530,
-      "translations": {
-        "az": {
-          "name": "Vannamei krevetlər, soyulmuş",
-          "description": "Dondurulmuş vannamei krevet 16/20, soyulmuş — Meduza, 30% sululuq.",
-          "unit_label": "1 kg"
-        },
-        "ru": {
-          "name": "Креветки ваннамей очищенные",
-          "description": "Замороженные креветки ваннамей 16/20, очищенные — Meduza, 30% глазури.",
-          "unit_label": "1 кг"
-        },
-        "en": {
-          "name": "Vannamei Shrimp, Peeled",
-          "description": "Frozen vannamei shrimp 16/20, peeled and deveined — Meduza brand, 30% glaze.",
-          "unit_label": "1 kg"
-        }
-      }
-    },
-    {
       "id": "crab-sticks",
       "category_id": "seafood",
       "price_minor": 1100,
       "unit_kind": "pack",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 540,
+      "sort": 440,
       "translations": {
         "az": {
           "name": "Krab çubuqları",
@@ -1470,7 +1246,7 @@
       "unit_kind": "pack",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 550,
+      "sort": 450,
       "translations": {
         "az": {
           "name": "Ançous filesi",
@@ -1496,21 +1272,21 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 560,
+      "sort": 460,
       "translations": {
         "az": {
           "name": "Təmizlənmiş krevetlər",
-          "description": "Bişmiş, təmizlənmiş krevet — makaron və salatlar üçün.",
+          "description": "Dondurulmuş vanamey krevet, başsız, soyulmuş, quyruqlu, çiy\n16/20",
           "unit_label": "1 kg"
         },
         "ru": {
           "name": "Креветки очищенные",
-          "description": "Варёные и очищенные — сразу в пасту или салат.",
+          "description": "Креветки ваннамей замороженные, без головы, очищенные, с хвостиком, сырые\n16/20",
           "unit_label": "1 кг"
         },
         "en": {
           "name": "Peeled Shrimp",
-          "description": "Cooked, peeled and deveined — straight into pasta or salad.",
+          "description": "Frozen Vannamei shrimp, headless, peeled, tail-on, raw\n16/20",
           "unit_label": "1 kg"
         }
       }
@@ -1522,7 +1298,7 @@
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 570,
+      "sort": 470,
       "translations": {
         "az": {
           "name": "Korolevskiy krevetlər",
@@ -1548,47 +1324,47 @@
       "unit_kind": "g",
       "unit_qty": 125,
       "is_popular": false,
-      "sort": 580,
+      "sort": 480,
       "translations": {
         "az": {
-          "name": "Təzə mozzarella",
-          "description": "Klassik təzə mozzarella topları duzlu suda — yumşaq, südlü, kaprese üçün ideal.",
-          "unit_label": "125 gr"
+          "name": "Mozzarella pendiri",
+          "description": "Mozzarella pendiri\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Saxlama müddəti 5-7 gün\n* Konservantsız təbii süddən hazırlanır",
+          "unit_label": "200 qr"
         },
         "ru": {
-          "name": "Моцарелла свежая",
-          "description": "Классические шарики свежей моцареллы в рассоле — мягкие, молочные, идеал для Капрезе.",
-          "unit_label": "125 г"
+          "name": "Моцарелла",
+          "description": "Сыр моцарелла\n* Заказы принимаются за день до доставки, так как сыр производится рано утром\n* Срок годности: 5–7 дней\n* Изготовлен из натурального молока без консервантов",
+          "unit_label": "200 г"
         },
         "en": {
-          "name": "Fresh Mozzarella",
-          "description": "Classic fresh mozzarella balls in brine — soft, milky and perfect for Caprese.",
-          "unit_label": "125 gr"
+          "name": "Mozzarella",
+          "description": "Mozzarella cheese\n* Orders are accepted one day in advance, as the cheese is produced early in the morning\n* Shelf life: 5–7 days\n* Made from natural milk without preservatives\n* Изготовлен из натурального молока без консервантов",
+          "unit_label": "200 gr"
         }
       }
     },
     {
       "id": "burrata-plain",
       "category_id": "cheese",
-      "price_minor": 1200,
+      "price_minor": 1100,
       "unit_kind": "g",
       "unit_qty": 200,
       "is_popular": false,
-      "sort": 590,
+      "sort": 490,
       "translations": {
         "az": {
-          "name": "Burrata",
-          "description": "İçi stracciatella kremli təzə burrata — gəldiyi gün yeyin.",
+          "name": "Burrata pendiri",
+          "description": "Buratta pendiri\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Saxlama müddəti 5-7 gün\n* Konservantsız təbii süddən hazırlanır",
           "unit_label": "200 gr"
         },
         "ru": {
           "name": "Буррата",
-          "description": "Свежая буррата с начинкой из страчателлы — съесть в день доставки.",
+          "description": "Сыр буррата\n* Заказы принимаются за день до доставки, так как сыр производится рано утром\n* Срок годности: 5–7 дней\n* Изготовлен из натурального молока без консервантов",
           "unit_label": "200 г"
         },
         "en": {
-          "name": "Burrata",
-          "description": "Fresh burrata with a stracciatella cream centre — eat the day it arrives.",
+          "name": "Burrata cheese",
+          "description": "Burrata cheese\n* Orders are accepted one day in advance, as the cheese is produced early in the morning\n* Shelf life: 5–7 days\n* Made from natural milk without preservatives",
           "unit_label": "200 gr"
         }
       }
@@ -1596,182 +1372,156 @@
     {
       "id": "labne",
       "category_id": "cheese",
-      "price_minor": 800,
+      "price_minor": 1200,
       "unit_kind": "g",
       "unit_qty": 250,
       "is_popular": false,
-      "sort": 600,
+      "sort": 500,
       "translations": {
         "az": {
-          "name": "Labne",
-          "description": "Süzülmüş qatıq pendiri — qalın, kremli, turşumtul. Çörəkə yayın və ya zeytun yağıyla verin.",
-          "unit_label": "250 gr"
+          "name": "Strataçella pendiri",
+          "description": "Strataçella pendiri\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Saxlama müddəti 5-7 gün\n* Konservantsız təbii süddən hazırlanır",
+          "unit_label": "200 gr"
         },
         "ru": {
-          "name": "Лябне",
-          "description": "Отцеженный йогуртовый сыр — густой, кремовый, с кислинкой. На тост или с оливковым маслом.",
-          "unit_label": "250 г"
+          "name": "Страчателла сыр",
+          "description": "Сыр Страчателла\n* Заказы принимаются за день до доставки, так как сыр производится рано утром\n* Срок годности: 5–7 дней\n* Изготовлен из натурального молока без консервантов.",
+          "unit_label": "200 г"
         },
         "en": {
-          "name": "Labne",
-          "description": "Strained yogurt cheese — thick, creamy and tangy. Spread on toast or serve with olive oil.",
-          "unit_label": "250 gr"
+          "name": "Stracciatella cheese",
+          "description": "Stracciatella cheese\n* Orders are accepted one day in advance, as the cheese is produced early in the morning\n* Shelf life: 5–7 days\n* Made from natural milk without preservatives",
+          "unit_label": "200 gr"
         }
       }
     },
     {
       "id": "goat-cheese",
-      "category_id": "cheese",
-      "price_minor": 3800,
+      "category_id": "avropa-pendirleri",
+      "price_minor": 4500,
       "unit_kind": "g",
       "unit_qty": 280,
       "is_popular": false,
-      "sort": 610,
+      "sort": 510,
       "translations": {
         "az": {
-          "name": "Cavan keçi pendiri",
-          "description": "Henri Willig Hollandiya cavan keçi pendiri — yüngül, kremli, vegetarian dostu.",
-          "unit_label": "280 gr"
+          "name": "Keçi pendiri",
+          "description": "Henry Willig Baby Goat Young pendiri.  Hollandi isehsalı",
+          "unit_label": "320 gr"
         },
         "ru": {
-          "name": "Молодой козий сыр",
-          "description": "Молодой козий сыр Henri Willig из Голландии — мягкий, сливочный, вегетарианский.",
-          "unit_label": "280 г"
+          "name": "Козий сыр",
+          "description": "Henry Willig Baby Goat Young сыр. Произведено в Голландии",
+          "unit_label": "320 г"
         },
         "en": {
-          "name": "Young Goat Cheese",
-          "description": "Henri Willig young goat cheese from Holland — mild, creamy, vegetarian-friendly.",
-          "unit_label": "280 gr"
+          "name": "Goat Young Cheese",
+          "description": "Henry Willig Baby Goat Young Cheese. Made in Nederland.",
+          "unit_label": "320 gr"
         }
       }
     },
     {
       "id": "chili-gouda",
-      "category_id": "cheese",
-      "price_minor": 4300,
+      "category_id": "avropa-pendirleri",
+      "price_minor": 4200,
       "unit_kind": "g",
       "unit_qty": 280,
       "is_popular": false,
-      "sort": 620,
+      "sort": 520,
       "translations": {
         "az": {
-          "name": "Qırmızı bibərli qauda",
-          "description": "Qırmızı bibər əlavəli Henri Willig pendiri — kremli Hollandiya bazasında iti dad.",
-          "unit_label": "280 gr"
+          "name": "Qırmızı bibərli pendir",
+          "description": "Henry Willig Baby Red Chili Peppers pendiri. Hollandiya istehsalı.",
+          "unit_label": "320 gr"
         },
         "ru": {
-          "name": "Гауда с красным перцем чили",
-          "description": "Молодая гауда Henri Willig с красным чили — острая, пикантная, на кремовой голландской основе.",
-          "unit_label": "280 г"
+          "name": "Сыр с красным перцем чили",
+          "description": "Henry Willig Baby Red Chili Peppers Сыр. Произведено в Голландии",
+          "unit_label": "320 г"
         },
         "en": {
-          "name": "Red Chili Pepper Gouda",
-          "description": "Henri Willig baby gouda studded with red chilli — bold heat in a creamy Dutch base.",
-          "unit_label": "280 gr"
-        }
-      }
-    },
-    {
-      "id": "gran-guardia",
-      "category_id": "cheese",
-      "price_minor": 2200,
-      "unit_kind": "g",
-      "unit_qty": 200,
-      "is_popular": false,
-      "sort": 630,
-      "translations": {
-        "az": {
-          "name": "Gran Quardia",
-          "description": "Ghidetti İtalyan bərk pendiri, Grana üslubunda yetişdirilmiş — qozyemiş dadlı, rendə üçün ideal.",
-          "unit_label": "200 gr"
-        },
-        "ru": {
-          "name": "Гран Гуардиа",
-          "description": "Итальянский твёрдый сыр Ghidetti в стиле Грана — ореховый, зернистый, идеален для тёрки.",
-          "unit_label": "200 г"
-        },
-        "en": {
-          "name": "Gran Guardia",
-          "description": "Ghidetti Italian hard cheese, aged in the style of Grana — nutty, granular, ideal for grating.",
-          "unit_label": "200 gr"
+          "name": "Red Chili Pepper Cheese",
+          "description": "Henry Willig Baby Red Chili Peppers Cheese. Made in Nederland.",
+          "unit_label": "320 gr"
         }
       }
     },
     {
       "id": "aged-gouda-333",
-      "category_id": "cheese",
-      "price_minor": 2500,
+      "category_id": "avropa-pendirleri",
+      "price_minor": 4400,
       "unit_kind": "g",
       "unit_qty": 200,
       "is_popular": false,
-      "sort": 640,
+      "sort": 530,
       "translations": {
         "az": {
-          "name": "Köhnəlmiş qauda 333",
+          "name": "333 Günlük Gauda pendiri (Veenmeester 333)",
           "description": "Veenmeester qauda, 333 gün yetişdirilmiş — karamel notlu, sıx, tirozin kristalları.",
-          "unit_label": "200 gr"
+          "unit_label": "300 gr"
         },
         "ru": {
-          "name": "Выдержанная гауда 333",
+          "name": "333 дней Выдержанная гауда (Veenmeester 333)",
           "description": "Гауда Veenmeester 333 дня выдержки — карамельные ноты, плотная, с кристаллами тирозина.",
-          "unit_label": "200 г"
+          "unit_label": "300 г"
         },
         "en": {
-          "name": "Aged Gouda 333",
+          "name": "333 days Aged Gouda (Veenmeester 333)",
           "description": "Veenmeester Gouda matured 333 days — caramel notes, firm crunch, tyrosine crystals.",
-          "unit_label": "200 gr"
+          "unit_label": "300 gr"
         }
       }
     },
     {
       "id": "aged-gouda-444",
-      "category_id": "cheese",
-      "price_minor": 3000,
+      "category_id": "avropa-pendirleri",
+      "price_minor": 4700,
       "unit_kind": "g",
       "unit_qty": 200,
       "is_popular": false,
-      "sort": 650,
+      "sort": 540,
       "translations": {
         "az": {
-          "name": "Köhnəlmiş qauda 444",
+          "name": "444 Günlük Gauda pendiri (Veenmeester 444)",
           "description": "Veenmeester qauda, 444 gün yetişdirilmiş — daha dərin dad, qırmızı şərabla əla.",
-          "unit_label": "200 gr"
+          "unit_label": "300 gr"
         },
         "ru": {
-          "name": "Выдержанная гауда 444",
+          "name": "444 дней Выдержанная гауда",
           "description": "Гауда Veenmeester 444 дня выдержки — более глубокий вкус, больше кристаллов, отлична с красным вином.",
-          "unit_label": "200 г"
+          "unit_label": "300 г"
         },
         "en": {
-          "name": "Aged Gouda 444",
+          "name": "444 days Aged Gouda (Veenmeester 444)",
           "description": "Veenmeester Gouda matured 444 days — deeper flavour, more crystals, excellent with red wine.",
-          "unit_label": "200 gr"
+          "unit_label": "300 gr"
         }
       }
     },
     {
       "id": "aged-gouda-555",
-      "category_id": "cheese",
-      "price_minor": 3500,
+      "category_id": "avropa-pendirleri",
+      "price_minor": 4900,
       "unit_kind": "g",
       "unit_qty": 200,
       "is_popular": false,
-      "sort": 660,
+      "sort": 550,
       "translations": {
         "az": {
-          "name": "Köhnəlmiş qauda 555",
+          "name": "555 Günlük Gauda pendiri (Veenmeester 555)",
           "description": "Veenmeester qauda, 555 gün yetişdirilmiş — intensiv, qozyemiş, karamel dadlı. Flaqman.",
-          "unit_label": "200 gr"
+          "unit_label": "300 gr"
         },
         "ru": {
-          "name": "Выдержанная гауда 555",
+          "name": "555 дней Выдержанная гауда",
           "description": "Гауда Veenmeester 555 дней выдержки — насыщенная, ореховая, почти ириска. Флагман линейки.",
-          "unit_label": "200 г"
+          "unit_label": "300 г"
         },
         "en": {
-          "name": "Aged Gouda 555",
+          "name": "555 days Aged Gouda (Veenmeester 555)",
           "description": "Veenmeester Gouda matured 555 days — intense, nutty, almost toffee-like. The flagship.",
-          "unit_label": "200 gr"
+          "unit_label": "300 gr"
         }
       }
     },
@@ -1782,21 +1532,21 @@
       "unit_kind": "g",
       "unit_qty": 200,
       "is_popular": false,
-      "sort": 670,
+      "sort": 560,
       "translations": {
         "az": {
-          "name": "Qauda pendiri",
-          "description": "Yarımbərk Hollandiya pendiri — dilimlənən, əriyən.",
+          "name": "Yerli Qauda pendiri",
+          "description": "Yarımbərk Hollandiya pendiri — dilimlənən, əriyən.\nYerli Istehsal\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Konservantsız təbii süddən hazırlanır",
           "unit_label": "200 gr"
         },
         "ru": {
-          "name": "Гауда",
-          "description": "Полутвёрдая голландская гауда — режется, плавится, на каждый день.",
+          "name": "Местная Гауда",
+          "description": "Полутвердый сыр голландского типа — хорошо режется и плавится.\nМестное производство\n* Заказы принимаются за день до доставки, так как сыр изготавливается рано утром.\n* Изготовлен из натурального молока без консервантов.",
           "unit_label": "200 г"
         },
         "en": {
           "name": "Gouda",
-          "description": "Semi-hard Dutch gouda — sliceable, melts well, everyday cheese.",
+          "description": "Semi-hard Dutch-style cheese — sliceable and meltable.\nLocally produced\n* Orders are accepted one day in advance, as the cheese is produced early in the morning.\n* Made from natural milk without preservatives.",
           "unit_label": "200 gr"
         }
       }
@@ -1808,33 +1558,111 @@
       "unit_kind": "g",
       "unit_qty": 200,
       "is_popular": false,
-      "sort": 680,
+      "sort": 570,
       "translations": {
         "az": {
           "name": "Pizza pendiri",
-          "description": "Doğranmış pizza pendiri — istilikdə yaxşı uzanır.",
+          "description": "Doğranmış pizza pendiri — istilikdə yaxşı uzanır.\nYerli istehsal\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Konservantsız təbii süddən hazırlanır",
           "unit_label": "200 gr"
         },
         "ru": {
           "name": "Сыр для пиццы, тёртый",
-          "description": "Готовая тёртая смесь моцареллы, которая правильно тянется.",
+          "description": "Тертый сыр для пиццы — хорошо тянется при нагревании.\nМестное производство\n* Заказы принимаются за день до доставки, так как сыр производится рано утром.\n* Изготовлен из натурального молока без консервантов.",
           "unit_label": "200 г"
         },
         "en": {
           "name": "Pizza Cheese, Grated",
-          "description": "Pre-grated mozzarella blend that stretches properly under heat.",
+          "description": "Shredded pizza cheese — stretches well when heated.\nLocally produced\n* Orders are accepted one day in advance, as the cheese is produced early in the morning.\n* Made from natural milk without preservatives.",
           "unit_label": "200 gr"
         }
       }
     },
     {
+      "id": "mini-mozzarella-pendiri",
+      "category_id": "cheese",
+      "price_minor": 1000,
+      "unit_kind": "pc",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 580,
+      "translations": {
+        "az": {
+          "name": "Mini Mozzarella pendiri",
+          "description": "Mini Mozzarella pendiri\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Saxlama müddəti 5-7 gün\n* Konservantsız təbii süddən hazırlanır",
+          "unit_label": "1 ədəd"
+        },
+        "ru": {
+          "name": "Мини Моцарелла",
+          "description": "Сыр мини Моцарелла\n* Заказы принимаются за день до доставки, так как сыр производится рано утром\n* Срок годности: 5–7 дней\n* Изготовлен из натурального молока без консервантов",
+          "unit_label": "1 шт"
+        },
+        "en": {
+          "name": "Mini Mozzarella",
+          "description": "Mini Mozzarella cheese\n* Orders are accepted one day in advance, as the cheese is produced early in the morning\n* Shelf life: 5–7 days\n* Made from natural milk without preservatives",
+          "unit_label": "1 piece"
+        }
+      }
+    },
+    {
+      "id": "suluquni-pendiri",
+      "category_id": "cheese",
+      "price_minor": 1800,
+      "unit_kind": "pc",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 590,
+      "translations": {
+        "az": {
+          "name": "Suluquni pendiri",
+          "description": "Məhşur Gürcü pendiri Suluquni \nYerli İstehsal\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Konservantsız təbii süddən hazırlanır",
+          "unit_label": "500 qr"
+        },
+        "ru": {
+          "name": "Сыр Сулугуни",
+          "description": "Знаменитый грузинский сыр сулугуни\nМестное производство\n* Заказы принимаются за день до получения, так как сыр изготавливается рано утром\n* Изготовлен из натурального молока без консервантов",
+          "unit_label": "500 г"
+        },
+        "en": {
+          "name": "Suluquni cheese",
+          "description": "Famous Georgian Sulguni Cheese\nLocally Produced\n* Orders are accepted one day in advance, as the cheese is produced early in the morning\n* Made from natural milk without preservatives",
+          "unit_label": "500 qr"
+        }
+      }
+    },
+    {
+      "id": "rikotta-pendiri",
+      "category_id": "cheese",
+      "price_minor": 700,
+      "unit_kind": "pc",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 600,
+      "translations": {
+        "az": {
+          "name": "Rikotta Pendiri",
+          "description": "Yumşaq, kremli teksturaya və zərif dada malik İtalyan pendiri.\n* Yerli istehsal\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Konservantsız təbii süddən hazırlanır",
+          "unit_label": "250 qr"
+        },
+        "ru": {
+          "name": "Сыр Рикотта",
+          "description": "Итальянский сыр с мягкой, сливочной текстурой и нежным вкусом.\n* Местное производство\n* Заказы принимаются за день до доставки, так как сыр изготавливается рано утром\n* Изготовлен из натурального молока без консервантов",
+          "unit_label": "250 г"
+        },
+        "en": {
+          "name": "Ricotta cheese",
+          "description": "An Italian cheese with a soft, creamy texture and a delicate flavor.\n* Locally produced\n* Orders are accepted one day in advance, as the cheese is produced early in the morning\n* Made from natural milk without preservatives",
+          "unit_label": "250 qr"
+        }
+      }
+    },
+    {
       "id": "frozen-edamame",
-      "category_id": "pantry",
+      "category_id": "diger",
       "price_minor": 900,
       "unit_kind": "g",
       "unit_qty": 400,
       "is_popular": false,
-      "sort": 690,
+      "sort": 610,
       "translations": {
         "az": {
           "name": "Dondurulmuş edamame",
@@ -1855,21 +1683,21 @@
     },
     {
       "id": "pesto-sauce",
-      "category_id": "pantry",
-      "price_minor": 1100,
+      "category_id": "souslar",
+      "price_minor": 900,
       "unit_kind": "g",
       "unit_qty": 180,
       "is_popular": false,
-      "sort": 700,
+      "sort": 620,
       "translations": {
         "az": {
-          "name": "Reyhan pestosu",
-          "description": "Ottima İtalyan reyhan pestosu — təzə reyhan, sarımsaq və parmezan ilə.",
+          "name": "Pesto sous",
+          "description": "Ottima İtalyan pesto sousu — təzə reyhan, sarımsaq və parmezan ilə.\nItaliya istehsalı",
           "unit_label": "180 gr"
         },
         "ru": {
           "name": "Песто из базилика",
-          "description": "Итальянское песто из базилика Ottima — свежий базилик, чеснок и пармезан. Продукт Италии.",
+          "description": "Превосходный итальянский соус песто — со свежим базиликом, чесноком и пармезаном.\nПроизведено в Италии.",
           "unit_label": "180 г"
         },
         "en": {
@@ -1881,16 +1709,16 @@
     },
     {
       "id": "sundried-tomatoes",
-      "category_id": "pantry",
-      "price_minor": 1000,
+      "category_id": "diger",
+      "price_minor": 1100,
       "unit_kind": "g",
       "unit_qty": 280,
       "is_popular": false,
-      "sort": 710,
+      "sort": 630,
       "translations": {
         "az": {
-          "name": "Yağda qurudulmuş pomidor",
-          "description": "Ottima İtalyan qurudulmuş pomidoru yağda — 130 q süzülmüş, zəngin dadlı.",
+          "name": "Qurudulmuş pomidor yağda",
+          "description": "Ottima İtalyan qurudulmuş pomidoru yağda — 280 q süzülmüş, zəngin dadlı.",
           "unit_label": "280 gr"
         },
         "ru": {
@@ -1908,14 +1736,14 @@
     {
       "id": "frozen-asparagus",
       "category_id": "pantry",
-      "price_minor": 1400,
+      "price_minor": 2200,
       "unit_kind": "kg",
       "unit_qty": 1,
       "is_popular": false,
-      "sort": 720,
+      "sort": 640,
       "translations": {
         "az": {
-          "name": "Dondurulmuş yaşıl quşqonmaz",
+          "name": "Dondurulmuş Qulancar",
           "description": "Nova üzvi dondurulmuş yaşıl quşqonmaz — IQF, 100% təzə, buxarla və ya tavada hazırlanır.",
           "unit_label": "1 kg"
         },
@@ -1938,7 +1766,7 @@
       "unit_kind": "g",
       "unit_qty": 500,
       "is_popular": false,
-      "sort": 730,
+      "sort": 650,
       "translations": {
         "az": {
           "name": "Di Martino × D&G Pasta",
@@ -1958,6 +1786,330 @@
       }
     },
     {
+      "id": "tuna-loin",
+      "category_id": "seafood",
+      "price_minor": 5000,
+      "unit_kind": "kg",
+      "unit_qty": 1,
+      "is_popular": true,
+      "sort": 660,
+      "translations": {
+        "az": {
+          "name": "Tunes filesi",
+          "description": "Bütöv tunes filesi, tünd qırmızı, sashimi keyfiyyətli.",
+          "unit_label": "1 kg"
+        },
+        "ru": {
+          "name": "Филе тунца, лоин",
+          "description": "Цельный лоин жёлтопёрого тунца, тёмно-красный, качества сашими.",
+          "unit_label": "1 кг"
+        },
+        "en": {
+          "name": "Tuna Loin",
+          "description": "Whole yellowfin loin, deep red and sashimi-grade when fresh.",
+          "unit_label": "1 kg"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "tuna-frozen",
+      "category_id": "seafood",
+      "price_minor": 6800,
+      "unit_kind": "kg",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 670,
+      "translations": {
+        "az": {
+          "name": "Dondurulmuş tunes",
+          "description": "Vakuumda dondurulmuş tunes porsiyaları.",
+          "unit_label": "1 kg"
+        },
+        "ru": {
+          "name": "Тунец, порции",
+          "description": "Порции тунца в вакууме, замороженные прямо в море.",
+          "unit_label": "1 кг"
+        },
+        "en": {
+          "name": "Tuna, Frozen Portions",
+          "description": "Vacuum-packed tuna portions, individually frozen at sea.",
+          "unit_label": "1 kg"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "unagi-frozen",
+      "category_id": "seafood",
+      "price_minor": 7000,
+      "unit_kind": "kg",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 680,
+      "translations": {
+        "az": {
+          "name": "Unaqi — dondurulmuş ilan balığı",
+          "description": "Yapon üsulu qrildə bişmiş ilan balığı, kabayaki sousunda.",
+          "unit_label": "1 kg"
+        },
+        "ru": {
+          "name": "Унаги, угорь в глазури",
+          "description": "Угорь на гриле по-японски в соусе кабаяки. Разогреть и подавать.",
+          "unit_label": "1 кг"
+        },
+        "en": {
+          "name": "Unagi, Glazed Eel",
+          "description": "Japanese-style grilled eel in kabayaki glaze. Heat and serve.",
+          "unit_label": "1 kg"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "french-chicken",
+      "category_id": "poultry",
+      "price_minor": 3000,
+      "unit_kind": "kg",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 690,
+      "translations": {
+        "az": {
+          "name": "Fransız toyuğu",
+          "description": "Fransadan sertifikatlı bütöv toyuq.",
+          "unit_label": "1 kg"
+        },
+        "ru": {
+          "name": "Французская курица",
+          "description": "Сертифицированный цыплёнок из Франции, целиком в упаковке.",
+          "unit_label": "1 кг"
+        },
+        "en": {
+          "name": "French Chicken",
+          "description": "Certified Label Rouge poussin from France, whole in the bag.",
+          "unit_label": "1 kg"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "brie",
+      "category_id": "cheese",
+      "price_minor": 1800,
+      "unit_kind": "g",
+      "unit_qty": 125,
+      "is_popular": false,
+      "sort": 700,
+      "translations": {
+        "az": {
+          "name": "Bri pendiri",
+          "description": "Ağ qabıqlı, yumşaq və kremvari pendir.",
+          "unit_label": "125 gr"
+        },
+        "ru": {
+          "name": "Бри",
+          "description": "Мягкий, сливочный, с белой корочкой. Основа любой сырной тарелки.",
+          "unit_label": "125 г"
+        },
+        "en": {
+          "name": "Brie",
+          "description": "Mild, buttery and creamy under a white rind. A board essential.",
+          "unit_label": "125 gr"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "grana-padano",
+      "category_id": "cheese",
+      "price_minor": 2100,
+      "unit_kind": "g",
+      "unit_qty": 200,
+      "is_popular": false,
+      "sort": 710,
+      "translations": {
+        "az": {
+          "name": "Qrana Padano",
+          "description": "Yetişdirilmiş İtalyan pendiri — parmicanodan yumşaqdır.",
+          "unit_label": "200 gr"
+        },
+        "ru": {
+          "name": "Грана Падано",
+          "description": "Выдержанный итальянский сыр для тёрки — мягче и нежнее пармезана.",
+          "unit_label": "200 г"
+        },
+        "en": {
+          "name": "Grana Padano",
+          "description": "Aged Italian grating cheese — milder and softer than Parmigiano.",
+          "unit_label": "200 gr"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "kitkat-matcha",
+      "category_id": "pantry",
+      "price_minor": 1300,
+      "unit_kind": "pack",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 720,
+      "translations": {
+        "az": {
+          "name": "KitKat matça",
+          "description": "Yapon mini KitKat, tünd matça dadında.",
+          "unit_label": "1 paket"
+        },
+        "ru": {
+          "name": "KitKat матча",
+          "description": "Японский мини-KitKat с тёмной матчей — горчинка зелёного чая, меньше сахара.",
+          "unit_label": "1 упак"
+        },
+        "en": {
+          "name": "KitKat Matcha",
+          "description": "Japanese mini KitKat in dark matcha — bitter green tea, less sugar.",
+          "unit_label": "1 pack"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "kitkat-matcha-latte",
+      "category_id": "pantry",
+      "price_minor": 900,
+      "unit_kind": "pack",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 730,
+      "translations": {
+        "az": {
+          "name": "KitKat matça latte",
+          "description": "Daha şirin və südlü matça versiyası.",
+          "unit_label": "1 paket"
+        },
+        "ru": {
+          "name": "KitKat матча латте",
+          "description": "Более сладкая и молочная версия матчи из японской линейки.",
+          "unit_label": "1 упак"
+        },
+        "en": {
+          "name": "KitKat Matcha Latte",
+          "description": "Sweeter, milkier matcha edition from the Japanese range.",
+          "unit_label": "1 pack"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "smoked-mackerel-fillet",
+      "category_id": "smoked",
+      "price_minor": 3500,
+      "unit_kind": "kg",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 740,
+      "translations": {
+        "az": {
+          "name": "Hisə verilmiş skumbriya filesi",
+          "description": "İsti hisə verilmiş skumbriya filesi — yağlı, dadlı, salataya və ya bilavasitə yeməyə hazır.",
+          "unit_label": "1 kg"
+        },
+        "ru": {
+          "name": "Скумбрия копчёная, филе",
+          "description": "Филе скумбрии горячего копчения на коже — жирное, насыщенное, готово к столу или в салаты.",
+          "unit_label": "1 кг"
+        },
+        "en": {
+          "name": "Smoked Mackerel Fillets",
+          "description": "Hot-smoked mackerel fillets, skin-on — rich, oily, ready to eat or flake into salads.",
+          "unit_label": "1 kg"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "smoked-herring",
+      "category_id": "smoked",
+      "price_minor": 800,
+      "unit_kind": "pc",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 750,
+      "translations": {
+        "az": {
+          "name": "Hisə verilmiş siyənək",
+          "description": "Bütöv isti hisə verilmiş siyənək — qızılı dərili, zərif ətli.",
+          "unit_label": "1 ədəd"
+        },
+        "ru": {
+          "name": "Сельдь копчёная",
+          "description": "Сельдь горячего копчения целиком — золотистая кожа, нежная мякоть, классика.",
+          "unit_label": "1 шт"
+        },
+        "en": {
+          "name": "Smoked Herring",
+          "description": "Whole hot-smoked herring — golden skin, tender flesh, a classic Eastern European favourite.",
+          "unit_label": "1 piece"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "vannamei-shrimp",
+      "category_id": "seafood",
+      "price_minor": 3200,
+      "unit_kind": "kg",
+      "unit_qty": 1,
+      "is_popular": false,
+      "sort": 760,
+      "translations": {
+        "az": {
+          "name": "Vannamei krevetlər, soyulmuş",
+          "description": "Dondurulmuş vannamei krevet 16/20, soyulmuş — Meduza, 30% sululuq.",
+          "unit_label": "1 kg"
+        },
+        "ru": {
+          "name": "Креветки ваннамей очищенные",
+          "description": "Замороженные креветки ваннамей 16/20, очищенные — Meduza, 30% глазури.",
+          "unit_label": "1 кг"
+        },
+        "en": {
+          "name": "Vannamei Shrimp, Peeled",
+          "description": "Frozen vannamei shrimp 16/20, peeled and deveined — Meduza brand, 30% glaze.",
+          "unit_label": "1 kg"
+        }
+      },
+      "is_active": false
+    },
+    {
+      "id": "gran-guardia",
+      "category_id": "cheese",
+      "price_minor": 2200,
+      "unit_kind": "g",
+      "unit_qty": 200,
+      "is_popular": false,
+      "sort": 770,
+      "translations": {
+        "az": {
+          "name": "Gran Quardia",
+          "description": "Ghidetti İtalyan bərk pendiri, Grana üslubunda yetişdirilmiş — qozyemiş dadlı, rendə üçün ideal.",
+          "unit_label": "200 gr"
+        },
+        "ru": {
+          "name": "Гран Гуардиа",
+          "description": "Итальянский твёрдый сыр Ghidetti в стиле Грана — ореховый, зернистый, идеален для тёрки.",
+          "unit_label": "200 г"
+        },
+        "en": {
+          "name": "Gran Guardia",
+          "description": "Ghidetti Italian hard cheese, aged in the style of Grana — nutty, granular, ideal for grating.",
+          "unit_label": "200 gr"
+        }
+      },
+      "is_active": false
+    },
+    {
       "id": "dimartino-classic",
       "category_id": "pantry",
       "price_minor": 0,
@@ -1965,7 +2117,7 @@
       "unit_qty": 500,
       "is_popular": false,
       "is_active": false,
-      "sort": 740,
+      "sort": 780,
       "_note": "Added at the shop's request, price to follow — see shared/README.md on is_active. Vermicelli and Tagliatelle photos are in; the boxes carry no D&G branding, so this is the plain Di Martino range, a separate listing from dimartino-pasta.",
       "translations": {
         "az": {
@@ -1989,38 +2141,38 @@
   "bundles": [
     {
       "id": "breakfast",
-      "discount_percent": 10,
+      "discount_percent": 18,
       "sort": 10,
       "items": [
         {
-          "product_id": "frozen-croissant",
+          "product_id": "mini-mozzarella-pendiri",
           "qty": 1
         },
         {
-          "product_id": "butter",
+          "product_id": "mozzarella",
           "qty": 1
         },
         {
-          "product_id": "brie",
+          "product_id": "burrata-plain",
           "qty": 1
         },
         {
-          "product_id": "red-caviar",
+          "product_id": "labne",
           "qty": 1
         }
       ],
       "translations": {
         "az": {
-          "name": "Həftəsonu səhər yeməyi",
-          "description": "Səhər bişirmək üçün kruassan, kərə yağı, bri pendiri və bir qab qırmızı ikra."
+          "name": "Pendir Set",
+          "description": "Pendir seti\n• Mozarella 200 qr\n• Mozarella mini balls 200 qr \n• Stratachella 150 qr\n• Buratta 200 qr\n\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Saxlama müddəti 5-7 gün\n* Konservantsız təbii süddən hazırlanır"
         },
         "ru": {
-          "name": "Выходной завтрак",
-          "description": "Круассаны для утренней выпечки, масло, бри и банка красной икры."
+          "name": "Сырный сет",
+          "description": "Сырный сет\n• Моцарелла (200 г)\n• Мини-шарики моцареллы (200 г)\n• Страчателла (150 г)\n• Буррата (200 г)\n\n* Заказы необходимо оформлять за день до получения, так как сыр производится рано утром.\n* Срок годности: 5–7 дней.\n* Изготовлено из натурального молока без консервантов."
         },
         "en": {
-          "name": "Weekend breakfast",
-          "description": "Croissants to bake in the morning, butter, brie and a tin of red caviar."
+          "name": "Cheese Set",
+          "description": "Cheese Set\n• Mozzarella 200g\n• Mini mozzarella balls 200g\n• Stracciatella 150g\n• Burrata 200g\n\n* Orders must be placed one day in advance, as the cheeses are produced early in the morning.\n* Shelf life: 5–7 days.\n* Made from natural milk without preservatives."
         }
       }
     },
@@ -2030,34 +2182,30 @@
       "sort": 20,
       "items": [
         {
-          "product_id": "camembert",
+          "product_id": "burrata-plain",
           "qty": 1
         },
         {
-          "product_id": "parmigiano-reggiano",
+          "product_id": "mozzarella",
           "qty": 1
         },
         {
-          "product_id": "baby-truffle",
-          "qty": 1
-        },
-        {
-          "product_id": "grana-padano",
+          "product_id": "pesto-sauce",
           "qty": 1
         }
       ],
       "translations": {
         "az": {
           "name": "Pendir lövhəsi",
-          "description": "Bir-birinə yaraşan dörd pendir — yumşaq, bərk, yetişdirilmiş və trüflü."
+          "description": "Dadlı set \n• Mozarella 200 qr\n• Buratta 200 qr\n• Sundried Tomato 280 qr\n• Pesto sauce 180 qr\n\n* Sifarış 1 gün əvvəl qəbul olunur, çünki pendirlər səhər tezdən istehsal olunur\n* Saxlama müddəti 5-7 gün\n* Konservantsız təbii süddən hazırlanır"
         },
         "ru": {
-          "name": "Сырная тарелка",
-          "description": "Четыре сыра, которые хорошо смотрятся вместе — мягкий, твёрдый, выдержанный и трюфельный."
+          "name": "Вкусный Сет",
+          "description": "Вкусный Сет \n• Моцарелла (200 г)\n• Буррата (200 г)\n• Вяленые томаты (280 г)\n• Соус песто (180 г)\n\n* Заказ необходимо оформлять за день, так как сыр производится рано утром.\n* Срок годности: 5–7 дней.\n* Изготовлено из натурального молока без консервантов."
         },
         "en": {
-          "name": "Cheese board",
-          "description": "Four cheeses that sit well together — soft, hard, aged and truffled."
+          "name": "Delicious Set",
+          "description": "Delicious Set \n• Mozzarella (200 g)\n• Burrata (200 g)\n• Sun-dried tomatoes (280 g)\n• Pesto sauce (180 g)\n\n* Orders must be placed one day in advance, as the cheeses are produced early in the morning.\n* Shelf life: 5–7 days.\n* Made from natural milk without preservatives."
         }
       }
     },

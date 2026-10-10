@@ -75,7 +75,7 @@ class OrderService
             throw new OrderRejected('We no longer deliver to this area. Please update the address.');
         }
 
-        $basket = $this->pricing->quote($input['lines'], $zoneId);
+        $basket = $this->pricing->quote($input['lines'] ?? [], $zoneId, $input['bundles'] ?? []);
 
         $this->assertPlaceable($basket);
 
@@ -139,7 +139,10 @@ class OrderService
         if ($basket->hasUnavailable()) {
             throw new OrderRejected(
                 'Some items are no longer available.',
-                ['unavailable_product_ids' => $basket->unavailableProductIds],
+                [
+                    'unavailable_product_ids' => $basket->unavailableProductIds,
+                    'unavailable_bundle_ids' => $basket->unavailableBundleIds,
+                ],
             );
         }
 

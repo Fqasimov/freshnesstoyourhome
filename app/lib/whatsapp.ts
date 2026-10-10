@@ -20,6 +20,7 @@ export function orderMessage (order: Order): string {
     msg += `• ${item.name} — ${qty} = ${money(item.line_total_minor, order.currency)}\n`
   }
 
+  if (order.discount_minor > 0) msg += `\n${t('sets.discount')}: −${money(order.discount_minor, order.currency)}`
   msg += `\n${t('wa.total')}: ${money(order.total_minor, order.currency)}`
   if (order.delivery_fee_minor > 0) msg += `\n${t('wa.deliv')}: ${money(order.delivery_fee_minor, order.currency)}`
   if (order.address_line) msg += `\n${t('wa.addr')}: ${order.address_line}`

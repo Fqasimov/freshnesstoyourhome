@@ -9,7 +9,7 @@ import { useCart } from '@/lib/cart'
 import { pick, t } from '@/lib/i18n'
 import { price } from '@/lib/money'
 import { duration, ease } from '@/lib/motion'
-import { productImage } from '@/assets/products'
+import { productPhoto } from '@/lib/photos'
 import type { Product } from '@/lib/api'
 import { Icon } from './Icon'
 import { PressableScale } from './PressableScale'
@@ -30,7 +30,7 @@ export const ProductCard = memo(function ProductCard ({ product, width }: { prod
   const qty = cart.qtyOf(product.id)
   // Half-kilo steps for weighed goods, whole units for everything else.
   const step = product.is_weight_based ? 0.5 : 1
-  const image = productImage(product.id)
+  const image = productPhoto(product)
 
   return (
     <PressableScale

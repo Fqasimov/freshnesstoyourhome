@@ -7,7 +7,7 @@ import { useCatalogue } from '@/lib/catalogue'
 import { useAuth } from '@/lib/auth'
 import { pick, t, useLang } from '@/lib/i18n'
 import { money } from '@/lib/money'
-import { productImage } from '@/assets/products'
+import { bundlePhoto, productPhoto } from '@/lib/photos'
 import { AppBar, Body, Button, Empty, Note, Row, Small } from '@/components/ui'
 import { color, font, space } from '@/theme/tokens'
 import { leaveApp } from '@/lib/nav'
@@ -50,10 +50,61 @@ export default function Basket () {
       <AppBar title={t('cart.title')} />
 
       <ScrollView contentContainerStyle={{ padding: space.gutter, paddingBottom: 32 }}>
-        {(quote?.lines ?? []).map(line => {
+        {(quote?.bundles ?? []).map(set => {
+          const bundle = catalogue.bundleById(set.bundle_id)
+          const image = (bundle && bundlePhoto(bundle)) ?? productPhoto(catalogue.byId(bundle?.items[0]?.product_id ?? ''))
+
+          return (
+            <View key={`set-${set.bundle_id}`} style={s.row}>
+              <View style={s.media}>
+                {image ? <Image source={image} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
+              </View>
+
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={s.name} numberOfLines={2}>{set.name}</Text>
+                <Small muted>{t('sets.badge', { off: set.discount_percent })}</Small>
+
+                <View style={s.controls}>
+                  <View style={s.stepper}>
+                    <Pressable
+                      onPress={() => cart.setSetQty(set.bundle_id, set.qty - 1)}
+                      hitSlop={6} style={s.stepBtn}
+                      accessibilityRole="button" accessibilityLabel={t('cart.remove')}
+                    >
+                      <Text style={s.stepText}>−</Text>
+                    </Pressable>
+                    <Text style={s.qty}>{set.qty}</Text>
+                    <Pressable
+                      onPress={() => cart.setSetQty(set.bundle_id, set.qty + 1)}
+                      hitSlop={6} style={s.stepBtn}
+                      accessibilityRole="button" accessibilityLabel={t('shop.add')}
+                    >
+                      <Text style={s.stepText}>+</Text>
+                    </Pressable>
+                  </View>
+
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={s.was}>{money(set.full_minor, quote?.currency)}</Text>
+                    <Text style={s.lineTotal}>{money(set.price_minor, quote?.currency)}</Text>
+                  </View>
+                </View>
+              </View>
+
+              <Pressable
+                onPress={() => cart.setSetQty(set.bundle_id, 0)}
+                hitSlop={8}
+                accessibilityRole="button" accessibilityLabel={t('cart.remove')}
+              >
+                <Text style={s.remove}>×</Text>
+              </Pressable>
+            </View>
+          )
+        })}
+
+        {(quote?.lines ?? []).filter(line => !line.bundle_id).map(line => {
           const product = catalogue.byId(line.product_id)
           const step = line.is_weight_based ? 0.5 : 1
-          const image = productImage(line.product_id)
+          const image = productPhoto(product)
 
           return (
             <View key={line.product_id} style={s.row}>
@@ -102,6 +153,9 @@ export default function Basket () {
         {quote ? (
           <View style={{ marginTop: 18 }}>
             <Row label={t('cart.subtotal')} value={money(quote.subtotal_minor, quote.currency)} />
+            {quote.discount_minor > 0 ? (
+              <Row label={t('sets.discount')} value={`−${money(quote.discount_minor, quote.currency)}`} />
+            ) : null}
             {quote.delivery_fee_minor > 0 ? (
               <Row label={t('cart.delivery')} value={money(quote.delivery_fee_minor, quote.currency)} />
             ) : null}
@@ -159,5 +213,6 @@ const s = StyleSheet.create({
   stepText: { fontSize: 18, fontFamily: font.semi, color: color.ink },
   qty: { minWidth: 42, textAlign: 'center', fontFamily: font.semi, fontSize: 13, color: color.ink },
   lineTotal: { fontFamily: font.semi, fontSize: 16, color: color.ink },
+  was: { fontFamily: font.body, fontSize: 12, color: color.ink3, textDecorationLine: 'line-through' },
   remove: { fontSize: 22, color: color.ink3, paddingHorizontal: 4 },
 })

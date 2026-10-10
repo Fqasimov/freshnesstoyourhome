@@ -13,6 +13,8 @@ final class PricedLine
         public readonly int $unitPriceMinor,
         public readonly int $lineTotalMinor,
         public readonly bool $isWeightBased,
+        /** The set this line came in, if any. */
+        public readonly ?string $bundleId = null,
     ) {}
 
     /** Names in every language, frozen at the moment of sale. */
