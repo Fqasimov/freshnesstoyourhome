@@ -13,7 +13,7 @@ import type { ExpoConfig } from 'expo/config'
  * Not a secret: it names the project, it grants nothing. Needed for push
  * notifications in a real build and for over-the-air updates.
  */
-const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? ''
+const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? 'e94e689d-2822-443c-a8f9-de48f13b791a'
 
 /**
  * Google sign-in on iOS needs the reversed iOS client id as a URL scheme
