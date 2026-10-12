@@ -49,6 +49,12 @@ const config: ExpoConfig = {
     // Start straight away with what is on the phone; a downloaded update is
     // used from the next launch. A customer never waits on a spinner for it.
     fallbackToCacheTimeout: 0,
+    // Signed updates: the app runs only an update signed with the private
+    // key that matches this certificate. Holding the Expo account or its
+    // token is then not enough to ship code to every phone. The key lives
+    // in the GitHub secret EXPO_UPDATES_PRIVATE_KEY, never in the repository.
+    codeSigningCertificate: './certs/certificate.pem',
+    codeSigningMetadata: { keyid: 'main', alg: 'rsa-v1_5-sha256' },
   },
 
   ios: {

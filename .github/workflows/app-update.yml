@@ -64,10 +64,19 @@ jobs:
           # Through the environment, not pasted into the command: a commit
           # message with a quote in it would otherwise break the shell line.
           MESSAGE: ${{ github.event.head_commit.message || 'Manual publish' }}
+          # Signs the update; installed apps refuse one without this signature.
+          EXPO_UPDATES_PRIVATE_KEY: ${{ secrets.EXPO_UPDATES_PRIVATE_KEY }}
         run: |
+          if [ -z "$EXPO_UPDATES_PRIVATE_KEY" ]; then
+            echo "EXPO_UPDATES_PRIVATE_KEY is not set: an unsigned update would be refused by the app." >&2
+            exit 1
+          fi
+          umask 077
+          printf '%s\n' "$EXPO_UPDATES_PRIVATE_KEY" > "$RUNNER_TEMP/updates-key.pem"
           # A fixed version: `@latest` would run whatever is published that
           # minute with the key that ships code to every phone.
           npx --yes eas-cli@24.8.0 update \
             --channel production \
             --message "$(printf '%s' "$MESSAGE" | head -n 1)" \
+            --private-key-path "$RUNNER_TEMP/updates-key.pem" \
             --non-interactive

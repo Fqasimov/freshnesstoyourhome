@@ -56,10 +56,14 @@ export function SocialButtons ({ onError }: { onError: (msg: string | null) => v
 
   return (
     <View style={{ gap: 10 }}>
+      {/* Hidden, not disabled, until Google sign-in is configured for this
+          platform: a button that only says "unavailable" fails store review. */}
+      {googleAvailable() ? (
       <PressableScale style={[s.btn, s.google]} onPress={() => go('google')} accessibilityRole="button">
         {busy === 'google' ? <ActivityIndicator color={color.ink} /> : <GoogleG />}
         <Text style={s.text}>{t('google')}</Text>
       </PressableScale>
+      ) : null}
       {apple || Platform.OS === 'ios' ? (
         <PressableScale style={[s.btn, s.apple]} onPress={() => go('apple')} accessibilityRole="button">
           {busy === 'apple' ? <ActivityIndicator color="#fff" /> : <Icon name="apple" size={19} color="#fff" />}

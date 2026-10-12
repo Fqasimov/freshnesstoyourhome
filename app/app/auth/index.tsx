@@ -20,6 +20,7 @@ import { PasswordRules, passwordValid } from '@/components/auth/PasswordRules'
 import { DateOfBirthSheet, formatDob } from '@/components/auth/DateOfBirth'
 import { Segmented } from '@/components/auth/Segmented'
 import { SocialButtons } from '@/components/auth/SocialButtons'
+import { googleAvailable } from '@/lib/social'
 import { color, font, space } from '@/theme/tokens'
 import { enterApp } from '@/lib/nav'
 
@@ -88,11 +89,14 @@ export default function AuthScreen () {
         </Animated.View>
 
         <Animated.View layout={LinearTransition.duration(duration.base).easing(ease.out)}>
+          {/* Nothing to offer "or" when no other sign-in is set up here. */}
+          {googleAvailable() || Platform.OS === 'ios' ? (
           <View style={s.or}>
             <View style={s.rule} />
             <Text style={s.orText}>{t('or')}</Text>
             <View style={s.rule} />
           </View>
+          ) : null}
           {social ? (
             <Animated.View entering={FadeIn.duration(duration.fast)} style={s.socialNote}>
               <Icon name="info-circle" size={14} color={color.ink2} />
