@@ -1,4 +1,5 @@
 <script setup>
+import { badgeText } from '../data/discount'
 import BIcon from './BIcon.vue'
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { money } from '../data/catalogue'
@@ -134,7 +135,13 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
           <dl class="modal__spec">
             <div><dt>{{ t('ui.category') }}</dt><dd>{{ catName(product.cat) }}</dd></div>
             <div><dt>{{ t('ui.unit') }}</dt><dd>{{ unit }}</dd></div>
-            <div><dt>{{ t('ui.price') }}</dt><dd>{{ price }} AZN</dd></div>
+            <div><dt>{{ t('ui.price') }}</dt><dd>
+              {{ price }} AZN
+              <template v-if="product.discount && !chosen">
+                <s class="modal__was">{{ money(product.regular) }} AZN</s>
+                <span class="modal__sale">{{ badgeText(product.discount, money) }}</span>
+              </template>
+            </dd></div>
           </dl>
 
           <div class="modal__buy">
@@ -239,6 +246,8 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
   .modal__box{ grid-template-columns:1fr; }
   .modal__img{ aspect-ratio:16/10; }
 }
+.modal__was{ color:var(--ink-3); margin-left:6px; font-size:.9em; }
+.modal__sale{ margin-left:6px; background:var(--brick); color:#fff; font-size:.72rem; font-weight:700; padding:2px 7px; border-radius:999px; }
 </style>
 
 <style scoped>

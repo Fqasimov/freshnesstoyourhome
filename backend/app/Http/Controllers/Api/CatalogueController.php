@@ -54,7 +54,12 @@ class CatalogueController extends Controller
                 ->map(fn (Product $p) => [
                     'id' => $p->id,
                     'category_id' => $p->category_id,
-                    'price_minor' => $p->price_minor,
+                    // What it costs today, sale included: the figure every
+                    // client adds up and the one the order will charge. The
+                    // normal price and the badge are only for showing it.
+                    'price_minor' => $p->salePriceMinor(),
+                    'regular_price_minor' => $p->price_minor,
+                    'discount' => $p->discountBadge(),
                     'currency' => $p->currency,
                     'unit_kind' => $p->unit_kind,
                     'unit_qty' => $p->unit_qty,
@@ -100,7 +105,7 @@ class CatalogueController extends Controller
                     && $b->items->every(fn ($item) => $orderable->has($item->product_id)))
                 ->map(fn (Bundle $b) => [
                     'id' => $b->id,
-                    'discount_percent' => $b->discount_percent,
+                    ...$this->bundlePrice($b, $orderable),
                     // Null unless the shop photographed the set itself, in
                     // which case the website shows it instead of the strip of
                     // its four products.
@@ -161,5 +166,23 @@ class CatalogueController extends Controller
         // order is priced again here, so a minute-old figure cannot be charged.
         return response()->json($payload)
             ->header('Cache-Control', 'public, max-age=60, s-maxage=60');
+    }
+
+    /**
+     * A set's price, worked out here so no client has to: an amount off a set
+     * cannot be repeated from a percentage. `discount_percent` stays for the
+     * app builds already on phones, which work the price out themselves; it is
+     * what the set really comes to, so they show the right figure.
+     */
+    private function bundlePrice(Bundle $b, \Illuminate\Support\Collection $orderable): array
+    {
+        $totals = $b->totals($orderable->map(fn ($p) => $p['price_minor'])->all());
+
+        return [
+            'discount_percent' => $totals['effective_percent'],
+            'full_minor' => $totals['full_minor'],
+            'price_minor' => $totals['price_minor'],
+            'discount' => $totals['discount'],
+        ];
     }
 }

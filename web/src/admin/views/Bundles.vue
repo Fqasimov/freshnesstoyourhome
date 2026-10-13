@@ -62,13 +62,13 @@ const toggle = b =>
 function saveDiscount (b) {
   const raw = String(draft.value[b.id] ?? '').trim().replace(',', '.').replace(/%$/, '')
   const value = Number(raw)
-  if (raw === '' || !Number.isFinite(value) || value < 0 || value > 60) {
-    complain({ message: 'Endirim 0 ilə 60 arasında tam rəqəm olmalıdır.' })
+  if (raw === '' || !/^\d{1,2}(\.\d{1,2})?$/.test(raw) || value > 60) {
+    complain({ message: 'Endirim 0 ilə 60 arasında olmalıdır (məs. 10, 16.4).' })
     draft.value[b.id] = b.discount_percent
     return
   }
-  if (Math.round(value) === b.discount_percent) { draft.value[b.id] = b.discount_percent; return }
-  patch(b, { discount_percent: Math.round(value) }, `Endirim ${Math.round(value)}%`)
+  if (value === Number(b.discount_percent)) { draft.value[b.id] = b.discount_percent; return }
+  patch(b, { discount_kind: 'percent', discount_percent: value }, `Endirim ${value}%`)
 }
 
 function removed (id) {
@@ -139,9 +139,15 @@ onMounted(load)
 
       <div class="a-row" style="margin-bottom:10px">
         <span class="a-muted" style="flex:1">Endirim</span>
-        <input v-model="draft[b.id]" class="a-in a-in--num" style="width:78px" inputmode="numeric"
-               @keyup.enter="saveDiscount(b)" @blur="saveDiscount(b)">
-        <span class="a-muted">%</span>
+        <!-- An amount off is edited in the set's form, where its total is. -->
+        <template v-if="b.discount_kind === 'amount'">
+          <b>−{{ money(b.discount_minor) }}</b>
+        </template>
+        <template v-else>
+          <input v-model="draft[b.id]" class="a-in a-in--num" style="width:78px" inputmode="decimal"
+                 @keyup.enter="saveDiscount(b)" @blur="saveDiscount(b)">
+          <span class="a-muted">%</span>
+        </template>
       </div>
 
       <dl class="a-dl" style="margin-bottom:10px">

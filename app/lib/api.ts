@@ -193,6 +193,11 @@ export type Product = {
 export type Bundle = {
   id: string
   discount_percent: number
+  /* Worked out by the server (newer APIs): the set before and after its
+     discount, and the badge the shop chose — a percentage or an amount off. */
+  full_minor?: number
+  price_minor?: number
+  discount?: { show: 'percent' | 'amount'; percent: number; amount_minor: number } | null
   image_url: string | null
   thumb_url: string | null
   name: LocaleMap

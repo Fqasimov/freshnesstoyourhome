@@ -8,6 +8,7 @@ use App\Models\ProductImage;
 use App\Models\ProductTranslation;
 use App\Models\BundleItem;
 use App\Support\Audit;
+use App\Support\Discount;
 use App\Support\StoredImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,6 +33,7 @@ class ProductController extends Controller
     private const AUDITED = [
         'price_minor', 'in_stock', 'is_active', 'is_popular', 'category_id', 'sort',
         'unit_kind', 'unit_qty',
+        'discount_kind', 'discount_percent', 'discount_minor', 'discount_show',
     ];
 
     public function index(Request $request): JsonResponse
@@ -332,6 +334,9 @@ class ProductController extends Controller
             'category_id' => ['sometimes', 'string', Rule::exists('categories', 'id')],
             'unit_kind' => ['sometimes', Rule::in([Product::UNIT_KG, Product::UNIT_PIECE])],
             'unit_qty' => ['sometimes', 'numeric', 'min:0.001', 'max:9999'],
+            // A sale: a percentage to two decimals (16.4) or an amount off in
+            // qəpik, and which of the two the website shows. No kind, no sale.
+            ...self::discountRules(),
             // The product's code. Same shape as when it was created.
             'new_id' => [
                 'sometimes', 'string', 'min:3', 'max:60',
@@ -355,6 +360,7 @@ class ProductController extends Controller
             }
 
             $product->fill(collect($data)->except(['translations', 'new_id'])->all());
+            self::checkDiscount($product);
             $changes = Audit::diff($product, self::AUDITED);
             $product->save();
 
@@ -511,6 +517,11 @@ class ProductController extends Controller
             'category_id' => $p->category_id,
             'category' => $p->category?->translationMap('name'),
             'price_minor' => $p->price_minor,
+            'sale_price_minor' => $p->salePriceMinor(),
+            'discount_kind' => $p->discount_kind,
+            'discount_percent' => (float) $p->discount_percent,
+            'discount_minor' => (int) $p->discount_minor,
+            'discount_show' => $p->discount_show ?? 'percent',
             'currency' => $p->currency,
             'unit_kind' => $p->unit_kind,
             'unit_qty' => (float) $p->unit_qty,
@@ -528,5 +539,43 @@ class ProductController extends Controller
             'description' => $p->translationMap('description'),
             'unit_label' => $p->translationMap('unit_label'),
         ];
+    }
+
+    /** The rules for a discount, shared with the sets. */
+    public static function discountRules(): array
+    {
+        return [
+            'discount_kind' => ['sometimes', 'nullable', Rule::in([Discount::PERCENT, Discount::AMOUNT])],
+            'discount_percent' => ['sometimes', 'numeric', 'decimal:0,2', 'min:0', 'max:90'],
+            'discount_minor' => ['sometimes', 'integer', 'min:0', 'max:10000000'],
+            'discount_show' => ['sometimes', Rule::in([Discount::PERCENT, Discount::AMOUNT])],
+        ];
+    }
+
+    /**
+     * A sale that takes something off and leaves something to pay. Checked
+     * against the price as it will be saved, since either may have changed.
+     */
+    private static function checkDiscount(Product $product): void
+    {
+        $price = (int) $product->price_minor;
+
+        $error = match ($product->discount_kind) {
+            Discount::PERCENT => (float) $product->discount_percent > 0 ? null
+                : 'Endirim faizi 0-dan böyük olmalıdır.',
+            Discount::AMOUNT => ($product->discount_minor > 0 && $product->discount_minor < $price) ? null
+                : 'Endirim məbləği 0-dan böyük və qiymətdən az olmalıdır.',
+            default => null,
+        };
+
+        if ($error !== null) {
+            throw ValidationException::withMessages(['discount' => $error]);
+        }
+
+        if ($product->discount_kind === null) {
+            // No sale: nothing left behind to come back by surprise.
+            $product->discount_percent = 0;
+            $product->discount_minor = 0;
+        }
     }
 }

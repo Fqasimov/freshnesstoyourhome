@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasTranslations;
+use App\Support\Discount;
 use App\Support\StoredImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +24,7 @@ class Product extends Model
     protected $fillable = [
         'id', 'category_id', 'price_minor', 'currency', 'unit_kind',
         'unit_qty', 'is_popular', 'is_active', 'in_stock', 'image_path', 'sort',
+        'discount_kind', 'discount_percent', 'discount_minor', 'discount_show',
     ];
 
     /*
@@ -35,6 +37,8 @@ class Product extends Model
     {
         return [
             'price_minor' => 'integer',
+            'discount_percent' => 'float',
+            'discount_minor' => 'integer',
             'unit_qty' => 'float',
             'is_popular' => 'boolean',
             'is_active' => 'boolean',
@@ -104,5 +108,33 @@ class Product extends Model
         // with it, not merely off the shelf.
         return $query->where('is_active', true)->where('in_stock', true)
             ->whereHas('category', fn (Builder $q) => $q->where('is_active', true));
+    }
+
+    /**
+     * What one unit costs today: the normal price with the product's own
+     * discount taken off. Every order, the catalogue and the website start
+     * from this; `price_minor` stays the normal price the discount is from.
+     */
+    public function salePriceMinor(): int
+    {
+        $price = (int) $this->price_minor;
+
+        $sale = match ($this->discount_kind) {
+            Discount::PERCENT => Discount::percentOff($price, Discount::basisPoints($this->discount_percent)),
+            Discount::AMOUNT => $price - (int) $this->discount_minor,
+            default => $price,
+        };
+
+        // Never free and never dearer, whatever was typed.
+        return max(1, min($price, $sale));
+    }
+
+    /** @return array{show: string, percent: float, amount_minor: int}|null */
+    public function discountBadge(): ?array
+    {
+        return Discount::badge(
+            (string) $this->discount_show, $this->discount_kind,
+            (float) $this->discount_percent, (int) $this->price_minor, $this->salePriceMinor(),
+        );
     }
 }

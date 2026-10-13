@@ -270,6 +270,13 @@ onMounted(() => {
             <input v-model="draft[r.id]" class="a-in a-in--num" :class="{ 'a-in--dirty': dirty(r) }"
                    inputmode="decimal" :disabled="saving === r.id"
                    @keyup.enter="savePrice(r)" @blur="savePrice(r)">
+            <!-- The normal price is edited here; a sale on it is set in the
+                 product's own page and shown here so it is not forgotten. -->
+            <div v-if="r.discount_kind && r.sale_price_minor < r.price_minor" class="a-sale"
+                 :title="'Endirimli qiymət'">
+              → {{ toAzn(r.sale_price_minor) }}
+              ({{ r.discount_kind === 'percent' ? `−${Number(r.discount_percent)}%` : `−${toAzn(r.discount_minor)}` }})
+            </div>
           </td>
           <td>
             <label class="a-sw">

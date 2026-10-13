@@ -247,3 +247,6 @@ textarea.a-in{ resize:vertical; min-height:74px; line-height:1.45; }
 .a-move{ white-space:nowrap; }
 .a-move .a-btn{ padding:4px 9px; margin-right:4px; line-height:1; }
 .a-move .a-btn:disabled{ opacity:.35; cursor:default; }
+
+/* A sale on a product, under its normal price in the table. */
+.a-sale{ font-size:.72rem; color:var(--danger, #b3261e); margin-top:3px; white-space:nowrap; }

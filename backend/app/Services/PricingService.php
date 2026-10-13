@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Bundle;
 use App\Models\DeliveryZone;
 use App\Models\Product;
+use App\Support\Discount;
 use App\Support\Money;
 
 /**
@@ -26,11 +27,9 @@ class PricingService
      * price on an order line, the set's price on the website and the one in
      * the panel are the same arithmetic and cannot disagree by a qəpik.
      */
-    public static function bundleUnitMinor(int $unitPriceMinor, int $percent): int
+    public static function bundleUnitMinor(int $unitPriceMinor, int|float $percent): int
     {
-        $percent = max(0, min(100, $percent));
-
-        return (int) round($unitPriceMinor * (100 - $percent) / 100, 0, PHP_ROUND_HALF_UP);
+        return Discount::percentOff($unitPriceMinor, Discount::basisPoints($percent));
     }
 
     /**
@@ -69,12 +68,14 @@ class PricingService
             }
 
             $qty = (float) $line['qty'];
-            $lineTotal = Money::line($product->price_minor, $qty);
+            // The product's own sale, if it has one, is in this price.
+            $unit = $product->salePriceMinor();
+            $lineTotal = Money::line($unit, $qty);
 
             $priced[] = new PricedLine(
                 product: $product,
                 qty: $qty,
-                unitPriceMinor: $product->price_minor,
+                unitPriceMinor: $unit,
                 lineTotalMinor: $lineTotal,
                 isWeightBased: $product->isWeightBased(),
             );
@@ -104,9 +105,14 @@ class PricingService
                 continue;
             }
 
+            $prices = $bundle->items->mapWithKeys(fn ($item) => [
+                $item->product_id => $products->get($item->product_id)->salePriceMinor(),
+            ])->all();
+            $full = $bundle->totals($prices)['full_minor'];
+
             foreach ($bundle->items as $item) {
                 $product = $products->get($item->product_id);
-                $unit = self::bundleUnitMinor($product->price_minor, $bundle->discount_percent);
+                $unit = $bundle->unitMinor($prices[$item->product_id], $full);
                 $qty = (float) $item->qty * $times;
                 $lineTotal = Money::line($unit, $qty);
 

@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth'
 import { pick, t, useLang } from '@/lib/i18n'
 import { money } from '@/lib/money'
 import { bundlePhoto, productPhoto } from '@/lib/photos'
+import { offLabel } from '@/components/SetCard'
 import { AppBar, Body, Button, Empty, Note, Row, Small } from '@/components/ui'
 import { color, font, space } from '@/theme/tokens'
 import { leaveApp } from '@/lib/nav'
@@ -74,7 +75,7 @@ export default function Basket () {
 
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={s.name} numberOfLines={2}>{set.name}</Text>
-                <Small muted>{t('sets.badge', { off: set.discount_percent })}</Small>
+                <Small muted>{t('sets.badge', { off: offLabel(bundle) })}</Small>
 
                 <View style={s.controls}>
                   <View style={s.stepper}>

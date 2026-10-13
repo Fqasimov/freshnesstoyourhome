@@ -2,6 +2,7 @@
 import BIcon from './BIcon.vue'
 import { computed } from 'vue'
 import { money } from '../data/catalogue'
+import { badgeText } from '../data/discount'
 import { useCart } from '../composables/useCart'
 import { useI18n } from '../composables/useI18n'
 
@@ -40,11 +41,13 @@ function add (ev) {
         <img v-if="product.img" :src="product.img" :alt="nm(product)" loading="lazy" decoding="async">
         <BIcon v-else name="basket" :size="30" class="card__none" />
         <span v-if="product.popular" class="card__hit"><BIcon name="fire" :size="10" />{{ t('cat.hit') }}</span>
+        <span v-if="product.discount" class="card__sale">{{ badgeText(product.discount, money) }}</span>
       </span>
 
       <span class="card__body">
         <span class="card__price">
           <b>{{ money(product.price) }} ₼</b>
+          <s v-if="product.discount">{{ money(product.regular) }} ₼</s>
         </span>
         <span class="card__name">{{ nm(product) }}</span>
         <span class="card__unit">{{ unitOf(product) }}</span>
@@ -109,6 +112,12 @@ function add (ev) {
 .card__price{
   align-self:flex-start; display:inline-flex; align-items:baseline;
   padding:4px 10px; border-radius:999px; background:var(--paper-2);
+}
+.card__price s{ font-size:.78rem; color:var(--ink-3); margin-left:6px; font-weight:500; }
+.card__sale{
+  position:absolute; right:8px; top:8px; z-index:1;
+  background:var(--brick, #b5412b); color:#fff; font-size:.7rem; font-weight:700;
+  padding:3px 8px; border-radius:999px; letter-spacing:.01em; font-variant-numeric:tabular-nums;
 }
 .card__price b{ font-size:1.02rem; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
 .card__price i{ font-style:normal; font-size:.8rem; font-weight:600; color:var(--ink-2); margin-left:1px; }

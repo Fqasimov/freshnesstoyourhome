@@ -7,7 +7,7 @@ import type { Bundle } from '@/lib/api'
 import { useCart } from '@/lib/cart'
 import { useCatalogue } from '@/lib/catalogue'
 import { pick, t } from '@/lib/i18n'
-import { price } from '@/lib/money'
+import { money, price } from '@/lib/money'
 import { bundlePhoto, productPhoto } from '@/lib/photos'
 import { Icon } from './Icon'
 import { color, font, space } from '@/theme/tokens'
@@ -20,6 +20,9 @@ const tap = () => { if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.Impac
  * agrees with the basket. Display only: the basket's figure is the server's.
  */
 export function setPricing (bundle: Bundle, byId: ReturnType<typeof useCatalogue>['byId']) {
+  if (typeof bundle.price_minor === 'number' && typeof bundle.full_minor === 'number') {
+    return { full: bundle.full_minor, now: bundle.price_minor }
+  }
   let full = 0
   let now = 0
   for (const i of bundle.items) {
@@ -28,6 +31,13 @@ export function setPricing (bundle: Bundle, byId: ReturnType<typeof useCatalogue
     now += Math.round(Math.round(unit * (100 - bundle.discount_percent) / 100) * i.qty)
   }
   return { full, now }
+}
+
+/** What comes off, as the shop chose to show it: "16.4%" or "2.50 AZN". */
+export function offLabel (bundle: Bundle): string {
+  const d = bundle.discount
+  if (d?.show === 'amount') return money(d.amount_minor)
+  return `${d ? d.percent : Math.round(bundle.discount_percent * 10) / 10}%`
 }
 
 /**
@@ -61,7 +71,7 @@ export const SetCard = memo(function SetCard ({ bundle, width }: { bundle: Bundl
             })}
           </View>
         )}
-        <View style={s.badge}><Text style={s.badgeText}>−{bundle.discount_percent}%</Text></View>
+        <View style={s.badge}><Text style={s.badgeText}>−{offLabel(bundle)}</Text></View>
       </View>
 
       <View style={s.body}>

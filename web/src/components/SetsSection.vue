@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { SETS, setPricing, money } from '../data/catalogue'
 import { useI18n } from '../composables/useI18n'
 import CatalogueCta from './CatalogueCta.vue'
+import { badgeText } from '../data/discount'
 
 const { t, nm, dsc } = useI18n()
 const emit = defineEmits(['add'])
@@ -55,7 +56,10 @@ function addSet (set, ev) {
           </div>
 
           <div class="set__body">
-            <span class="set__save">−{{ s.off }}% · {{ money(s.saving) }} AZN {{ t('sets.save') }}</span>
+            <!-- What the shop chose to show: the percentage or the amount
+                 off. The bundled sets of the offline copy have only `off`. -->
+            <span v-if="s.discount?.show === 'amount'" class="set__save">{{ badgeText(s.discount, money) }}</span>
+            <span v-else class="set__save">{{ s.discount ? badgeText(s.discount, money) : `−${s.off}%` }} · {{ money(s.saving) }} AZN {{ t('sets.save') }}</span>
             <h3>{{ nm(s) }}</h3>
             <p class="set__desc">{{ dsc(s) }}</p>
 

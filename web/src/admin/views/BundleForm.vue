@@ -1,4 +1,6 @@
 <script setup>
+import DiscountField from '../components/DiscountField.vue'
+import { basisPoints, percentOff, shareOf } from '../../data/discount'
 import { ref, computed, watch, onMounted } from 'vue'
 import { api, money } from '../api'
 import { say, complain } from '../toast'
@@ -24,7 +26,6 @@ const b = props.bundle ?? {}
 
 const form = ref({
   id: b.id ?? '',
-  discount: b.discount_percent ?? 10,
   items: (b.items ?? []).map(i => ({ product_id: i.product_id, qty: i.qty })),
   ...Object.fromEntries(LANGS.map(l => [l.id, {
     name: b.name?.[l.id] ?? '',
@@ -35,6 +36,15 @@ if (!form.value.items.length) form.value.items.push({ product_id: '', qty: 1 })
 
 const products = ref([])
 const busy = ref(false)
+
+/* A set always has a discount: a percentage (16.4) or an amount off the set. */
+const discount = ref({
+  kind: b.discount_kind ?? 'percent',
+  percent: Number(b.discount_percent ?? 10),
+  minor: Number(b.discount_minor ?? 0),
+  show: b.discount_show ?? 'percent',
+})
+const discountOk = ref(true)
 
 onMounted(async () => {
   try {
@@ -58,17 +68,21 @@ const byId = computed(() => Object.fromEntries(products.value.map(p => [p.id, p]
 const chosen = computed(() => form.value.items.filter(i => i.product_id))
 
 /* A preview only. The server works out the real figure the same way and
-   is the one the website shows. */
-const full = computed(() => chosen.value.reduce((s, i) => s + (byId.value[i.product_id]?.price_minor ?? 0) * Number(i.qty || 0), 0))
+   is the one the website shows. A set is built from what its products cost
+   today, their own sales included. */
+const unitOf = id => byId.value[id]?.sale_price_minor ?? byId.value[id]?.price_minor ?? 0
+const full = computed(() => chosen.value.reduce((s, i) => s + Math.round(unitOf(i.product_id) * Number(i.qty || 0)), 0))
 /* Each product is discounted on its own and rounded to the qəpik, as the server does. */
 const price = computed(() => chosen.value.reduce((s, i) => {
-  const unit = byId.value[i.product_id]?.price_minor ?? 0
-  return s + Math.round(Math.round(unit * (100 - Number(form.value.discount || 0)) / 100) * Number(i.qty || 0))
+  const d = discount.value
+  const unit = d.kind === 'amount'
+    ? shareOf(unitOf(i.product_id), full.value, d.minor)
+    : percentOff(unitOf(i.product_id), basisPoints(d.percent))
+  return s + Math.round(unit * Number(i.qty || 0))
 }, 0))
 
 const idOk = computed(() => !isNew || (/^[a-z0-9]+(-[a-z0-9]+)*$/.test(form.value.id) && form.value.id.length >= 3))
 const dupes = computed(() => new Set(chosen.value.map(i => i.product_id)).size !== chosen.value.length)
-const discountOk = computed(() => Number.isInteger(Number(form.value.discount)) && form.value.discount >= 0 && form.value.discount <= 60)
 const ready = computed(() => idOk.value && form.value.az.name.trim() && chosen.value.length > 0 && !dupes.value && discountOk.value)
 
 const addItem = () => form.value.items.push({ product_id: '', qty: 1 })
@@ -98,7 +112,10 @@ async function save () {
     description: form.value[l.id].description.trim() || null,
   }]))
   const body = {
-    discount_percent: Number(form.value.discount),
+    discount_kind: discount.value.kind,
+    discount_percent: discount.value.percent,
+    discount_minor: discount.value.minor,
+    discount_show: discount.value.show,
     items: chosen.value.map(i => ({ product_id: i.product_id, qty: Number(i.qty) || 1 })),
     translations,
   }
@@ -176,11 +193,10 @@ async function save () {
 
     <div class="a-sec">
       <h3>Endirim</h3>
-      <div class="a-row">
-        <input v-model="form.discount" class="a-in a-in--num" style="width:90px" inputmode="numeric"
-               :class="{ 'a-in--dirty': !discountOk }">
-        <span class="a-muted">% · 0–60</span>
-      </div>
+      <DiscountField v-model="discount" :base="full" :max-percent="60" :allow-none="false" @valid="discountOk = $event" />
+      <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
+        Faiz (məs. 16.4, ən çox 60) və ya dəstdən çıxılan məbləğ. Saytda hansının görünəcəyini seçin.
+      </p>
       <dl class="a-dl" style="margin-top:12px">
         <dt>Tam qiymət</dt><dd>{{ money(full) }}</dd>
         <dt>Set qiyməti</dt><dd><b>{{ money(price) }}</b></dd>

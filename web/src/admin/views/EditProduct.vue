@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { api } from '../api'
 import { say, complain } from '../toast'
+import DiscountField from '../components/DiscountField.vue'
 
 /**
  * A product's words: its name, description and unit label in each language,
@@ -34,6 +35,18 @@ const form = ref({
   }])),
 })
 const busy = ref(false)
+
+/* The product's sale, if it has one. Sent only when it changed. */
+const initialDiscount = {
+  kind: p.discount_kind ?? null,
+  percent: Number(p.discount_percent ?? 0),
+  minor: Number(p.discount_minor ?? 0),
+  show: p.discount_show ?? 'percent',
+}
+const discount = ref({ ...initialDiscount })
+const discountOk = ref(true)
+const sameDiscount = (a, b) => a.kind === b.kind && a.show === b.show &&
+  (a.kind !== 'percent' || a.percent === b.percent) && (a.kind !== 'amount' || a.minor === b.minor)
 
 /* The extra photographs, kept here so adding and removing one shows at once. */
 const gallery = ref([...(p.gallery ?? [])])
@@ -96,7 +109,7 @@ const CODE = /^[a-z0-9]+(-[a-z0-9]+)*$/
 const codeOk = computed(() => form.value.code === p.id || (CODE.test(form.value.code) && form.value.code.length >= 3))
 const qtyNum = computed(() => Number(String(form.value.unit_qty).replace(',', '.')))
 const qtyOk = computed(() => Number.isFinite(qtyNum.value) && qtyNum.value >= 0.001 && qtyNum.value <= 9999)
-const ready = computed(() => form.value.az.name.trim().length > 0 && codeOk.value && qtyOk.value)
+const ready = computed(() => form.value.az.name.trim().length > 0 && codeOk.value && qtyOk.value && discountOk.value)
 
 async function save () {
   if (!ready.value) return
@@ -116,6 +129,12 @@ async function save () {
     if (form.value.code !== p.id) body.new_id = form.value.code
     if (form.value.unit_kind !== p.unit_kind) body.unit_kind = form.value.unit_kind
     if (qtyNum.value !== Number(p.unit_qty ?? 1)) body.unit_qty = qtyNum.value
+    if (!sameDiscount(discount.value, initialDiscount)) {
+      body.discount_kind = discount.value.kind
+      body.discount_percent = discount.value.percent
+      body.discount_minor = discount.value.minor
+      body.discount_show = discount.value.show
+    }
 
     const updated = await api(`/admin/products/${p.id}`, { method: 'PATCH', body })
     say(`${updated.name?.az ?? updated.id} yadda saxlanıldı`)
@@ -153,6 +172,15 @@ async function save () {
       <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
         Kiçik latın hərfləri, rəqəmlər və tire (məs. <span class="a-mono">hise-qizil-baliq</span>).
         Kod dəyişəndə keçmiş sifarişlər, aksiyalar və şəkillər yeni koda keçir.
+      </p>
+    </div>
+
+    <div class="a-sec">
+      <h3>Endirim</h3>
+      <DiscountField v-model="discount" :base="p.price_minor" :max-percent="90" @valid="discountOk = $event" />
+      <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
+        Faizi (məs. 16.4) və ya qiymətdən çıxılan məbləği yazın — hansını yazsanız, qiymət ondan hesablanır.
+        Saytda hansının görünəcəyini seçin. Aksiyalar da endirimli qiymətdən hesablanır.
       </p>
     </div>
 

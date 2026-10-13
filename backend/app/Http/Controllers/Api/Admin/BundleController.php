@@ -7,13 +7,13 @@ use App\Models\Bundle;
 use App\Models\BundleItem;
 use App\Models\BundleTranslation;
 use App\Models\Product;
-use App\Services\PricingService;
 use App\Support\Audit;
-use App\Support\Money;
+use App\Support\Discount;
 use App\Support\StoredImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
@@ -51,7 +51,7 @@ class BundleController extends Controller
             // A slug, permanent, like a product's: it names the set's photo
             // folder and the line a basket holds it under.
             'id' => ['required', 'string', 'min:3', 'max:40', 'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/', 'unique:bundles,id'],
-            'discount_percent' => ['required', 'integer', 'min:0', 'max:60'],
+            ...self::discountRules(),
             'is_active' => ['sometimes', 'boolean'],
 
             'items' => ['required', 'array', 'min:1', 'max:12'],
@@ -67,7 +67,10 @@ class BundleController extends Controller
         $bundle = DB::transaction(function () use ($data) {
             $bundle = Bundle::create([
                 'id' => $data['id'],
-                'discount_percent' => $data['discount_percent'],
+                'discount_kind' => $data['discount_kind'] ?? Discount::PERCENT,
+                'discount_percent' => $data['discount_percent'] ?? 0,
+                'discount_minor' => $data['discount_minor'] ?? 0,
+                'discount_show' => $data['discount_show'] ?? Discount::PERCENT,
                 'is_active' => $data['is_active'] ?? false,
                 'sort' => (int) Bundle::max('sort') + 1,
             ]);
@@ -93,6 +96,8 @@ class BundleController extends Controller
                 ]);
             }
 
+            self::checkDiscount($bundle->load('items.product'));
+
             return $bundle;
         });
 
@@ -110,9 +115,7 @@ class BundleController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         $data = $request->validate([
-            // Capped well below 100: a bundle that costs nothing is a bug
-            // being typed, not a promotion being run.
-            'discount_percent' => ['sometimes', 'integer', 'min:0', 'max:60'],
+            ...self::discountRules(),
             'is_active' => ['sometimes', 'boolean'],
             'sort' => ['sometimes', 'integer', 'min:0', 'max:9999'],
 
@@ -128,8 +131,9 @@ class BundleController extends Controller
         $bundle = Bundle::with(['translations', 'items'])->findOrFail($id);
 
         $changes = DB::transaction(function () use ($bundle, $data) {
-            $bundle->fill(collect($data)->only(['discount_percent', 'is_active', 'sort'])->all());
-            $changes = Audit::diff($bundle, ['discount_percent', 'is_active', 'sort']);
+            $fields = ['discount_kind', 'discount_percent', 'discount_minor', 'discount_show', 'is_active', 'sort'];
+            $bundle->fill(collect($data)->only($fields)->all());
+            $changes = Audit::diff($bundle, $fields);
             $bundle->save();
 
             if (array_key_exists('items', $data)) {
@@ -151,6 +155,9 @@ class BundleController extends Controller
                     $changes['items'] = ['from' => $before, 'to' => $after];
                 }
             }
+
+            // After the items, since an amount off is checked against them.
+            self::checkDiscount($bundle->load('items.product'));
 
             foreach ($data['translations'] ?? [] as $locale => $fields) {
                 if (! in_array($locale, self::LOCALES, true)) {
@@ -277,22 +284,26 @@ class BundleController extends Controller
             // set has no photograph of its own.
             'image' => $i->product?->image_path,
             'image_url' => $i->product?->imageUrl(),
-            'price_minor' => $i->product?->price_minor,
+            // Today's price, the product's own sale included: a set is built
+            // from what its products cost now.
+            'price_minor' => $i->product?->salePriceMinor(),
             'orderable' => (bool) ($i->product?->is_active && $i->product?->in_stock),
         ]);
 
         // What the set is worth at today's prices, and what it would cost at
         // the discount. Computed here so the panel never has to do money
         // arithmetic of its own — the same rule the website follows.
-        $full = $items->sum(fn ($i) => (int) ($i['price_minor'] ?? 0) * $i['qty']);
-        $price = (int) $items->sum(fn ($i) => Money::line(
-            PricingService::bundleUnitMinor((int) ($i['price_minor'] ?? 0), $b->discount_percent),
-            (float) $i['qty'],
-        ));
+        $totals = $b->totals($items->mapWithKeys(fn ($i) => [$i['product_id'] => (int) ($i['price_minor'] ?? 0)])->all());
+        $full = $totals['full_minor'];
+        $price = $totals['price_minor'];
 
         return [
             'id' => $b->id,
-            'discount_percent' => $b->discount_percent,
+            'discount_kind' => $b->discount_kind ?? Discount::PERCENT,
+            'discount_percent' => (float) $b->discount_percent,
+            'discount_minor' => (int) $b->discount_minor,
+            'discount_show' => $b->discount_show ?? Discount::PERCENT,
+            'discount' => $totals['discount'],
             'image_url' => $b->imageUrl(),
             'thumb_url' => $b->thumbUrl(),
             'has_upload' => $b->image_file !== null,
@@ -311,5 +322,38 @@ class BundleController extends Controller
                 && $items->isNotEmpty()
                 && $items->every(fn ($i) => $i['orderable']),
         ];
+    }
+
+    /**
+     * The same fields as a product's discount; a percentage is capped well
+     * below 100, because a set that costs nothing is a bug being typed, not a
+     * promotion being run.
+     */
+    private static function discountRules(): array
+    {
+        return [
+            'discount_kind' => ['sometimes', Rule::in([Discount::PERCENT, Discount::AMOUNT])],
+            'discount_percent' => ['sometimes', 'numeric', 'decimal:0,2', 'min:0', 'max:60'],
+            'discount_minor' => ['sometimes', 'integer', 'min:0', 'max:10000000'],
+            'discount_show' => ['sometimes', Rule::in([Discount::PERCENT, Discount::AMOUNT])],
+        ];
+    }
+
+    /** An amount off a set obeys the same cap as a percentage: at most 60%. */
+    private static function checkDiscount(Bundle $bundle): void
+    {
+        if ($bundle->discount_kind !== Discount::AMOUNT) {
+            return;
+        }
+
+        $full = $bundle->totals($bundle->items->mapWithKeys(fn ($i) => [
+            $i->product_id => (int) $i->product?->salePriceMinor(),
+        ])->all())['full_minor'];
+
+        if ($bundle->discount_minor <= 0 || $bundle->discount_minor > intdiv($full * 60, 100)) {
+            throw ValidationException::withMessages([
+                'discount_minor' => 'Endirim məbləği 0-dan böyük və dəstin qiymətinin 60%-indən az olmalıdır.',
+            ]);
+        }
     }
 }

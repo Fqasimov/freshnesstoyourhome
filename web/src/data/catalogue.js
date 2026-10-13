@@ -74,6 +74,10 @@ export function setPricing (set) {
      bundled fallback sets have none, so the default keeps their arithmetic
      exactly as it was. */
   const qty = id => set.qty?.[id] ?? 1
+  if (set.serverPrice) {
+    const { full, price } = set.serverPrice
+    return { items, full: full / 100, price: price / 100, saving: (full - price) / 100 }
+  }
   const minor = p => p.priceMinor ?? Math.round(p.price * 100)
   const fullMinor = items.reduce((sum, p) => sum + Math.round(minor(p) * qty(p.id)), 0)
   const priceMinor = items.reduce((sum, p) =>
@@ -109,8 +113,12 @@ function adaptProduct (p) {
   return {
     id: p.id,
     cat: p.category_id,
+    /* What it costs today, sale included — what the basket adds up and the
+       order charges. The normal price and the badge are only for showing. */
     price: p.price_minor / 100,
     priceMinor: p.price_minor,
+    regular: (p.regular_price_minor ?? p.price_minor) / 100,
+    discount: p.discount ?? null,
     unit: {
       en: p.unit_label?.en ?? '',
       az: p.unit_label?.az ?? '',
@@ -147,6 +155,10 @@ function adaptBundle (b) {
   return {
     id: b.id,
     off: Number(b.discount_percent) || 0,
+    /* Worked out by the server, which is the only one that can: an amount
+       off a set is not a percentage the page could repeat. */
+    serverPrice: Number.isFinite(b.price_minor) ? { full: b.full_minor, price: b.price_minor } : null,
+    discount: b.discount ?? null,
     items: (b.items ?? []).map(i => i.product_id),
     qty: Object.fromEntries((b.items ?? []).map(i => [i.product_id, Number(i.qty) || 1])),
     en: b.name?.en ?? b.id,
