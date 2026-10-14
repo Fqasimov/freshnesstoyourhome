@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useCart } from './composables/useCart'
+import { useAccount } from './composables/useAccount'
 import { useToast, flyToCart } from './composables/useMotion'
 
 import IntroSequence from './components/IntroSequence.vue'
@@ -53,6 +54,9 @@ watch([open, peeked], () => {
 
 const onKey = e => { if (e.key === 'Escape') closeAll() }
 onMounted(() => window.addEventListener('keydown', onKey))
+/* A returning customer who signed in here stays signed in: fetch who they are. */
+const account = useAccount()
+onMounted(() => account.load())
 onUnmounted(() => window.removeEventListener('keydown', onKey))
 </script>
 

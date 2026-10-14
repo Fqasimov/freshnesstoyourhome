@@ -14,6 +14,9 @@ return [
     'currency' => 'AZN',
 
     'order' => [
+        // How long a guest's website order can still be claimed into an
+        // account for tracking, from the browser that placed it.
+        'claim_days' => (int) env('ORDER_CLAIM_DAYS', 30),
         // Orders are taken a day ahead, as the business requires.
         'lead_days' => env('ORDER_LEAD_DAYS', 1),
         'delivery_open' => env('DELIVERY_OPEN', '10:00'),

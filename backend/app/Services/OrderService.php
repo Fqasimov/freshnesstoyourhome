@@ -43,9 +43,12 @@ class OrderService
      * and address come with the order itself. Priced by exactly the same
      * code as an app order, and on the same list in the panel.
      */
-    public function placeFromWebsite(array $input): Order
+    public function placeFromWebsite(array $input, ?User $user = null): Order
     {
-        return $this->write(null, $input, Order::SOURCE_WEB, [
+        // Signed in on the website: the order is theirs, as in the app, and
+        // shows up in their account on both. Otherwise it has no owner until
+        // someone claims it (see claim()).
+        return $this->write($user, $input, Order::SOURCE_WEB, [
             'contact_name' => $input['contact_name'],
             'contact_phone' => $input['contact_phone'],
             'address_line' => $input['address_line'] ?? null,
@@ -125,6 +128,51 @@ class OrderService
             }
 
             $this->record($order, null, Order::PLACED, $user, $note);
+
+            return $order->load('items');
+        });
+    }
+
+    /**
+     * Hand a guest's website order a claim token: the browser keeps it, and
+     * presenting it from a signed-in account attaches the order to that
+     * account. Returns the token in clear text once; only its hash is kept.
+     */
+    public function issueClaim(Order $order): string
+    {
+        $token = Str::random(48);
+
+        $order->forceFill([
+            'claim_token_hash' => hash('sha256', $token),
+            'claim_expires_at' => now()->addDays((int) config('freshness.order.claim_days', 30)),
+        ])->save();
+
+        return $token;
+    }
+
+    /**
+     * Attach a guest order to the account presenting its token. Null when the
+     * token is unknown, used, expired, or the order already has an owner —
+     * all alike, so a guess learns nothing. One use only.
+     */
+    public function claim(string $token, User $user): ?Order
+    {
+        return DB::transaction(function () use ($token, $user) {
+            $order = Order::where('claim_token_hash', hash('sha256', $token))
+                ->whereNull('user_id')
+                ->where('claim_expires_at', '>', now())
+                ->lockForUpdate()
+                ->first();
+
+            if ($order === null) {
+                return null;
+            }
+
+            $order->forceFill([
+                'user_id' => $user->id,
+                'claim_token_hash' => null,
+                'claim_expires_at' => null,
+            ])->save();
 
             return $order->load('items');
         });

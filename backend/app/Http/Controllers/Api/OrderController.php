@@ -161,7 +161,15 @@ class OrderController extends Controller
 
         $data['contact_name'] = trim($data['contact_first_name'].' '.$data['contact_last_name']);
 
-        $order = $this->orders->placeFromWebsite($data);
+        // A website visitor who is signed in places the order on their account,
+        // exactly as the app does. Only a shop token counts: a panel token or
+        // a blocked account is treated as no account at all.
+        $user = $request->user('sanctum');
+        if ($user !== null && (! $user->tokenCan('customer') || $user->isBlocked())) {
+            $user = null;
+        }
+
+        $order = $this->orders->placeFromWebsite($data, $user);
 
         return response()->json([
             'id' => $order->id,
@@ -169,7 +177,28 @@ class OrderController extends Controller
             'total_minor' => $order->total_minor,
             'delivery_fee_minor' => $order->delivery_fee_minor,
             'requires_weighing' => $order->requires_weighing,
+            'signed_in' => $user !== null,
+            // Without an account, the one way to follow this order later:
+            // sign in or sign up and present this from the same browser.
+            'claim_token' => $user === null ? $this->orders->issueClaim($order) : null,
         ], 201);
+    }
+
+    /**
+     * Attach a website order placed before signing in to this account, so it
+     * can be tracked here and in the app.
+     */
+    public function claim(Request $request): JsonResponse
+    {
+        $data = $request->validate(['token' => ['required', 'string', 'size:48']]);
+
+        $order = $this->orders->claim($data['token'], $request->user());
+
+        if ($order === null) {
+            return response()->json(['message' => 'Not found.'], 404);
+        }
+
+        return response()->json(['order' => new OrderResource($order)]);
     }
 
     /**

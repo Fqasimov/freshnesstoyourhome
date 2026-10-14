@@ -122,6 +122,9 @@ Route::middleware(['auth:sanctum', 'blocked', 'throttle:api'])->group(function (
     Route::post('orders', [OrderController::class, 'store'])
         ->middleware('throttle:place-order');
     Route::post('orders/{id}/cancel', [OrderController::class, 'cancel']);
+    // A website order placed before signing in, taken into this account.
+    Route::post('orders/claim', [OrderController::class, 'claim'])
+        ->middleware('throttle:place-order');
 });
 
 // ----------------------------------------------------------------- staff ---

@@ -2,6 +2,7 @@ import { ref, computed, watch } from 'vue'
 import { PRODUCTS, SETS, CONTACT, ORDER_DATES, money, setPricing } from '../data/catalogue'
 import { zoneById, feeText } from '../data/delivery'
 import { useI18n } from './useI18n'
+import { authToken, rememberClaim } from './useAccount'
 
 const read = () => {
   try { const v = JSON.parse(localStorage.getItem('fth.cart') || '[]'); return Array.isArray(v) ? v : [] }
@@ -50,6 +51,8 @@ const isoIn = days => {
 
 /* The code of the order just placed, shown in the drawer once it is sent. */
 const placedCode = ref('')
+/* Whether the last order went on a signed-in account (else it can be claimed). */
+const placedOnAccount = ref(false)
 const sending = ref(false)
 
 /* The server's pricing of the current basket. Null until it answers, and on a
@@ -312,9 +315,13 @@ const canSend = computed(() => Boolean(
 
     if (API) {
       try {
+        // Signed in: the order goes on the account, and shows in the cabinet
+        // and the app. Without an account it gets a claim token instead.
+        const headers = { 'Content-Type': 'application/json', Accept: 'application/json' }
+        if (authToken()) headers.Authorization = `Bearer ${authToken()}`
         const res = await fetch(`${API}/api/orders/web`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          headers,
           body: JSON.stringify({
             ...orderLines(),
             zone_id: zoneId.value,
@@ -327,7 +334,12 @@ const canSend = computed(() => Boolean(
             note: note.value.trim() || null,
           }),
         })
-        if (res.ok) code = (await res.json()).code ?? ''
+        if (res.ok) {
+          const placed = await res.json()
+          code = placed.code ?? ''
+          placedOnAccount.value = Boolean(placed.signed_in)
+          rememberClaim(placed.claim_token, code)
+        }
       } catch (e) { /* offline: WhatsApp alone still works */ }
     }
 
@@ -351,6 +363,6 @@ const canSend = computed(() => Boolean(
     quote, quoting, weighed, ceiling,
     zoneId, address, mapLink, zone, deliveryText, canSend,
     note, deliveryDate, minDate, maxDate, dateOk,
-    firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode,
+    firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode, placedOnAccount,
   }
 }

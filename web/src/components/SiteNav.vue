@@ -7,6 +7,7 @@ import { useCart } from '../composables/useCart'
 import { SETS } from '../data/catalogue'
 import mark from '../assets/logo-mark.svg'
 import BIcon from './BIcon.vue'
+import { signedIn } from '../composables/useAccount'
 import flagAz from '../assets/flags/az.svg'
 import flagRu from '../assets/flags/ru.svg'
 import flagGb from '../assets/flags/gb.svg'
@@ -50,6 +51,8 @@ const links = computed(() => [
   // The catalogue button leaves the toolbar on a phone; it lives here instead.
   { to: { name: 'catalogue' }, key: 'cta.go', phone: true },
   { to: { path: '/', hash: '#order' }, key: 'nav.how' },
+  // On a phone the account button leaves the toolbar too, for room.
+  { to: { name: 'account' }, key: 'acc.nav', phone: true },
 ])
 
 const route = useRoute()
@@ -125,6 +128,12 @@ watch(count, (now, before) => {
           <span>{{ t('cta.go') }}</span>
         </RouterLink>
 
+        <!-- The personal cabinet: the same account as in the app. A dot
+             when signed in, so the customer can see they are. -->
+        <RouterLink :to="{ name: 'account' }" class="accbtn" :class="{ in: signedIn }"
+                    :aria-label="t('acc.nav')" :title="t('acc.nav')" @click="menu = false">
+          <BIcon name="person" :size="16" />
+        </RouterLink>
         <button class="cartbtn" ref="cartBtn" aria-label="Open cart" @click="open = true">
           <BIcon name="bag" :size="14" />
           <span class="lbl">{{ t('nav.cart') }}</span>
@@ -257,6 +266,16 @@ watch(count, (now, before) => {
 .lang__menu button:hover{ background:var(--paper-2); }
 .lang__menu button.on{ background:var(--acid); }
 
+.accbtn{
+  position:relative; display:inline-flex; align-items:center; justify-content:center;
+  width:36px; height:36px; border:1px solid currentColor; border-radius:50%; color:inherit;
+  transition:transform .3s var(--ease-out);
+}
+.accbtn:hover{ transform:translateY(-1px); }
+.accbtn.in::after{
+  content:''; position:absolute; right:-1px; top:-1px; width:9px; height:9px; border-radius:50%;
+  background:var(--leaf, #6c9a3c); border:2px solid var(--paper);
+}
 .cartbtn{
   display:flex; align-items:center; gap:9px;
   border:1px solid currentColor; border-radius:100px; padding:8px 14px 8px 15px;
@@ -317,4 +336,6 @@ watch(count, (now, before) => {
 @media (max-width:340px){
   .nav__name{ display:none; }
 }
+/* The account button gives way on a phone; the menu carries the link instead. */
+@media (max-width:720px){ .accbtn{ display:none; } }
 </style>

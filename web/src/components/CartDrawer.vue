@@ -1,19 +1,31 @@
 <script setup>
 import BIcon from './BIcon.vue'
 import MapPicker from './MapPicker.vue'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { money } from '../data/catalogue'
 import { ZONES } from '../data/delivery'
 import { useI18n } from '../composables/useI18n'
 import { useCart } from '../composables/useCart'
+import { useAccount } from '../composables/useAccount'
 
 const { t, nm } = useI18n()
 const {
   lines, count, total, open, setQty, setQtyTo, remove, whatsapp, weighed, ceiling,
   zoneId, address, mapLink, zone, deliveryText, canSend,
   note, deliveryDate, minDate, maxDate, dateOk,
-  firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode,
+  firstName, lastName, phone, nameOk, phoneOk, send, sending, placedCode, placedOnAccount,
 } = useCart()
+
+/* Signed in: start the contact fields from the account, without overwriting
+   anything already typed. */
+const { user } = useAccount()
+watch(user, u => {
+  if (!u) return
+  const [first, ...rest] = String(u.name ?? '').trim().split(/\s+/)
+  if (!firstName.value && first) firstName.value = first
+  if (!lastName.value && rest.length) lastName.value = rest.join(' ')
+  if (!phone.value && u.phone) phone.value = u.phone
+}, { immediate: true })
 
 const countLabel = computed(() =>
   `${count.value} ${count.value === 1 ? t('ui.item') : t('ui.items')}`)
@@ -80,6 +92,11 @@ const countLabel = computed(() =>
       <p class="placed__code">{{ placedCode }}</p>
       <p class="placed__p">{{ t('cart.placedP') }}</p>
       <a class="placed__wa" :href="whatsapp" target="_blank" rel="noopener">{{ t('cart.placedWa') }}</a>
+      <!-- Tracking: on the account already, or one step away. A guest's
+           order waits in this browser and joins the account on sign-in. -->
+      <RouterLink :to="{ name: 'account' }" class="placed__track" @click="open = false">
+        {{ placedOnAccount ? t('acc.trackIn') : t('acc.trackJoin') }}
+      </RouterLink>
     </div>
 
     <div class="drawer__foot" v-if="lines.length">
@@ -174,6 +191,7 @@ const countLabel = computed(() =>
 .placed__h{ margin:0; font-family:var(--display); font-size:1.3rem; }
 .placed__code{ margin:8px 0; font-size:1.6rem; font-weight:700; letter-spacing:.12em; color:var(--forest); }
 .placed__p{ margin:0 0 10px; font-size:.86rem; color:var(--ink-2); line-height:1.5; }
+.placed__track{ display:block; margin-top:12px; padding:10px 14px; border-radius:999px; background:var(--forest); color:#fff; font-size:.84rem; font-weight:600; text-decoration:none; }
 .placed__wa{ font-size:.86rem; font-weight:600; color:var(--forest); }
 .drawer{
   position:fixed; top:0; right:0; bottom:0; z-index:500;

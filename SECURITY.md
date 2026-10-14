@@ -339,6 +339,23 @@ Still open on the app side:
 - **Social sign-in has no nonce (low).** A Google or Apple token stolen from
   the phone could be replayed against the API until it expires (an hour).
 
+## Accounts on the website
+
+The website signs in to the same accounts as the app, through the same
+endpoints, codes and limits. An account is optional for ordering.
+
+- **The session is a `customer` bearer token in the browser's local storage**,
+  sent only to our own API. Script injection is what could read it; the site's
+  script policy allows no inline or third-party script, which is the control.
+  Signing out revokes the token on the server.
+- **A guest's website order can be claimed into an account** with a random
+  48-character token handed only to the browser that placed it. Only its hash
+  is stored; it works once, for 30 days (`ORDER_CLAIM_DAYS`), and an unknown,
+  spent or expired token answers the same 404. Knowing an order's code or phone
+  number is not enough to take it.
+- **A website order placed while signed in goes on that account.** A panel
+  token or a blocked account is treated as no account.
+
 ## Known gaps, found in the October review and not closed in code
 
 Each of these is a decision or a change of behaviour for the shop, not a quiet

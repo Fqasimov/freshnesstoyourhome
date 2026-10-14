@@ -32,6 +32,13 @@ export const router = createRouter({
       // card, and somebody who only reads the front page should not download it.
       component: () => import('./views/CatalogueView.vue'),
     },
+    {
+      path: '/hesab',
+      name: 'account',
+      // The personal cabinet: sign in or up, and follow orders. Optional —
+      // an order never needs it — and split out like the catalogue.
+      component: () => import('./views/AccountView.vue'),
+    },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 
