@@ -75,7 +75,9 @@ const config: ExpoConfig = {
   },
 
   android: {
-    package: 'az.freshnesstoyourhome.app',
+    // Fixed by Google Play on the first upload; it cannot change now.
+    // (The iOS bundle id above is separate and stays as it is.)
+    package: 'az.freshness.az',
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#FFFFFF',
