@@ -78,7 +78,7 @@ const config: ExpoConfig = {
     package: 'az.freshnesstoyourhome.app',
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#3A6A2C',
+      backgroundColor: '#FFFFFF',
     },
     // The app asks for nothing. It has no camera, no location, no contacts —
     // an empty permission list is the strongest privacy statement available
