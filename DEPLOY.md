@@ -231,7 +231,7 @@ the Google button says so; email + password + code works regardless.
 1. OAuth consent screen: app name, support email, the privacy URL.
 2. Create an OAuth client of type **Web application** (its id is what the
    phone's token is issued for).
-3. Create one of type **Android**: package `az.freshness.az` and
+3. Create one of type **Android**: package `az.freshnesstoyourhome.app` and
    the SHA-1 of the signing key (`npx eas credentials` shows it; Play Console
    → App integrity shows Google's app-signing SHA-1 too — add both).
 4. For iPhone later: one of type **iOS**, bundle `az.freshnesstoyourhome.app`.
