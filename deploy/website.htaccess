@@ -16,6 +16,14 @@ Options -Indexes -MultiViews
   RewriteCond %{REQUEST_URI} !^/\.well-known/
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
+  # One address for the shop: www and the old domain go to freshness.az.
+  # The API (/server) is left alone on purpose: app builds already on phones
+  # call the old domain's /server, and a redirect would turn their POSTs into
+  # GETs or drop their sign-in. /.well-known stays for certificate renewal.
+  RewriteCond %{HTTP_HOST} ^(www\.freshness\.az|(www\.)?freshnesstoyourhome\.az)$ [NC]
+  RewriteCond %{REQUEST_URI} !^/(server|\.well-known)(/|$)
+  RewriteRule ^ https://freshness.az%{REQUEST_URI} [R=301,L]
+
   # Dotfiles — .env, .git, .htaccess, .DS_Store — are never served.
   RewriteRule (^|/)\.(?!well-known/) - [F,L]
 

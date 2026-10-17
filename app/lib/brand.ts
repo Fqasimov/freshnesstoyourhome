@@ -10,8 +10,8 @@ export const CONTACT = {
   phoneDisplay: '+994 50 352 19 19',
   whatsapp: '994503521919',
   instagram: 'freshnesstoyourhome',
-  email: 'info@freshnesstoyourhome.az',
-  privacyUrl: 'https://freshnesstoyourhome.az/privacy/',
+  email: 'info@freshness.az',
+  privacyUrl: 'https://freshness.az/privacy/',
   hours: { az: 'Həftənin 7 günü · 10:00 – 22:00', ru: '7 дней в неделю · 10:00 – 22:00', en: '7 days a week · 10:00 – 22:00' },
   city: { az: 'Bakı, Azərbaycan', ru: 'Баку, Азербайджан', en: 'Baku, Azerbaijan' },
 } as const

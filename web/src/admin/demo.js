@@ -741,7 +741,7 @@ export async function respond (path, method, body) {
 
 const ME = {
   id: 'admin',
-  email: 'siz@freshnesstoyourhome.az',
+  email: 'siz@freshness.az',
   name: 'Nümunə idarəçi',
   phone: '+994503521919',
   locale: 'az',

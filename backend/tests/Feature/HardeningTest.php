@@ -21,7 +21,7 @@ class HardeningTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const ADMIN = 'info@freshnesstoyourhome.az';
+    private const ADMIN = 'info@freshness.az';
 
     protected function setUp(): void
     {

@@ -77,7 +77,7 @@ php artisan freshness:dev-user
 ```
 
 ```
-  email   dev@freshnesstoyourhome.az
+  email   dev@freshness.az
   code    774522
   role    customer
   name    Rəşad Məmmədov
@@ -95,7 +95,7 @@ Useful variants:
 ```bash
 php artisan freshness:dev-user --token                        # also print an API token for curl
 php artisan freshness:dev-user --role=courier \
-  --email=courier@freshnesstoyourhome.az                      # someone who can weigh orders
+  --email=courier@freshness.az                      # someone who can weigh orders
 php artisan freshness:dev-user --email=someone@else.az        # a second customer
 ```
 
@@ -188,7 +188,7 @@ device (push never works on a simulator):
 
 ```bash
 php artisan freshness:push-test                          # who has a device
-php artisan freshness:push-test dev@freshnesstoyourhome.az
+php artisan freshness:push-test dev@freshness.az
 ```
 
 `npm run journey` exports the app for web and drives it in a real browser. It

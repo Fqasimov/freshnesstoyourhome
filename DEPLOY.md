@@ -83,14 +83,14 @@ alone**, or the sync has nothing to read and the build fails on the missing
 images. The app's `export:web` does the same. `npm run check` at the root says
 whether anything is out of step without writing.
 
-## Shared hosting with no shell (how freshnesstoyourhome.az is deployed)
+## Shared hosting with no shell (how freshness.az is deployed)
 
 The live site is on a shared cPanel account where SSH logs in but the shell is
 switched off, so nothing can be run on the server — not `composer`, not
 `artisan`. Everything that normally happens there is done before upload:
 
 ```bash
-DOMAIN=freshnesstoyourhome.az scripts/package-deploy.sh
+DOMAIN=freshness.az scripts/package-deploy.sh
 ```
 
 That builds two zips in `deploy-out/`:
@@ -156,7 +156,7 @@ available in the build sandbox is a WebAssembly build that crashes on start.
 for 8.3 or newer before then. Moving back up is `config.platform.php` and the
 Laravel constraint in `composer.json`, then a `composer update`.
 
-To ship a change later: `DOMAIN=freshnesstoyourhome.az scripts/package-deploy.sh`
+To ship a change later: `DOMAIN=freshness.az scripts/package-deploy.sh`
 (add `INSTALL=1` only for a brand-new server — that is the one package that
 carries the installer). Upload and extract `backend.zip` in the home folder,
 **then open the database-update page it prints**
@@ -175,7 +175,7 @@ synced, and a smoke test checks the shop, the API and that `.env` is still
 
 It stays off until it is given the keys:
 
-1. cPanel → **FTP Accounts** → add `deploy@freshnesstoyourhome.az`, strong
+1. cPanel → **FTP Accounts** → add `deploy@freshness.az`, strong
    password, **Directory: the home folder itself** (clear the suggested
    `public_html/…` so the box ends at `/home/freshdcg/`). If cPanel will not
    allow that, use the main cPanel FTP login instead.
@@ -190,7 +190,7 @@ It stays off until it is given the keys:
    The upload checks the FTP server's certificate (`security: strict`), so
    `FTP_SERVER` must be a name that certificate covers. On cPanel that is
    usually the server's own hostname (shown in cPanel's sidebar as "Server
-   Name", e.g. `serverNN.hostinq.az`), not `ftp.freshnesstoyourhome.az`. If
+   Name", e.g. `serverNN.hostinq.az`), not `ftp.freshness.az`. If
    the upload step fails with a certificate error, change `FTP_SERVER` to that
    hostname; do not switch the check off.
 4. Actions → Deploy → **Run workflow** for the first run. It uploads
@@ -295,7 +295,7 @@ alongside the database, because the database only holds the filenames.
 **Who gets in is one line in the server's `.env`:**
 
 ```
-ADMIN_EMAILS=info@freshnesstoyourhome.az
+ADMIN_EMAILS=info@freshness.az
 ```
 
 The installer asks for it. Only an address on that line gets a code at
@@ -397,14 +397,14 @@ together with `APP_KEY`/`BLIND_INDEX_KEY` kept elsewhere.
 Every line should print the number shown:
 
 ```bash
-D=https://freshnesstoyourhome.az
+D=https://freshness.az
 curl -s -o /dev/null -w '%{http_code}  .env\n'               $D/.env                     # 403
 curl -s -o /dev/null -w '%{http_code}  .git\n'               $D/.git/config              # 403
 curl -s -o /dev/null -w '%{http_code}  api .env\n'           $D/server/.env              # 403
 curl -s -o /dev/null -w '%{http_code}  stray php\n'          $D/server/test.php          # 403
 curl -s -o /dev/null -w '%{http_code}  php in uploads\n'     $D/server/storage/x.php     # 403
 curl -s -o /dev/null -w '%{http_code}  upload listing\n'     $D/server/storage/          # 403
-curl -s -o /dev/null -w '%{http_code}  http redirect\n'      http://freshnesstoyourhome.az/  # 301
+curl -s -o /dev/null -w '%{http_code}  http redirect\n'      http://freshness.az/  # 301
 curl -sI $D/cms/ | grep -i content-security-policy       # present, script-src 'self'
 curl -s -H 'X-Forwarded-For: 1.2.3.4' -o /dev/null -w '%{http_code}\n' -X POST \
   -H 'Content-Type: application/json' -d '{"email":"x@example.com"}' \
@@ -415,7 +415,7 @@ On Windows PowerShell use `curl.exe` instead of `curl`.
 
 ### Cloudflare in front (free plan) — optional, recommended
 
-1. Cloudflare → *Add a site* → `freshnesstoyourhome.az` → Free. Let it import
+1. Cloudflare → *Add a site* → `freshness.az` → Free. Let it import
    the DNS records, then compare them with cPanel → *Zone Editor* before
    switching: the `mail`, `webmail` and MX records, and the SPF/DKIM TXT
    records, must all be there, with `mail`/`webmail` set to **DNS only**
@@ -426,7 +426,7 @@ On Windows PowerShell use `curl.exe` instead of `curl`.
    valid, so strict works). Edge Certificates → Always Use HTTPS on.
 4. In `.env`: `TRUSTED_PROXIES=cloudflare`.
 5. **Access (Zero Trust, free up to 50 users)** → Applications → Add →
-   Self-hosted. Domain `freshnesstoyourhome.az`, and add three paths: `cms`,
+   Self-hosted. Domain `freshness.az`, and add three paths: `cms`,
    `server/api/admin`, `server/api/auth/panel`. Policy: *Allow* → Emails →
    the admin address. Login method: One-time PIN (or Google). Now a visitor
    to /cms meets Cloudflare's sign-in before a byte reaches hostinq.az — and

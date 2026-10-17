@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build upload-ready packages for a shared host with no shell.
 #
-#   DOMAIN=freshnesstoyourhome.az scripts/package-deploy.sh
+#   DOMAIN=freshness.az scripts/package-deploy.sh
 #
 # Produces, in deploy-out/:
 #   website.zip   extract into public_html/        → https://DOMAIN and /cms
@@ -27,7 +27,7 @@
 # one-time web installer copied into backend/public/ under a random name.
 set -euo pipefail
 
-DOMAIN="${DOMAIN:-freshnesstoyourhome.az}"
+DOMAIN="${DOMAIN:-freshness.az}"
 # Where the API answers. A folder on the main domain by default — the host
 # would not create an api. subdomain — or API_MODE=subdomain for api.DOMAIN.
 if [ "${API_MODE:-folder}" = subdomain ]; then

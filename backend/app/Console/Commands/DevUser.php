@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Hash;
 class DevUser extends Command
 {
     protected $signature = 'freshness:dev-user
-        {--email=dev@freshnesstoyourhome.az : The address to sign in with}
+        {--email=dev@freshness.az : The address to sign in with}
         {--name=Rəşad Məmmədov : Name on the account}
         {--phone=+994501234567 : Phone the courier would call}
         {--role=customer : customer, courier or admin}

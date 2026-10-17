@@ -1,4 +1,4 @@
-# Test, build and upload freshnesstoyourhome.az on every push.
+# Test, build and upload freshness.az on every push.
 #
 # The host (hostinq.az, shared cPanel) has no shell, so nothing can be built
 # there. This does on GitHub's machine what package-deploy.sh does on a
@@ -37,7 +37,7 @@ jobs:
     # later runs send only what changed and take a few minutes.
     timeout-minutes: 180
     env:
-      DOMAIN: freshnesstoyourhome.az
+      DOMAIN: freshness.az
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -77,7 +77,7 @@ jobs:
       - name: Stage the home folder
         env:
           # Optional. A browser key for the basket's map pin picker, restricted
-          # to freshnesstoyourhome.az in Google Cloud. Unset, the picker is
+          # to freshness.az in Google Cloud. Unset, the picker is
           # left out and "use my location" still works.
           VITE_GOOGLE_MAPS_KEY: ${{ vars.GOOGLE_MAPS_KEY }}
         run: |

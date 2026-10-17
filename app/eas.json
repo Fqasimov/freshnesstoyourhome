@@ -14,7 +14,7 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://freshnesstoyourhome.az/server"
+        "EXPO_PUBLIC_API_URL": "https://freshness.az/server"
       },
       "channel": "preview",
       "android": {
@@ -24,7 +24,7 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://freshnesstoyourhome.az/server"
+        "EXPO_PUBLIC_API_URL": "https://freshness.az/server"
       },
       "channel": "production"
     }

@@ -3,7 +3,7 @@ import HomeView from './views/HomeView.vue'
 import { glideTo } from './composables/glide'
 
 /**
- * Two pages, at real addresses: freshnesstoyourhome.az/ and /kataloq.
+ * Two pages, at real addresses: freshness.az/ and /kataloq.
  *
  * The site used to route on the part after a "#" (/#/kataloq), so it could
  * run from any static folder. On the real host Apache sends every unknown

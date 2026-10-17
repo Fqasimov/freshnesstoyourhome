@@ -38,7 +38,7 @@ class DevUserCommandTest extends TestCase
     {
         $this->artisan('freshness:dev-user')->assertSuccessful();
 
-        $user = User::findByEmail('dev@freshnesstoyourhome.az');
+        $user = User::findByEmail('dev@freshness.az');
 
         $this->assertNotNull($user);
         $this->assertSame('customer', $user->role);
@@ -69,11 +69,11 @@ class DevUserCommandTest extends TestCase
     public function test_it_can_appoint_staff_without_exposing_a_route(): void
     {
         $this->artisan('freshness:dev-user', [
-            '--email' => 'courier@freshnesstoyourhome.az',
+            '--email' => 'courier@freshness.az',
             '--role' => 'courier',
         ])->assertSuccessful();
 
-        $this->assertSame('courier', User::findByEmail('courier@freshnesstoyourhome.az')->role);
+        $this->assertSame('courier', User::findByEmail('courier@freshness.az')->role);
     }
 
     public function test_it_rejects_an_unknown_role(): void

@@ -22,7 +22,7 @@ class StatelessApiTest extends TestCase
     {
         // Treat the shop's host as a first-party SPA host, as Sanctum does by
         // default for the host in APP_URL.
-        config(['sanctum.stateful' => ['freshnesstoyourhome.az']]);
+        config(['sanctum.stateful' => ['freshness.az']]);
 
         // Laravel skips CSRF checks entirely while the environment is
         // "testing", which would make this pass whether or not the bug is
@@ -30,8 +30,8 @@ class StatelessApiTest extends TestCase
         $this->app['env'] = 'local';
 
         $this->withHeaders([
-            'Origin' => 'https://freshnesstoyourhome.az',
-            'Referer' => 'https://freshnesstoyourhome.az/cms/',
+            'Origin' => 'https://freshness.az',
+            'Referer' => 'https://freshness.az/cms/',
         ])->postJson('/api/auth/request-code', ['email' => 'someone@example.com'])
             ->assertOk();
     }

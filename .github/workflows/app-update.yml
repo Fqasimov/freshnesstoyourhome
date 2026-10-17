@@ -39,7 +39,7 @@ jobs:
         working-directory: app
     env:
       # The same API the store builds use (eas.json → production).
-      EXPO_PUBLIC_API_URL: https://freshnesstoyourhome.az/server
+      EXPO_PUBLIC_API_URL: https://freshness.az/server
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 

@@ -6,7 +6,7 @@ import { api, verifyEmailCode, completeTwoFactor, loadMe, DEMO } from '../api'
 const emit = defineEmits(['in'])
 
 // The preview has no mailbox to send to, so it starts filled in.
-const email = ref(DEMO ? 'siz@freshnesstoyourhome.az' : '')
+const email = ref(DEMO ? 'siz@freshness.az' : '')
 const code = ref('')
 const appCode = ref('')
 const recovery = ref('')

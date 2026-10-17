@@ -23,7 +23,7 @@ class PanelAuthTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const ADMIN = 'info@freshnesstoyourhome.az';
+    private const ADMIN = 'info@freshness.az';
 
     protected function setUp(): void
     {
@@ -333,8 +333,8 @@ class PanelAuthTest extends TestCase
     public function test_panel_and_app_codes_go_out_from_their_own_senders(): void
     {
         config([
-            'mail.from' => ['address' => 'hello@freshnesstoyourhome.az', 'name' => 'Freshness'],
-            'freshness.mail.panel_from' => ['address' => 'panel@freshnesstoyourhome.az', 'name' => 'Freshness Panel'],
+            'mail.from' => ['address' => 'hello@freshness.az', 'name' => 'Freshness'],
+            'freshness.mail.panel_from' => ['address' => 'panel@freshness.az', 'name' => 'Freshness Panel'],
         ]);
         Mail::fake();
 
@@ -343,7 +343,7 @@ class PanelAuthTest extends TestCase
 
         Mail::assertQueued(LoginCodeMail::class, fn (LoginCodeMail $m) => $m->panel
             && $m->hasTo(self::ADMIN)
-            && $m->envelope()->from->address === 'panel@freshnesstoyourhome.az');
+            && $m->envelope()->from->address === 'panel@freshness.az');
 
         Mail::assertQueued(LoginCodeMail::class, fn (LoginCodeMail $m) => ! $m->panel
             && $m->hasTo('customer@example.com')

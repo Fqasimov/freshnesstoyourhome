@@ -123,8 +123,8 @@ Available in Azerbaijani, Russian and English. You can delete your account at an
 ## Other fields
 
 - **Category:** Shopping (Play: Shopping; App Store: Shopping, secondary Food & Drink)
-- **Privacy policy:** https://freshnesstoyourhome.az/privacy
-- **Website:** https://freshnesstoyourhome.az
+- **Privacy policy:** https://freshness.az/privacy
+- **Website:** https://freshness.az
 - **Contact email:** the shop's `info@` address
 - **Screenshots:** `store/screenshots/` — 1080×1920, Play's recommended phone size.
   App Store needs 1290×2796 (6.9") instead; make those once the iOS build exists.

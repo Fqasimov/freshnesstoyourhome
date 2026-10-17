@@ -5,4 +5,4 @@ Disallow: /cms/
 Disallow: /hesab
 Disallow: /server/api/
 
-Sitemap: https://freshnesstoyourhome.az/sitemap.xml
+Sitemap: https://freshness.az/sitemap.xml

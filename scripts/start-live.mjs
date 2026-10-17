@@ -10,6 +10,6 @@ import { spawn } from 'node:child_process'
 const child = spawn('npx', ['expo', 'start', ...process.argv.slice(2)], {
   stdio: 'inherit',
   shell: process.platform === 'win32',
-  env: { ...process.env, EXPO_PUBLIC_API_URL: 'https://freshnesstoyourhome.az/server' },
+  env: { ...process.env, EXPO_PUBLIC_API_URL: 'https://freshness.az/server' },
 })
 child.on('exit', code => process.exit(code ?? 0))
