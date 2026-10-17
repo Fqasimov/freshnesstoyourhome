@@ -26,10 +26,21 @@ class DeployController extends Controller
         $this->authorise($request);
 
         $code = Artisan::call('migrate', ['--force' => true]);
+        $output = trim(Artisan::output());
+
+        // Uploaded photos are served through public_html/server/storage, a
+        // link to storage/app/public. The first-install page made it; a host
+        // moved by copying files has none, and a File Manager cannot make one.
+        // So the deploy makes sure it is there, every time.
+        $link = public_path('storage');
+        if ($code === 0 && ! file_exists($link) && ! is_link($link)) {
+            $code = Artisan::call('storage:link');
+            $output .= "\n".trim(Artisan::output());
+        }
 
         return response()->json([
             'ok' => $code === 0,
-            'output' => trim(Artisan::output()),
+            'output' => $output,
         ], $code === 0 ? 200 : 500);
     }
 
