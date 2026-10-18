@@ -11,7 +11,9 @@ import { reducedMotion } from '../composables/useMotion'
    visitor sees the overlay flash for a frame before it fades away. */
 let seen = false
 try { seen = sessionStorage.getItem('fth.intro') === '1' } catch (e) {}
-const skip = reducedMotion || seen
+/* Nor on a product page: somebody arriving from a search result for one
+   product came for that product, not for the brand's entrance. */
+const skip = reducedMotion || seen || location.pathname.startsWith('/mehsul/')
 
 const svg = ref(null)
 const go = ref(false)

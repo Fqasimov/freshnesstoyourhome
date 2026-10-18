@@ -53,6 +53,8 @@ class CatalogueController extends Controller
                 ->get()
                 ->map(fn (Product $p) => [
                     'id' => $p->id,
+                    // The product's own page on the website: /mehsul/{slug}.
+                    'slug' => $p->slug ?? $p->id,
                     'category_id' => $p->category_id,
                     // What it costs today, sale included: the figure every
                     // client adds up and the one the order will charge. The

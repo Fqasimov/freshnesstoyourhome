@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HasTranslations;
 use App\Support\Discount;
+use App\Support\Slug;
 use App\Support\StoredImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +23,7 @@ class Product extends Model
     public $incrementing = false;
 
     protected $fillable = [
-        'id', 'category_id', 'price_minor', 'currency', 'unit_kind',
+        'id', 'slug', 'category_id', 'price_minor', 'currency', 'unit_kind',
         'unit_qty', 'is_popular', 'is_active', 'in_stock', 'image_path', 'sort',
         'discount_kind', 'discount_percent', 'discount_minor', 'discount_show',
     ];
@@ -63,6 +64,23 @@ class Product extends Model
         return $this->image_file
             ? Storage::disk('public')->url(StoredImage::thumbPath($this->image_file))
             : null;
+    }
+
+    /**
+     * Give the product its website address, once it has a name to make it from.
+     *
+     * Called after the translations are written — a product is created first
+     * and named a moment later, so a creating hook would find no name. Never
+     * overwrites a slug that is already there: see App\Support\Slug.
+     */
+    public function assignSlug(): void
+    {
+        if (filled($this->slug)) {
+            return;
+        }
+
+        $this->load('translations');
+        $this->forceFill(['slug' => Slug::uniqueFor($this)])->saveQuietly();
     }
 
     public function category(): BelongsTo

@@ -76,6 +76,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
       @add="onAdd"
       @add-set="onAddSet"
       @peek="peeked = $event"
+      @confirm="onConfirm"
     />
   </RouterView>
 

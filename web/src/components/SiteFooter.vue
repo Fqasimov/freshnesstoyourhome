@@ -15,16 +15,19 @@ const year = new Date().getFullYear()
    shown word and the search word differ where a hashtag is written without
    spaces. */
 const TAGS = [
-  ['#skumbriya', 'skumbriya'],
-  ['#hisəverilmişbalıq', 'hisə'],
-  ['#smokedmackerel', 'mackerel'],
-  ['#копчёнаяскумбрия', 'скумбрия'],
-  ['#premiumbalıq', 'balıq'],
+  // Led by what the shop sells most: smoked salmon, caviar and the cheeses.
+  // The search words match the product names ("Qırmızı ikra"), not the tag.
+  ['#hisəverilmişqızılbalıq', 'qızıl balıq'],
+  ['#qırmızıkürü', 'ikra'],
+  ['#burrata', 'burrata'],
+  ['#mozzarella', 'mozzarella'],
+  ['#avropapendirləri', 'pendir'],
+  ['#smokedsalmon', 'salmon'],
+  ['#копчёныйлосось', 'лосось'],
+  ['#краснаяикра', 'икра'],
   ['#dənizməhsulları', 'dəniz'],
-  ['#seafoodbaku', 'seafood'],
-  ['#qırmızıkürü', 'kürü'],
-  ['#pendir', 'pendir'],
-  ['#fishdeliverybaku', 'fish'],
+  ['#krevet', 'krevet'],
+  ['#hisəverilmişbalıq', 'hisə'],
 ]
 const links = computed(() => [
   [{ path: '/', hash: '#story' }, 'nav.story'],

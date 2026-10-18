@@ -26,6 +26,7 @@ const p = props.product
 const form = ref({
   category_id: p.category_id,
   code: p.id,
+  slug: p.slug ?? '',
   unit_kind: p.unit_kind,
   unit_qty: String(p.unit_qty ?? 1),
   ...Object.fromEntries(LANGS.map(l => [l.id, {
@@ -109,7 +110,8 @@ const CODE = /^[a-z0-9]+(-[a-z0-9]+)*$/
 const codeOk = computed(() => form.value.code === p.id || (CODE.test(form.value.code) && form.value.code.length >= 3))
 const qtyNum = computed(() => Number(String(form.value.unit_qty).replace(',', '.')))
 const qtyOk = computed(() => Number.isFinite(qtyNum.value) && qtyNum.value >= 0.001 && qtyNum.value <= 9999)
-const ready = computed(() => form.value.az.name.trim().length > 0 && codeOk.value && qtyOk.value && discountOk.value)
+const slugOk = computed(() => form.value.slug === (p.slug ?? '') || (CODE.test(form.value.slug) && form.value.slug.length >= 3))
+const ready = computed(() => form.value.az.name.trim().length > 0 && codeOk.value && slugOk.value && qtyOk.value && discountOk.value)
 
 async function save () {
   if (!ready.value) return
@@ -127,6 +129,7 @@ async function save () {
     // Only what was touched is sent: a code or unit nobody changed must not
     // ride along and be mistaken for an edit.
     if (form.value.code !== p.id) body.new_id = form.value.code
+    if (form.value.slug !== (p.slug ?? '')) body.slug = form.value.slug
     if (form.value.unit_kind !== p.unit_kind) body.unit_kind = form.value.unit_kind
     if (qtyNum.value !== Number(p.unit_qty ?? 1)) body.unit_qty = qtyNum.value
     if (!sameDiscount(discount.value, initialDiscount)) {
@@ -172,6 +175,19 @@ async function save () {
       <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
         Kiçik latın hərfləri, rəqəmlər və tire (məs. <span class="a-mono">hise-qizil-baliq</span>).
         Kod dəyişəndə keçmiş sifarişlər, aksiyalar və şəkillər yeni koda keçir.
+      </p>
+    </div>
+
+    <div class="a-sec">
+      <h3>Saytdakı ünvan</h3>
+      <div class="a-slug">
+        <span class="a-muted a-mono">freshness.az/mehsul/</span>
+        <input v-model.trim="form.slug" class="a-in a-mono" maxlength="80" aria-label="Məhsulun səhifəsinin ünvanı"
+               :class="{ 'a-in--dirty': !slugOk }" autocapitalize="off" spellcheck="false">
+      </div>
+      <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
+        Məhsulun öz səhifəsi — Google bu ünvanı göstərir (məs. <span class="a-mono">qirmizi-kuru-500q</span>).
+        Adından avtomatik yaranır. Dəyişsəniz, köhnə link işləməyəcək — yalnız lazım olanda dəyişin.
       </p>
     </div>
 
@@ -251,3 +267,8 @@ async function save () {
     </div>
   </aside>
 </template>
+
+<style scoped>
+.a-slug{ display:flex; align-items:center; gap:6px; }
+.a-slug .a-in{ flex:1; min-width:0; }
+</style>

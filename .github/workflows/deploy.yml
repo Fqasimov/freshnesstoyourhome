@@ -18,6 +18,10 @@ on:
     branches: [claude/photo-analysis-bgp25f]
     paths-ignore: ['**.md', 'app/**', '.claude/**']
   workflow_dispatch:
+  # Every night, so the product pages written for search engines carry the
+  # prices and products set in the panel that day. Only what changed is sent.
+  schedule:
+    - cron: '7 1 * * *'   # 05:07 in Baku
 
 # One deploy at a time, in order: a second push waits for the first.
 concurrency:
@@ -117,6 +121,15 @@ jobs:
             -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
             -H "Accept: application/json" \
             "https://$DOMAIN/server/api/deploy/migrate"
+
+      # The product pages and sitemap were written at build time from the API
+      # as it was then. Now the database is migrated, write them again from
+      # what it says today; if it does not answer, the build's pages stay.
+      - name: Product pages from the live catalogue
+        env:
+          PRERENDER_API: https://${{ env.DOMAIN }}/server
+          PRERENDER_LIVE_ONLY: '1'
+        run: node web/scripts/prerender.mjs "${{ runner.temp }}/site/public_html"
 
       - name: Upload ~/public_html
         uses: SamKirkland/FTP-Deploy-Action@8e83cea8672e3fbcbb9fdafff34debf6ae4c5f65 # v4.3.5

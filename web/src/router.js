@@ -1,9 +1,10 @@
 import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import { glideTo } from './composables/glide'
+import { setPageHead } from './composables/usePageMeta'
 
 /**
- * Two pages, at real addresses: freshness.az/ and /kataloq.
+ * Real addresses: freshness.az/, /kataloq and a page per product at /mehsul/{slug}.
  *
  * The site used to route on the part after a "#" (/#/kataloq), so it could
  * run from any static folder. On the real host Apache sends every unknown
@@ -33,6 +34,14 @@ export const router = createRouter({
       component: () => import('./views/CatalogueView.vue'),
     },
     {
+      path: '/mehsul/:slug',
+      name: 'product',
+      // A page per product, so Google can show each one for its own name
+      // ("burrata Bakı", "qırmızı kürü qiymət"). The build also writes a
+      // plain HTML copy of each — see web/scripts/prerender.mjs.
+      component: () => import('./views/ProductView.vue'),
+    },
+    {
       path: '/hesab',
       name: 'account',
       // The personal cabinet: sign in or up, and follow orders. Optional —
@@ -60,18 +69,28 @@ export const router = createRouter({
 })
 
 /* Each page says what it is, in the words people search for. The home page keeps
-   the title and description written into index.html; the catalogue gets its own. */
+   the title and description written into index.html; the catalogue gets its own,
+   and a product page sets its own from the product (ProductView). The words lead
+   with what the shop mostly sells — smoked salmon, red caviar, burrata and the
+   other cheeses — rather than with any single fish. */
 const HOME_TITLE = document.title
 const metaDesc = document.querySelector('meta[name="description"]')
 const HOME_DESC = metaDesc?.getAttribute('content') ?? ''
+const ogImage = document.querySelector('meta[property="og:image"]')
+const HOME_IMAGE = ogImage?.getAttribute('content') ?? ''
 const PAGES = {
   catalogue: {
-    title: 'Kataloq — balıq, hisə verilmiş skumbriya, dəniz məhsulları | Freshness To Your Home',
-    desc: 'Freshness To Your Home kataloqu: təzə balıq, hisə verilmiş skumbriya və skumbriya filesi, dəniz məhsulları, kürü, pendir, ət və şirniyyat. Qiymətlər AZN ilə, Bakıya çatdırılma.',
+    title: 'Kataloq — hisə verilmiş qızıl balıq, kürü, burrata və pendirlər | Freshness To Your Home',
+    desc: 'Kataloq: hisə verilmiş qızıl balıq və beluqa, qırmızı və qara kürü, burrata, mozzarella, parmezan, təzə balıq, krevet və dəniz məhsulları. Qiymətlər AZN ilə, Bakıya çatdırılma.',
   },
 }
 router.afterEach(to => {
+  // A product page writes its own head once it knows the product.
+  if (to.name === 'product') return
   const page = PAGES[to.name]
   document.title = page?.title ?? HOME_TITLE
   metaDesc?.setAttribute('content', page?.desc ?? HOME_DESC)
+  if (ogImage && HOME_IMAGE) ogImage.setAttribute('content', HOME_IMAGE)
+  if (HOME_IMAGE) document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', HOME_IMAGE)
+  setPageHead({ path: to.path, title: document.title, desc: page?.desc ?? HOME_DESC })
 })

@@ -9,6 +9,7 @@ use App\Models\ProductTranslation;
 use App\Models\BundleItem;
 use App\Support\Audit;
 use App\Support\Discount;
+use App\Support\Slug;
 use App\Support\StoredImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class ProductController extends Controller
     /** Fields whose changes are worth a line in the audit trail. */
     private const AUDITED = [
         'price_minor', 'in_stock', 'is_active', 'is_popular', 'category_id', 'sort',
-        'unit_kind', 'unit_qty',
+        'unit_kind', 'unit_qty', 'slug',
         'discount_kind', 'discount_percent', 'discount_minor', 'discount_show',
     ];
 
@@ -134,6 +135,9 @@ class ProductController extends Controller
                     'unit_label' => $fields['unit_label'] ?? null,
                 ]);
             }
+
+            // Its page on the website, now that it has a name to make one from.
+            $product->assignSlug();
 
             return $product;
         });
@@ -337,6 +341,14 @@ class ProductController extends Controller
             // A sale: a percentage to two decimals (16.4) or an amount off in
             // qəpik, and which of the two the website shows. No kind, no sale.
             ...self::discountRules(),
+            // Its address on the website, /mehsul/{slug}. Set once from the
+            // name; changing it here moves the page, so the old link stops
+            // working — the panel says as much next to the box.
+            'slug' => [
+                'sometimes', 'string', 'min:3', 'max:'.Slug::MAX,
+                'regex:'.Slug::PATTERN,
+                Rule::unique('products', 'slug')->ignore($id, 'id'),
+            ],
             // The product's code. Same shape as when it was created.
             'new_id' => [
                 'sometimes', 'string', 'min:3', 'max:60',
@@ -426,8 +438,13 @@ class ProductController extends Controller
     {
         $from = $product->id;
 
+        $slug = $product->slug;
+
         $copy = $product->replicate();
         $copy->id = $to;
+        // The slug is unique, and the old row still holds it until it is
+        // deleted below; the page keeps its address across the rename.
+        $copy->slug = null;
         $copy->created_at = $product->created_at;
         $copy->save();
 
@@ -436,6 +453,7 @@ class ProductController extends Controller
         }
 
         Product::whereKey($from)->delete();
+        Product::whereKey($to)->update(['slug' => $slug]);
         \App\Support\CatalogueCache::flush();
 
         return Product::with(['translations', 'gallery'])->findOrFail($to);
@@ -514,6 +532,7 @@ class ProductController extends Controller
     {
         return [
             'id' => $p->id,
+            'slug' => $p->slug,
             'category_id' => $p->category_id,
             'category' => $p->category?->translationMap('name'),
             'price_minor' => $p->price_minor,

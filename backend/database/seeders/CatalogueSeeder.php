@@ -105,6 +105,8 @@ class CatalogueSeeder extends Seeder
                     ],
                 );
             }
+
+            $product->assignSlug();
         }
     }
 

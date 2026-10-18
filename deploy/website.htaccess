@@ -32,6 +32,14 @@ Options -Indexes -MultiViews
   RewriteRule (^|/)(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml)$ - [F,L,NC]
   RewriteRule \.(env|ini|log|sql|sqlite|bak|old|orig|swp|dist|sh|ya?ml|zip|tar|t?gz|7z|rar|map)$ - [F,L,NC]
 
+  # A product page: the plain HTML copy the build wrote for it, with its own
+  # title and structured data for search engines (web/scripts/prerender.mjs).
+  # The app takes over from there. A product with no file yet — added in the
+  # panel since the last build — falls through to the app below, which shows
+  # it all the same.
+  RewriteCond %{DOCUMENT_ROOT}/mehsul/$1.html -f
+  RewriteRule ^mehsul/([a-z0-9-]+)/?$ mehsul/$1.html [L]
+
   # The shop's pages (/, /kataloq) are one app: any path that is not a real
   # file or folder is answered by index.html, and the app shows the page.
   # The API, the panel and the privacy page are real folders and never

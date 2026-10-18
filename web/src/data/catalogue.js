@@ -24,6 +24,7 @@ import {
   SETS as BUNDLED_SETS,
 } from './catalogue.generated'
 import { ZONES } from './delivery'
+import { assignSlugs } from './slug'
 
 /* The shop's own details live in shared/brand.json, where the app reads them
    too. Re-exported from here so the many components that already import
@@ -39,6 +40,10 @@ export const PRODUCTS = reactive(BUNDLED_PRODUCTS.map(p => ({ ...p })))
    hashed, cache-busted URL and a missing file fails the build instead of
    404-ing in production. */
 const PHOTOS = import.meta.glob('../assets/products/*.jpg', { eager: true, import: 'default' })
+
+/* Each product's page address. The live catalogue brings the server's own;
+   these stand in until it lands, made by the same rule. */
+assignSlugs(PRODUCTS, p => p.az, p => p.unit?.az).forEach((slug, i) => { PRODUCTS[i].slug = slug })
 
 PRODUCTS.forEach(p => {
   const hit = PHOTOS[`../assets/products/${p.id}.jpg`]
@@ -92,6 +97,10 @@ export function setPricing (set) {
 /** True while the page is showing the bundled copy rather than live data. */
 export const catalogueStale = ref(true)
 
+/** True once the first fetch has finished, however it went. A product page
+    waits for this before it says a product does not exist. */
+export const catalogueSettled = ref(false)
+
 /* How far ahead an order may be dated: the shop's own rule, as the server
    states it. The defaults are what the server ships with. */
 export const ORDER_DATES = reactive({ leadDays: 1, maxDaysAhead: 14 })
@@ -112,6 +121,8 @@ const API = import.meta.env.VITE_API_URL
 function adaptProduct (p) {
   return {
     id: p.id,
+    /* Its own page on the site, /mehsul/{slug}. */
+    slug: p.slug ?? p.id,
     cat: p.category_id,
     /* What it costs today, sale included — what the basket adds up and the
        order charges. The normal price and the badge are only for showing. */
@@ -233,6 +244,7 @@ export async function loadCatalogue () {
   if (!API) {
     // No API configured — a plain static build of the marketing site. The
     // bundled catalogue is all there is, and that is a valid way to deploy it.
+    catalogueSettled.value = true
     return
   }
 
@@ -271,5 +283,7 @@ export async function loadCatalogue () {
     catalogueStale.value = false
   } catch {
     // Offline, blocked, or CORS. The bundled copy stands.
+  } finally {
+    catalogueSettled.value = true
   }
 }

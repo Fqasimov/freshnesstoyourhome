@@ -3,6 +3,7 @@ import BIcon from './BIcon.vue'
 import { computed } from 'vue'
 import { money } from '../data/catalogue'
 import { badgeText } from '../data/discount'
+import { productPath } from '../data/slug'
 import { useCart } from '../composables/useCart'
 import { useI18n } from '../composables/useI18n'
 
@@ -29,6 +30,12 @@ const cart = useCart()
    they never show a stepper: there is no single line for it to count. */
 const qty = computed(() => (props.product.variants ? 0 : cart.qtyOf(props.product.id)))
 
+function peek (ev) {
+  if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button !== 0) return
+  ev.preventDefault()
+  emit('peek', props.product)
+}
+
 function add (ev) {
   emit('add', { product: props.product, el: ev.currentTarget.closest('.card') })
 }
@@ -36,7 +43,10 @@ function add (ev) {
 
 <template>
   <article class="card" :class="{ 'card--slide': variant === 'slide' }">
-    <button type="button" class="card__open" :aria-label="nm(product)" @click="emit('peek', product)">
+    <!-- A real link to the product's own page, which is what search engines
+         follow; a plain click still opens the quick view, so browsing stays
+         where it is. A new-tab click goes to the page. -->
+    <a class="card__open" :href="productPath(product)" :aria-label="nm(product)" @click="peek">
       <span class="card__media">
         <img v-if="product.img" :src="product.img" :alt="nm(product)" loading="lazy" decoding="async">
         <BIcon v-else name="basket" :size="30" class="card__none" />
@@ -52,7 +62,7 @@ function add (ev) {
         <span class="card__name">{{ nm(product) }}</span>
         <span class="card__unit">{{ unitOf(product) }}</span>
       </span>
-    </button>
+    </a>
 
     <div class="card__corner">
       <Transition name="swap" mode="out-in">
@@ -83,7 +93,7 @@ function add (ev) {
 
 .card__open{
   display:flex; flex-direction:column; width:100%; padding:0; border:0; background:none;
-  text-align:left; color:inherit; cursor:pointer;
+  text-align:left; color:inherit; cursor:pointer; text-decoration:none;
   transition:transform .16s var(--ease-snap);
 }
 .card__open:active{ transform:scale(.97); }

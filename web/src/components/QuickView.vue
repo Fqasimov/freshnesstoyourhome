@@ -3,6 +3,7 @@ import { badgeText } from '../data/discount'
 import BIcon from './BIcon.vue'
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { money } from '../data/catalogue'
+import { productPath } from '../data/slug'
 import { useI18n } from '../composables/useI18n'
 
 const props = defineProps({ product: { type: Object, default: null } })
@@ -124,6 +125,9 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
           <h3>{{ nm(product) }}</h3>
           <p class="modal__alt">{{ alt(product) }}</p>
           <p class="modal__desc">{{ dsc(product) }}</p>
+          <RouterLink :to="productPath(product)" class="modal__page" @click="emit('close')">
+            {{ t('pp.open') }} <BIcon name="arrow-right" :size="12" />
+          </RouterLink>
 
           <div v-if="product.variants" class="variants">
             <button v-for="(v, i) in product.variants" :key="i"
@@ -196,6 +200,10 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
 </template>
 
 <style scoped>
+.modal__page{
+  display:inline-flex; align-items:center; gap:6px; margin:-4px 0 14px;
+  font-size:.82rem; color:var(--forest); text-decoration:underline; text-underline-offset:3px;
+}
 /* ---------- 17. Quick view ----------------------------------------------- */
 .modal{
   position:fixed; inset:0; z-index:600; display:grid; place-items:center; padding:var(--gutter);

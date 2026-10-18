@@ -103,6 +103,10 @@ h3.display{ font-size:clamp(1.28rem, 2.1vw, 1.8rem); line-height:1.1; }
 .lede{ font-size:clamp(1rem,1.35vw,1.18rem); color:var(--ink-2); max-width:52ch; line-height:1.62; }
 
 .wrap{ width:100%; max-width:var(--maxw); margin-inline:auto; padding-inline:var(--gutter); }
+/* The plain copy of a product page the build writes for search engines
+   (scripts/prerender.mjs). Seen only for the moment before the app starts. */
+.prerendered{ padding-top:calc(var(--nav-h) + 24px); padding-bottom:60px; }
+.prerendered img{ max-width:min(100%,480px); height:auto; border-radius:22px; }
 section{ position:relative; scroll-margin-top:78px; }
 
 /* ---------- 3. Reveal-on-scroll ----------------------------------------- */
