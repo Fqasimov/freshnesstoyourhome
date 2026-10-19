@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import BIcon from '../components/BIcon.vue'
-import { useI18n } from '../composables/useI18n'
+import { useI18n, lang } from '../composables/useI18n'
 import { useAccount, pendingClaims } from '../composables/useAccount'
 import { money } from '../data/catalogue'
 
@@ -116,7 +116,18 @@ async function refresh () {
 const STEPS = ['placed', 'confirmed', 'preparing', 'out_for_delivery', 'delivered']
 const stepIndex = o => STEPS.indexOf(o.status)
 const azn = minor => `${money((minor ?? 0) / 100)} AZN`
-const when = iso => iso ? new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+/* Month names written out rather than asked of Intl: browsers have no proper
+   Azerbaijani date format and print "2026 M10 19" instead. */
+const MONTHS = {
+  az: ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avq', 'sen', 'okt', 'noy', 'dek'],
+  ru: ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+}
+const when = iso => {
+  const d = iso ? new Date(iso) : null
+  if (!d || Number.isNaN(d.getTime())) return ''
+  return `${d.getDate()} ${(MONTHS[lang.value] ?? MONTHS.az)[d.getMonth()]} ${d.getFullYear()}`
+}
 
 async function cancel (o) {
   if (!window.confirm(t('acc.cancelAsk'))) return
