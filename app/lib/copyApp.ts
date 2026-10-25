@@ -224,7 +224,7 @@ export const APP_COPY: Record<Lang, Record<string, string>> = {
     'cat.search': 'Поиск товаров',
     'cat.popular': 'Хиты',
     'cat.popularLead': 'Заказывают чаще всего',
-    'sets.title': 'Специальные предложения',
+    'sets.title': 'Спецпредложения',
     'sets.lead': 'Наборы выгоднее, чем по отдельности',
     'sets.badge': 'Набор · −{off}',
     'sets.save': 'выгода',

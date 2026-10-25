@@ -52,7 +52,7 @@ const hidden = computed(() => matches.value.length - shown.value.length)
       <tbody>
         <tr v-for="z in shown" :key="z.id">
           <td :title="name(z)">{{ name(z) }}</td>
-          <td class="zones__fee" :class="{ 'is-range': z.fee[0] !== z.fee[1] }">{{ feeText(z) }} <small>AZN</small></td>
+          <td class="zones__fee" :class="{ 'is-range': z.fee[0] !== z.fee[1] }">{{ feeText(z) }} <small>₼</small></td>
         </tr>
         <tr v-if="!matches.length"><td colspan="2" class="zones__none">{{ t('deliv.zoneNone') }}</td></tr>
       </tbody>

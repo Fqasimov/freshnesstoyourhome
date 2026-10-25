@@ -232,7 +232,7 @@ function safeMap (value) {
                 <td>
                   {{ i.name }}
                   <div class="a-muted" style="font-size:.75rem">
-                    {{ i.qty }} × {{ toAzn(i.unit_price_minor) }} AZN
+                    {{ i.qty }} × {{ toAzn(i.unit_price_minor) }} ₼
                     <span v-if="i.is_weight_based">· çəkiyə görə</span>
                   </div>
                 </td>

@@ -61,8 +61,8 @@ const countLabel = computed(() =>
           <div class="line__img"><img :src="l.product.img" alt=""></div>
           <div class="line__t">
             <b>{{ nm(l.product) }}</b>
-            <span>{{ l.unit }} · {{ l.price }} AZN</span>
-            <em>{{ money(l.price * l.qty) }} AZN</em>
+            <span>{{ l.unit }} · {{ l.price }} ₼</span>
+            <em>{{ money(l.price * l.qty) }} ₼</em>
             <small v-if="l.weighed" class="line__w">{{ t('ui.weightVaries') }}</small>
           </div>
           <div class="line__r">
@@ -102,7 +102,7 @@ const countLabel = computed(() =>
     <div class="drawer__foot" v-if="lines.length">
       <div class="total">
         <span>{{ t('cart.sub') }}</span>
-        <b>{{ money(total) }}<i>AZN</i></b>
+        <b>{{ money(total) }}<i>₼</i></b>
       </div>
 
       <!-- Goods sold by the kilo are weighed by the courier, so the figure
@@ -110,7 +110,7 @@ const countLabel = computed(() =>
            the whole difference between an expectation and an argument. -->
       <p v-if="weighed && ceiling" class="drawer__weighed">
         {{ t('ui.weighedNote') }}
-        <b>{{ t('ui.waWeighed') }} {{ money(ceiling) }} AZN</b>
+        <b>{{ t('ui.waWeighed') }} {{ money(ceiling) }} ₼</b>
       </p>
 
       <!-- Where it is going. Asked here rather than over WhatsApp, so the
@@ -142,7 +142,7 @@ const countLabel = computed(() =>
         <select id="cart-zone" class="deliv__in" v-model="zoneId">
           <option value="">{{ t('deliv.zonePick') }}</option>
           <option v-for="z in ZONES" :key="z.id" :value="z.id">
-            {{ nm(z) }} — {{ z.fee[0] === z.fee[1] ? z.fee[0] : z.fee[0] + '–' + z.fee[1] }} AZN
+            {{ nm(z) }} — {{ z.fee[0] === z.fee[1] ? z.fee[0] : z.fee[0] + '–' + z.fee[1] }} ₼
           </option>
         </select>
 

@@ -248,7 +248,7 @@ class PushNotificationTest extends TestCase
 
         (new SendOrderPush($order->id, 'weighed'))->handle(app(\App\Services\PushSender::class));
 
-        Http::assertSent(fn ($request) => str_contains($request->data()[0]['body'], '71.50 AZN'));
+        Http::assertSent(fn ($request) => str_contains($request->data()[0]['body'], '71.50 ₼'));
     }
 
     /* ── housekeeping ─────────────────────────────────────────────────── */

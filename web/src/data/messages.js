@@ -42,12 +42,12 @@ const OWN = {
     'sort.desc':'Qiymət: bahadan ucuza','sort.az':'Ad: A–Z',
 
     'story.eyebrow':'Haqqımızda',
-    'story.quote':'Freshness to your home — gündəlik və xüsusi süfrələriniz üçün <em>premium qida məhsullarını bir ünvanda</em> birləşdiririk.',
+    'story.quote':'Freshness To Your Home — gündəlik və xüsusi süfrələriniz üçün <em>premium qida məhsullarını bir ünvanda</em> birləşdiririk.',
     'story.copy':'Təzə balıq və dəniz məhsulları, qırmızı və qara kürü, Avropa və yerli pendirlər, İtalyan dondurmaları və desertlər, toyuq məhsulları və digər seçilmiş məhsullar.',
     'story.meta':'Premium qida məhsulları · Bakı',
 
     'dl.eyebrow':'Çatdırılma şərtləri','dl.h2':'Çatdırılma',
-    'dl.copy':'Sifarişlərinizi Bakı və Bakıətrafı bütün qəsəbələrə çatdırırıq. Məhsulların saxlanması və daşınması zamanı keyfiyyətinə isə zəmanət veririk.',
+    'dl.copy':'Sifarişlərinizi Bakı və Bakı ətrafı bütün qəsəbələrə çatdırırıq. Məhsulların saxlanması və daşınması zamanı keyfiyyətinə isə zəmanət veririk.',
     'dl.close':'Həftənin 7 günü, 10:00–22:00 — seçin, sifariş edin, təzə və soyuq şəkildə evinizdə qəbul edin.',
     'dl.zones':'Çatdırılma əraziləri','dl.fee':'Çatdırılma haqqı','dl.min':'Minimum sifariş',
     'dl.ask':'Sifariş zamanı dəqiqləşdirilir',
@@ -75,7 +75,7 @@ const OWN = {
     'h.zonenote':'Çatdırılma əraziləri və qiymətləri üzrə dəqiq məlumat üçün bizimlə əlaqə saxlayın.',
 
     'foot.privacy':'Məxfilik siyasəti',
-    'foot.note':'Qiymətlər AZN ilə, göstərilən vahidə görədir, dərc olunduğu tarixə aiddir və bazara uyğun dəyişə bilər. “1 kq” kimi göstərilən çəkilər çatdırılma zamanı faktiki çəkiyə görə dəqiqləşdirilir.',
+    'foot.note':'Qiymətlər manatla (₼), göstərilən vahidə görədir, dərc olunduğu tarixə aiddir və bazara uyğun dəyişə bilər. “1 kq” kimi göstərilən çəkilər çatdırılma zamanı faktiki çəkiyə görə dəqiqləşdirilir.',
     'foot.tags':'Axtarılan məhsullar',
 
     'cart.t':'Səbətiniz','cart.sub':'Təxmini məbləğ',
@@ -105,7 +105,7 @@ const OWN = {
     'cat.hit':'Hit','cat.popular':'Hit məhsullar','cat.popularLead':'Ən çox sifariş olunanlar',
     'cat.all':'Bütün məhsullar','cat.count':'{n} məhsul','cat.showAll':'Hamısına bax',
     'ui.less':'Birini çıxar','ui.more':'Birini əlavə et',
-    'price.under':'20 AZN-ə qədər','price.mid':'20–50 AZN','price.high':'50–100 AZN','price.top':'100 AZN-dən yuxarı',
+    'price.under':'20 ₼-dək','price.mid':'20–50 ₼','price.high':'50–100 ₼','price.top':'100 ₼-dan yuxarı',
     'nav.catalogue':'Kataloq',
     'cta.go':'Kataloqa keçid edin','cta.sub':'Altı bölmə, axtarış və filtrlər',
     'cta.band.h':'Tam kataloqu gəzin','cta.band.p':'Bölmələrə görə süzün, qiymət aralığı seçin, axtarın — bütün məhsullarımız bir səhifədə.',
@@ -128,7 +128,7 @@ const OWN = {
   },
 
   ru: {
-    'nav.shop':'Каталог','nav.sets':'Акции','nav.week':'Хиты заказов','nav.story':'О нас',
+    'nav.shop':'Каталог','nav.sets':'Спецпредложения','nav.week':'Хиты заказов','nav.story':'О нас',
     'nav.how':'Как заказать?','nav.delivery':'Доставка','nav.contact':'Контакты','nav.cart':'Корзина',
 
     'brand.tag':'Вкус приезжает к вам домой',
@@ -148,7 +148,7 @@ const OWN = {
     'pr4.t':'Заказ за день',
     'pr4.d':'Заказ лучше оформить за день — часть продуктов производится утром того же дня.',
 
-    'sets.eyebrow':'Выгодные предложения','sets.h2':'Специальные предложения',
+    'sets.eyebrow':'Выгодные предложения','sets.h2':'Спецпредложения',
     'sets.copy':'Мы собрали в наборы то, что чаще всего заказывают вместе — выгоднее, чем покупать по отдельности.',
     'sets.save':'выгода','sets.includes':'Состав набора','sets.add':'Добавить набор',
 
@@ -162,7 +162,7 @@ const OWN = {
     'sort.desc':'Цена: по убыванию','sort.az':'Название: А–Я',
 
     'story.eyebrow':'О нас',
-    'story.quote':'Freshness to your home — собираем <em>премиальные продукты в одном месте</em> для ваших ежедневных и праздничных столов.',
+    'story.quote':'Freshness To Your Home — собираем <em>премиальные продукты в одном месте</em> для ваших ежедневных и праздничных столов.',
     'story.copy':'Свежая рыба и морепродукты, красная и чёрная икра, европейские и местные сыры, итальянское мороженое и десерты, птица и другие отборные продукты.',
     'story.meta':'Премиальные продукты питания · Баку',
 
@@ -225,13 +225,13 @@ const OWN = {
     'cat.hit':'Хит','cat.popular':'Хиты','cat.popularLead':'Заказывают чаще всего',
     'cat.all':'Все товары','cat.count':'Товаров: {n}','cat.showAll':'Смотреть все',
     'ui.less':'Убрать одну','ui.more':'Добавить ещё',
-    'price.under':'до 20 AZN','price.mid':'20–50 AZN','price.high':'50–100 AZN','price.top':'выше 100 AZN',
+    'price.under':'до 20 ₼','price.mid':'20–50 ₼','price.high':'50–100 ₼','price.top':'выше 100 ₼',
     'nav.catalogue':'Каталог',
     'cta.go':'Перейти в каталог','cta.sub':'Шесть разделов, поиск и фильтры',
     'cta.band.h':'Загляните в полный каталог','cta.band.p':'Фильтр по разделам, диапазон цен, поиск — весь ассортимент на одной странице.',
     'cta.sets':'Эти наборы — лишь малая часть нашего каталога.',
     'cta.more':'Больше товаров',
-    'cat.sets.h':'Акции и наборы','cat.sets.p':'Готовые наборы — выгоднее, чем покупать по отдельности.',
+    'cat.sets.h':'Спецпредложения и наборы','cat.sets.p':'Готовые наборы — выгоднее, чем покупать по отдельности.',
     'counter.smoked':'Белуга, лосось, форель — холодного и горячего копчения.',
     'counter.fresh':'Стейки, филе и рыба целиком.',
     'counter.seafood':'Креветки, мидии, кальмар, омар и икра.',
@@ -282,7 +282,7 @@ const OWN = {
     'sort.desc':'Price: high to low','sort.az':'Name: A–Z',
 
     'story.eyebrow':'About us',
-    'story.quote':'Freshness to your home — premium food for your everyday table and your special ones, <em>gathered in one place</em>.',
+    'story.quote':'Freshness To Your Home — premium food for your everyday table and your special ones, <em>gathered in one place</em>.',
     'story.copy':'Fresh fish and seafood, red and black caviar, European and local cheeses, Italian ice cream and desserts, poultry and other chosen goods.',
     'story.meta':'Premium food products · Baku',
 
@@ -315,7 +315,7 @@ const OWN = {
     'h.zonenote':'Get in touch for exact delivery areas and charges.',
 
     'foot.privacy':'Privacy policy',
-    'foot.note':'Prices in AZN, per the unit shown, current at the time of publication and subject to change with the market. Weights marked “1 kg” are settled on delivery against the actual weight supplied.',
+    'foot.note':'Prices in manat (₼), per the unit shown, current at the time of publication and subject to change with the market. Weights marked “1 kg” are settled on delivery against the actual weight supplied.',
     'foot.tags':'Popular searches',
 
     'cart.t':'Your basket','cart.sub':'Estimated total',
@@ -345,7 +345,7 @@ const OWN = {
     'cat.hit':'Hit','cat.popular':'Best sellers','cat.popularLead':'What people order most',
     'cat.all':'All products','cat.count':'{n} products','cat.showAll':'See all',
     'ui.less':'Remove one','ui.more':'Add one more',
-    'price.under':'under 20 AZN','price.mid':'20–50 AZN','price.high':'50–100 AZN','price.top':'over 100 AZN',
+    'price.under':'under 20 ₼','price.mid':'20–50 ₼','price.high':'50–100 ₼','price.top':'over 100 ₼',
     'nav.catalogue':'Catalogue',
     'cta.go':'Go to the catalogue','cta.sub':'Six counters, search and filters',
     'cta.band.h':'Browse the full catalogue','cta.band.p':'Filter by counter, pick a price range, search — everything we carry on one page.',

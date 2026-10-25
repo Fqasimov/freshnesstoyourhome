@@ -115,7 +115,7 @@ async function refresh () {
 
 const STEPS = ['placed', 'confirmed', 'preparing', 'out_for_delivery', 'delivered']
 const stepIndex = o => STEPS.indexOf(o.status)
-const azn = minor => `${money((minor ?? 0) / 100)} AZN`
+const azn = minor => `${money((minor ?? 0) / 100)} ₼`
 /* Month names written out rather than asked of Intl: browsers have no proper
    Azerbaijani date format and print "2026 M10 19" instead. */
 const MONTHS = {

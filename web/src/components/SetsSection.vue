@@ -59,7 +59,7 @@ function addSet (set, ev) {
             <!-- What the shop chose to show: the percentage or the amount
                  off. The bundled sets of the offline copy have only `off`. -->
             <span v-if="s.discount?.show === 'amount'" class="set__save">{{ badgeText(s.discount, money) }}</span>
-            <span v-else class="set__save">{{ s.discount ? badgeText(s.discount, money) : `−${s.off}%` }} · {{ money(s.saving) }} AZN {{ t('sets.save') }}</span>
+            <span v-else class="set__save">{{ s.discount ? badgeText(s.discount, money) : `−${s.off}%` }} · {{ money(s.saving) }} ₼ {{ t('sets.save') }}</span>
             <h3>{{ nm(s) }}</h3>
             <p class="set__desc">{{ dsc(s) }}</p>
 
@@ -69,8 +69,8 @@ function addSet (set, ev) {
 
             <div class="set__foot">
               <span class="set__price">
-                <b>{{ money(s.price) }}<i>AZN</i></b>
-                <s>{{ money(s.full) }} AZN</s>
+                <b>{{ money(s.price) }}<i>₼</i></b>
+                <s>{{ money(s.full) }} ₼</s>
               </span>
               <button class="btn btn--brick" @click="addSet(s, $event)">
                 <span>{{ t('sets.add') }}</span>

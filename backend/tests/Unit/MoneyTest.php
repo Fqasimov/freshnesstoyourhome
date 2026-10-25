@@ -43,10 +43,10 @@ class MoneyTest extends TestCase
 
     public function test_formatting_never_loses_a_qepik(): void
     {
-        $this->assertSame('24.60 AZN', Money::format(2460));
-        $this->assertSame('0.05 AZN', Money::format(5));
-        $this->assertSame('0.00 AZN', Money::format(0));
-        $this->assertSame('1 234 567.89 AZN', Money::format(123456789));
-        $this->assertSame('-3.50 AZN', Money::format(-350));
+        $this->assertSame('24.60 ₼', Money::format(2460));
+        $this->assertSame('0.05 ₼', Money::format(5));
+        $this->assertSame('0.00 ₼', Money::format(0));
+        $this->assertSame('1 234 567.89 ₼', Money::format(123456789));
+        $this->assertSame('-3.50 ₼', Money::format(-350));
     }
 }

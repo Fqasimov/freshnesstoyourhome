@@ -114,11 +114,11 @@ async function save () {
         <h3>Qiymət</h3>
         <div class="a-row">
           <div class="a-field" style="flex:1">
-            <label for="zf-fee">Çatdırılma (AZN)</label>
+            <label for="zf-fee">Çatdırılma (₼)</label>
             <input id="zf-fee" v-model="form.fee" class="a-in" inputmode="decimal" placeholder="7.00">
           </div>
           <div class="a-field" style="flex:1">
-            <label for="zf-min">Minimum sifariş (AZN)</label>
+            <label for="zf-min">Minimum sifariş (₼)</label>
             <input id="zf-min" v-model="form.min" class="a-in" inputmode="decimal" placeholder="0">
           </div>
         </div>

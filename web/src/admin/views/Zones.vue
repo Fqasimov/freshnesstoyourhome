@@ -46,13 +46,13 @@ async function patch (zone, body, note) {
 function saveFee (z) {
   const minor = toMinor(fee.value[z.id])
   if (!Number.isFinite(minor) || minor < 0 || minor === z.fee_minor) return
-  patch(z, { fee_minor: minor }, `${z.name?.az ?? z.id}: çatdırılma ${toAzn(minor)} AZN`)
+  patch(z, { fee_minor: minor }, `${z.name?.az ?? z.id}: çatdırılma ${toAzn(minor)} ₼`)
 }
 
 function saveMin (z) {
   const minor = toMinor(min.value[z.id])
   if (!Number.isFinite(minor) || minor < 0 || minor === z.min_order_minor) return
-  patch(z, { min_order_minor: minor }, `${z.name?.az ?? z.id}: minimum ${toAzn(minor)} AZN`)
+  patch(z, { min_order_minor: minor }, `${z.name?.az ?? z.id}: minimum ${toAzn(minor)} ₼`)
 }
 
 function removed (id) {
@@ -87,8 +87,8 @@ onMounted(load)
       <thead>
         <tr>
           <th>Zona</th>
-          <th class="num">Çatdırılma (AZN)</th>
-          <th class="num">Minimum sifariş (AZN)</th>
+          <th class="num">Çatdırılma (₼)</th>
+          <th class="num">Minimum sifariş (₼)</th>
           <th>Aktiv</th>
         </tr>
       </thead>

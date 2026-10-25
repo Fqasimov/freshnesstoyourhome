@@ -211,18 +211,18 @@ function adaptCategories (apiCategories, products) {
  * which is also why nothing here awaits before the first paint.
  */
 /* The delivery areas the server serves, in the website's shape.
-   An area the panel added appears; one it switched off disappears; a fee it
-   changed wins. Where the server's fee is still the low end of the range in
-   shared/delivery.json, that range is kept — "5–7 AZN" is truer than "5". */
+   An area the panel added appears; one it switched off disappears; its fee is
+   the server's own, exactly — the figure the order will be charged, so the
+   home page, the delivery table and the basket can never show another. */
 function mergeZones (apiZones) {
   const bundled = new Map(ZONES.map(z => [z.id, z]))
   const next = apiZones.map(z => {
-    const fee = Math.round(z.fee_minor / 100)
+    const fee = Math.round(z.fee_minor) / 100
     const known = bundled.get(z.id)
     const name = z.name ?? {}
     return {
       id: z.id,
-      fee: known && known.fee[0] === fee ? known.fee : [fee, fee],
+      fee: [fee, fee],
       az: name.az ?? known?.az ?? z.id,
       ru: name.ru ?? known?.ru ?? name.az ?? z.id,
       en: name.en ?? known?.en ?? name.az ?? z.id,

@@ -83,7 +83,7 @@ function savePrice (row) {
     return
   }
   if (minor === row.price_minor) return
-  patch(row, { price_minor: minor }, `${row.name?.az ?? row.id}: ${toAzn(minor)} AZN`)
+  patch(row, { price_minor: minor }, `${row.name?.az ?? row.id}: ${toAzn(minor)} ₼`)
 }
 
 /* Order is set within one category. The arrows move a product past its
@@ -228,7 +228,7 @@ onMounted(() => {
           <th>Məhsul</th>
           <th>Bölmə</th>
           <th>Vahid</th>
-          <th class="num">Qiymət (AZN)</th>
+          <th class="num">Qiymət (₼)</th>
           <th>Stok</th>
           <th>Vitrin</th>
           <th>Populyar</th>

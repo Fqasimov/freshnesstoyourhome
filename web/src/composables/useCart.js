@@ -231,7 +231,7 @@ export function useCart () {
      for six of the nineteen zones it is a range and no single number is
      truthful. The shop settles it in the same reply that confirms the
      weights, which is a conversation it was always going to have. */
-  const deliveryText = computed(() => (zone.value ? `${feeText(zone.value)} AZN` : ''))
+  const deliveryText = computed(() => (zone.value ? `${feeText(zone.value)} ₼` : ''))
 
   /* Nowhere to send it is as incomplete a basket as nothing in it. */
   const NAME_OK = /^\p{L}[\p{L}\s'’.-]*$/u
@@ -251,12 +251,12 @@ const canSend = computed(() => Boolean(
     let msg = t('ui.waIntro') + '\n\n'
     if (code) msg += `${t('ui.waCode')}: ${code}\n\n`
     lines.value.forEach(l => {
-      msg += `• ${nm(l.product)} — ${l.unit} × ${l.qty} = ${money(l.price * l.qty)} AZN\n`
+      msg += `• ${nm(l.product)} — ${l.unit} × ${l.qty} = ${money(l.price * l.qty)} ₼\n`
     })
 
-    msg += `\n${t('ui.waTotal')}: ${money(total.value)} AZN`
+    msg += `\n${t('ui.waTotal')}: ${money(total.value)} ₼`
     if (weighed.value && ceiling.value) {
-      msg += ` (${t('ui.waWeighed')} ${money(ceiling.value)} AZN)`
+      msg += ` (${t('ui.waWeighed')} ${money(ceiling.value)} ₼)`
     }
 
     if (zone.value) msg += `\n${t('ui.waDeliv')}: ${nm(zone.value)} — ${deliveryText.value}`

@@ -181,7 +181,7 @@ async function submit () {
       </div>
       <div class="a-row">
         <div class="a-field" style="flex:1">
-          <label for="np-price">Qiymət (AZN)</label>
+          <label for="np-price">Qiymət (₼)</label>
           <input id="np-price" v-model="form.price" class="a-in" inputmode="decimal" placeholder="4.50">
         </div>
         <div class="a-field" style="flex:1">

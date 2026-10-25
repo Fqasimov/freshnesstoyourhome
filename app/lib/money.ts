@@ -16,7 +16,7 @@ export function money (minor: number | null | undefined, currency = 'AZN'): stri
   // trimmed ICU and cannot be relied on for an az locale.
   const grouped = String(major).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 
-  return `${sign}${grouped}.${cents} ${currency}`
+  return `${sign}${grouped}.${cents} ${currency === 'AZN' ? '₼' : currency}`
 }
 
 /** Weights are carried to three decimals, matching the scales and the column. */

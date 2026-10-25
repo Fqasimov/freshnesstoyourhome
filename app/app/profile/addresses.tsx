@@ -5,11 +5,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { api, ApiError, type Address } from '@/lib/api'
 import { useCatalogue } from '@/lib/catalogue'
 import { pick, t, useLang } from '@/lib/i18n'
+import { zoneById } from '@/lib/zones'
 import { AppBar, Body, Button, Empty, Field, Loading, Note, Small, inputStyle } from '@/components/ui'
 import { Icon } from '@/components/Icon'
 import { Sheet } from '@/components/Sheet'
 import { color, font, space } from '@/theme/tokens'
-import { feeText, isRange, zoneById } from '@/lib/zones'
 import { money } from '@/lib/money'
 
 type Draft = {
@@ -185,9 +185,6 @@ function AddressForm ({ draft, setDraft, error, saving, onSave, onCancel, curren
             {chosen ? <Text style={s.fee}>{zoneFee(chosen, currency)}</Text> : null}
             <Icon name="chevron-down" size={14} color={color.ink3} />
           </Pressable>
-          {chosen && quotedAsRange(chosen)
-            ? <Small style={{ marginTop: 8 }}>{t('deliv.feeRange')}</Small>
-            : null}
         </Field>
 
         <Field label={t('deliv.addr')}>
@@ -285,20 +282,10 @@ function ZoneSheet ({ open, zones, currency, selected, onClose, onPick }: {
   )
 }
 
-/* The panel's fee, always. The shared file's range is kept only while the
-   panel's figure is still that range's low end — "5–7" is truer than "5" —
-   so a fee changed in the panel shows here at once, as on the website. */
-function sharedRange (z: Zone) {
-  const shared = zoneById(z.id)
-  return shared && shared.fee[0] * 100 === z.fee_minor ? shared : null
-}
-
+/* The panel's fee, exactly — the figure the order will be charged. */
 function zoneFee (z: Zone, currency: string): string {
-  const shared = sharedRange(z)
-  return shared ? `${feeText(shared)} ${currency}` : money(z.fee_minor, currency)
+  return money(z.fee_minor, currency)
 }
-
-const quotedAsRange = (z: Zone) => isRange(sharedRange(z))
 
 const s = StyleSheet.create({
   card: {

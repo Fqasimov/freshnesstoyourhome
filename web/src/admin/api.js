@@ -160,4 +160,4 @@ export const toAzn = minor => (Number(minor ?? 0) / 100).toFixed(2)
 export const toMinor = azn => Math.round(Number(String(azn).replace(',', '.')) * 100)
 
 export const money = (minor, currency = 'AZN') =>
-  `${toAzn(minor)} ${currency}`
+  `${toAzn(minor)} ${currency === 'AZN' ? '₼' : currency}`

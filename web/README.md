@@ -115,7 +115,7 @@ Azerbaijani, Russian and English, so any face carrying translated text has to
 have both the schwa (ə, Ə) and Cyrillic. That was checked against the actual
 glyph tables rather than assumed — Manrope has no Ə, Golos Text has neither,
 and **Fraunces has no Cyrillic at all**, which is why it is confined to the
-brand's own name, where the text is "Freshness to your home" in every language
+brand's own name, where the text is "Freshness To Your Home" in every language
 and can never become something else. Its `<link>` carries `&text=`, so Google
 returns those thirteen letters and nothing else: 4 KB instead of 90, and any
 other character falls straight through to the next font in the stack.

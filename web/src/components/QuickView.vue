@@ -132,7 +132,7 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
           <div v-if="product.variants" class="variants">
             <button v-for="(v, i) in product.variants" :key="i"
                     :class="{ on: variant === i }" @click="variant = i">
-              {{ unitOf(product, v) }} · {{ v.price }} AZN
+              {{ unitOf(product, v) }} · {{ v.price }} ₼
             </button>
           </div>
 
@@ -140,9 +140,9 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
             <div><dt>{{ t('ui.category') }}</dt><dd>{{ catName(product.cat) }}</dd></div>
             <div><dt>{{ t('ui.unit') }}</dt><dd>{{ unit }}</dd></div>
             <div><dt>{{ t('ui.price') }}</dt><dd>
-              {{ price }} AZN
+              {{ price }} ₼
               <template v-if="product.discount && !chosen">
-                <s class="modal__was">{{ money(product.regular) }} AZN</s>
+                <s class="modal__was">{{ money(product.regular) }} ₼</s>
                 <span class="modal__sale">{{ badgeText(product.discount, money) }}</span>
               </template>
             </dd></div>
@@ -161,7 +161,7 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
               <button @click="stepQty(1)" aria-label="+">+</button>
             </div>
             <button class="btn" @click="confirm">
-              <span>{{ t('ui.add') }} · {{ money(price * qty) }} AZN</span>
+              <span>{{ t('ui.add') }} · {{ money(price * qty) }} ₼</span>
             </button>
           </div>
           <p v-if="weighed" class="modal__vary">{{ t('ui.weightVaries') }}</p>

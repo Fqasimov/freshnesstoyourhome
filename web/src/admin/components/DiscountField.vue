@@ -60,7 +60,7 @@ const error = computed(() => {
     if (!PCT.test(pctText.value.trim())) return 'Faiz: məs. 10, 16.4 və ya 5,6 — ən çox iki onluq.'
     if (!(percent.value > 0 && percent.value <= props.maxPercent)) return `Faiz 0-dan böyük, ${props.maxPercent}%-dən çox olmamalıdır.`
   } else {
-    if (!AMT.test(amtText.value.trim())) return 'Məbləğ: məs. 2 və ya 2.50 AZN.'
+    if (!AMT.test(amtText.value.trim())) return 'Məbləğ: məs. 2 və ya 2.50 ₼.'
     if (!(minor.value > 0)) return 'Məbləğ 0-dan böyük olmalıdır.'
     if (props.base > 0 && minor.value * 100 > props.base * props.maxPercent) return `Məbləğ qiymətin ${props.maxPercent}%-indən çox ola bilməz.`
   }
@@ -100,7 +100,7 @@ watch([kind, pctText, amtText, show, error], () => {
         <span>−</span>
         <input v-model="amtText" class="a-in a-in--num" inputmode="decimal" placeholder="0.00" aria-label="Endirim məbləği"
                :class="{ 'a-in--dirty': kind === 'amount' && error }" @input="fromAmount">
-        <span>AZN</span>
+        <span>₼</span>
       </label>
       <button v-if="kind" type="button" class="a-btn a-btn--sm a-btn--ghost" @click="clear">Endirimi sil</button>
     </div>
@@ -113,7 +113,7 @@ watch([kind, pctText, amtText, show, error], () => {
 
     <p v-if="error" class="a-note a-note--err" style="margin:8px 0 0">{{ error }}</p>
     <p v-else-if="after != null" class="a-muted dsc__after">
-      Yeni qiymət <b>{{ fmt(after) }} AZN</b> <s>{{ fmt(base) }} AZN</s>
+      Yeni qiymət <b>{{ fmt(after) }} ₼</b> <s>{{ fmt(base) }} ₼</s>
       · hesablanan: {{ kind === 'percent' ? 'faizlə' : 'məbləğlə' }}
     </p>
     <p v-else-if="!kind" class="a-muted dsc__after">Endirim yoxdur.</p>

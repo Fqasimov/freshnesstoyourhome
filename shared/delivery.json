@@ -1,6 +1,6 @@
 {
   "_": "Delivery zones — the single source. Edit here, run npm run sync at the repo root, and the website and the app both change. See shared/README.md.",
-  "_fee": "A PAIR [low, high] in whole manats. Equal ends mean a flat fee. Half of these are ranges because the distance inside the area varies enough that the shop will not commit to one figure until it knows the address, which is why delivery is quoted as its own line rather than folded into a total.",
+  "_fee": "A PAIR [low, high] in whole manats; today every pair is flat, because the order is charged one fixed fee per area (the low end of the old ranges) and the site must show the figure the order will carry. The admin panel's fee is the authority once the API answers; this is what seeds it and what shows before it does.",
   "_order": "The shop's own order: broadly cheapest first, city before the settlements around it.",
   "_names": "The Russian and English names are transliterations of the Azerbaijani, which is the form the shop itself uses.",
   "zones": [
@@ -108,7 +108,7 @@
       "id": "binegedi",
       "fee": [
         6,
-        7
+        6
       ],
       "az": "Binəqədi",
       "ru": "Бинагади",
@@ -118,7 +118,7 @@
       "id": "badamdar",
       "fee": [
         6,
-        7
+        6
       ],
       "az": "Badamdar",
       "ru": "Бадамдар",
@@ -128,7 +128,7 @@
       "id": "nzs",
       "fee": [
         6,
-        7
+        6
       ],
       "az": "NZS",
       "ru": "НЗС",
@@ -138,7 +138,7 @@
       "id": "dernegul",
       "fee": [
         6,
-        7
+        6
       ],
       "az": "Dərnəgül",
       "ru": "Дарнагюль",
@@ -178,7 +178,7 @@
       "id": "bilecari",
       "fee": [
         7,
-        8
+        7
       ],
       "az": "Biləcəri",
       "ru": "Биладжари",
@@ -188,7 +188,7 @@
       "id": "neftciler",
       "fee": [
         7,
-        8
+        7
       ],
       "az": "Neftçilər",
       "ru": "Нефтчиляр",
@@ -198,7 +198,7 @@
       "id": "sabuncu",
       "fee": [
         7,
-        8
+        7
       ],
       "az": "Sabunçu",
       "ru": "Сабунчу",
@@ -208,7 +208,7 @@
       "id": "xalqlar-dostlugu",
       "fee": [
         7,
-        8
+        7
       ],
       "az": "Xalqlar Dostluğu",
       "ru": "Дружба народов",
@@ -218,7 +218,7 @@
       "id": "gunesli",
       "fee": [
         7,
-        8
+        7
       ],
       "az": "Günəşli",
       "ru": "Гюнешли",
@@ -228,7 +228,7 @@
       "id": "koroglu-etrafi",
       "fee": [
         7,
-        8
+        7
       ],
       "az": "Koroğlu ətrafı",
       "ru": "Район Кёроглу",
@@ -238,7 +238,7 @@
       "id": "avtovagzal",
       "fee": [
         7,
-        8
+        7
       ],
       "az": "Avtovağzal",
       "ru": "Автовокзал",
@@ -248,7 +248,7 @@
       "id": "bakixanov",
       "fee": [
         8,
-        10
+        8
       ],
       "az": "Bakıxanov (Razin)",
       "ru": "Бакиханов (Разин)",
@@ -258,7 +258,7 @@
       "id": "yeni-gunesli",
       "fee": [
         8,
-        10
+        8
       ],
       "az": "Yeni Günəşli",
       "ru": "Новый Гюнешли",
@@ -268,7 +268,7 @@
       "id": "sixov",
       "fee": [
         8,
-        10
+        8
       ],
       "az": "Şıxov",
       "ru": "Шихово",
@@ -278,7 +278,7 @@
       "id": "masazir",
       "fee": [
         10,
-        12
+        10
       ],
       "az": "Masazır",
       "ru": "Масазыр",
@@ -288,7 +288,7 @@
       "id": "sulutepe",
       "fee": [
         10,
-        12
+        10
       ],
       "az": "Sulutəpə",
       "ru": "Сулутепе",
@@ -298,7 +298,7 @@
       "id": "ramana",
       "fee": [
         10,
-        12
+        10
       ],
       "az": "Ramana",
       "ru": "Раманы",
@@ -308,7 +308,7 @@
       "id": "sederek-lokbatan",
       "fee": [
         10,
-        15
+        10
       ],
       "az": "Sədərək / Lökbatan",
       "ru": "Сядяряк / Локбатан",
@@ -318,7 +318,7 @@
       "id": "zabrat",
       "fee": [
         10,
-        15
+        10
       ],
       "az": "Zabrat",
       "ru": "Забрат",
@@ -328,7 +328,7 @@
       "id": "mastaga",
       "fee": [
         10,
-        15
+        10
       ],
       "az": "Maştağa",
       "ru": "Маштага",
@@ -338,7 +338,7 @@
       "id": "hovsan",
       "fee": [
         10,
-        15
+        10
       ],
       "az": "Hövsan",
       "ru": "Гёвсан",
@@ -348,7 +348,7 @@
       "id": "mehdiabad",
       "fee": [
         12,
-        15
+        12
       ],
       "az": "Mehdiabad",
       "ru": "Мехдиабад",
@@ -358,7 +358,7 @@
       "id": "kurdexani",
       "fee": [
         12,
-        15
+        12
       ],
       "az": "Kürdəxanı",
       "ru": "Кюрдаханы",
@@ -378,7 +378,7 @@
       "id": "qaradag",
       "fee": [
         15,
-        20
+        15
       ],
       "az": "Qaradağ",
       "ru": "Гарадаг",
@@ -388,7 +388,7 @@
       "id": "pirsagi",
       "fee": [
         15,
-        20
+        15
       ],
       "az": "Pirşağı",
       "ru": "Пиршаги",
@@ -398,7 +398,7 @@
       "id": "novxani",
       "fee": [
         15,
-        20
+        15
       ],
       "az": "Novxanı",
       "ru": "Новханы",
@@ -408,7 +408,7 @@
       "id": "turkan",
       "fee": [
         15,
-        20
+        15
       ],
       "az": "Türkan",
       "ru": "Тюркян",
@@ -418,7 +418,7 @@
       "id": "qala",
       "fee": [
         15,
-        20
+        15
       ],
       "az": "Qala",
       "ru": "Гала",
@@ -428,7 +428,7 @@
       "id": "sagan",
       "fee": [
         15,
-        20
+        15
       ],
       "az": "Şağan",
       "ru": "Шаган",
@@ -438,7 +438,7 @@
       "id": "fatmayi",
       "fee": [
         18,
-        20
+        18
       ],
       "az": "Fatmayı",
       "ru": "Фатмаи",
@@ -498,7 +498,7 @@
       "id": "suvelan",
       "fee": [
         20,
-        25
+        20
       ],
       "az": "Şüvəlan",
       "ru": "Шувелян",
@@ -508,7 +508,7 @@
       "id": "zire",
       "fee": [
         20,
-        25
+        20
       ],
       "az": "Zirə",
       "ru": "Зира",

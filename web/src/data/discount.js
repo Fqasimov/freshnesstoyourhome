@@ -16,10 +16,10 @@ export const shareOf = (minor, whole, off) =>
 /* "16.4" and "16,4" are the same number to a shopkeeper. */
 export const parseNum = v => Number(String(v ?? '').trim().replace(',', '.'))
 
-/* What the badge says: "−16.4%" or "−2.50 AZN". `money` formats manats. */
+/* What the badge says: "−16.4%" or "−2.50 ₼". `money` formats manats. */
 export function badgeText (d, money) {
   if (!d) return ''
   return d.show === 'amount'
-    ? `−${money(d.amount_minor / 100)} AZN`
+    ? `−${money(d.amount_minor / 100)} ₼`
     : `−${String(d.percent).replace(/\.0+$/, '')}%`
 }

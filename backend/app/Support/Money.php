@@ -42,6 +42,8 @@ final class Money
         $major = number_format(intdiv($minor, 100), 0, '.', ' ');
         $cents = str_pad((string) ($minor % 100), 2, '0', STR_PAD_LEFT);
 
-        return $sign.$major.'.'.$cents.' '.$currency;
+        // The manat sign, as everywhere a customer reads a price; any other
+        // currency keeps its code.
+        return $sign.$major.'.'.$cents.' '.($currency === 'AZN' ? '₼' : $currency);
     }
 }
