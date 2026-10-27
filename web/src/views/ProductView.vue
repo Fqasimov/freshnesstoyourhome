@@ -3,9 +3,9 @@ import { computed, ref, watch, watchEffect, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import BIcon from '../components/BIcon.vue'
 import ProductCard from '../components/ProductCard.vue'
-import { PRODUCTS, money, catalogueSettled } from '../data/catalogue'
+import { PRODUCTS, CATEGORIES, money, catalogueSettled } from '../data/catalogue'
 import { badgeText } from '../data/discount'
-import { productPath } from '../data/slug'
+import { productPath, categoryPath } from '../data/slug'
 import { useI18n } from '../composables/useI18n'
 import { setProductMeta, clearProductMeta } from '../composables/usePageMeta'
 
@@ -21,7 +21,8 @@ import { setProductMeta, clearProductMeta } from '../composables/usePageMeta'
 const emit = defineEmits(['add', 'add-set', 'peek', 'confirm'])
 
 const route = useRoute()
-const { t, nm, alt, dsc, catName, unitOf } = useI18n()
+const { t, nm, alt, dsc, catName, unitOf, lang } = useI18n()
+const catOf = p => CATEGORIES.find(c => c.id === p?.cat)
 
 const product = computed(() => {
   const key = String(route.params.slug ?? '')
@@ -78,7 +79,10 @@ function buy () {
 /* ── What the tab and a search engine read ──────────────────────────────── */
 watchEffect(() => {
   const p = product.value
-  if (p) setProductMeta(p, { name: nm(p), desc: dsc(p), unit: unitOf(p), category: catName(p.cat) })
+  if (p) {
+    const c = catOf(p)
+    setProductMeta(p, { name: nm(p), desc: dsc(p), unit: unitOf(p), category: catName(p.cat), categoryPath: c ? categoryPath(c) : null, lang: lang.value })
+  }
   else if (catalogueSettled.value) clearProductMeta({ missing: true })
 })
 onUnmounted(() => clearProductMeta())
@@ -95,7 +99,8 @@ const paragraphs = computed(() => dsc(product.value ?? {}).split(/\n+/).map(s =>
         <RouterLink to="/kataloq">{{ t('nav.shop') }}</RouterLink>
         <template v-if="product">
           <BIcon name="chevron-right" :size="10" />
-          <span>{{ catName(product.cat) }}</span>
+          <RouterLink v-if="catOf(product)" :to="categoryPath(catOf(product))">{{ catName(product.cat) }}</RouterLink>
+          <span v-else>{{ catName(product.cat) }}</span>
         </template>
       </nav>
 

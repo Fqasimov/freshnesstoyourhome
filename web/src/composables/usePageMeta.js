@@ -43,12 +43,12 @@ export function setPageHead ({ path, title, desc }) {
  * A product page. Called again whenever the live catalogue changes the price
  * or the visitor changes language, so what Google renders matches the page.
  */
-export function setProductMeta (p, { name, desc, unit, category }) {
+export function setProductMeta (p, { name, desc, unit, category, categoryPath, lang = 'az' }) {
   const path = productPath(p)
   const url = `${location.origin}${path}`
   const facts = { name, price: p.price, unit, desc }
   const title = productTitle(facts)
-  const description = productDescription(facts)
+  const description = productDescription(facts, lang)
 
   document.title = title
   meta('name', 'description').content = description
@@ -62,24 +62,41 @@ export function setProductMeta (p, { name, desc, unit, category }) {
     meta('name', 'twitter:image').content = images[0]
   }
 
-  let ld = document.getElementById('ld-product')
-  if (!ld) {
-    ld = document.createElement('script')
-    ld.type = 'application/ld+json'
-    ld.id = 'ld-product'
-    document.head.appendChild(ld)
-  }
-  ld.textContent = JSON.stringify(productJsonLd({
-    url, name, desc, images, price: p.price, sku: p.id, category,
+  const [product, crumbs] = productJsonLd({
+    url, name, desc, images, price: p.price, sku: p.id, category, lang,
+    categoryUrl: categoryPath ? `${location.origin}${categoryPath}` : undefined,
     weighed: Boolean(p.weighed), site: location.origin,
-  }))
+  })
+  setLd('ld-product', product)
+  setLd('ld-crumbs', crumbs)
 }
 
 /** Leaving a product page, or arriving at one that does not exist. */
 export function clearProductMeta ({ missing = false } = {}) {
-  document.getElementById('ld-product')?.remove()
+  setLd('ld-product', null)
+  setLd('ld-crumbs', null)
   meta('property', 'og:type').content = 'website'
   // A product taken off sale: tell search engines to drop the page rather
   // than keep showing a dead listing.
   meta('name', 'robots').content = missing ? 'noindex' : ROBOTS_DEFAULT
+}
+
+/** Whether search engines should index this page. A search result or a
+    missing page should not be; everything else should. */
+export function setRobots (index = true) {
+  meta('name', 'robots').content = index ? ROBOTS_DEFAULT : 'noindex, follow'
+}
+
+/** Structured data under its own id, replaced in place; null removes it.
+    The build writes the same ids, so the page never carries two copies. */
+export function setLd (id, data) {
+  let el = document.getElementById(id)
+  if (!data) { el?.remove(); return }
+  if (!el) {
+    el = document.createElement('script')
+    el.type = 'application/ld+json'
+    el.id = id
+    document.head.appendChild(el)
+  }
+  el.textContent = JSON.stringify(data)
 }

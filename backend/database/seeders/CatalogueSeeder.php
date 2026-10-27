@@ -64,6 +64,8 @@ class CatalogueSeeder extends Seeder
                     ['name' => $name],
                 );
             }
+
+            $category->assignSlug();
         }
     }
 

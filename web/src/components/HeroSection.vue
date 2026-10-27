@@ -85,15 +85,17 @@ const shots = [
           it. Both halves are the brand's own name, so neither is translated
           and both can use the Latin-only display face.
         -->
-        <h1 class="hero__mark">
+        <!-- The wordmark is the logo, not the heading: the page's one H1 is
+             the line below, in the words people search for. -->
+        <div class="hero__mark" role="img" aria-label="Freshness To Your Home">
           <span class="mark__a">Freshness</span>
           <span class="mark__b">to your home</span>
-        </h1>
+        </div>
         <svg class="hero__ul" viewBox="0 0 420 22" preserveAspectRatio="none" aria-hidden="true">
           <path ref="rule" d="M4 15C70 6 138 5 206 9c62 4 124 9 210 2"/>
         </svg>
         <p class="hero__tag">{{ t('hero.h1b') }}</p>
-        <p class="hero__copy">{{ t('hero.copy') }}</p>
+        <h1 class="hero__copy">{{ t('hero.copy') }}</h1>
         <div class="hero__cta">
           <CatalogueCta />
           <!-- A RouterLink, not href="#contact": under hash routing a bare
@@ -172,7 +174,7 @@ const shots = [
 }
 .hero.in .hero__ul path{ stroke-dashoffset:0; }
 
-.hero__copy{ margin:clamp(10px,1.4vw,16px) 0 0; max-width:46ch; color:rgba(246,243,234,.9); font-size:clamp(.98rem,1.2vw,1.1rem); }
+.hero__copy{ margin:clamp(10px,1.4vw,16px) 0 0; max-width:46ch; color:rgba(246,243,234,.9); font-size:clamp(.98rem,1.2vw,1.1rem); font-family:inherit; font-weight:400; line-height:inherit; letter-spacing:normal; }
 
 .hero__cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:clamp(26px,3.4vw,38px); }
 

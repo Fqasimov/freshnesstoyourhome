@@ -42,3 +42,21 @@ export function assignSlugs (rows, name, unit) {
 
 /* The path of a product's page. Accepts either shape of product. */
 export const productPath = p => `/mehsul/${p.slug || p.id}`
+
+/* Category pages, /kataloq/{slug}. The server's own (App\Support\Slug::
+   CATEGORY) wins once the catalogue arrives; this is the same table for the
+   bundled copy. */
+export const CATEGORY_SLUGS = {
+  kuruler: 'kuru',
+  smoked: 'hise-verilmis-baliq',
+  fresh: 'teze-baliq',
+  seafood: 'deniz-mehsullari',
+  'avropa-pendirleri': 'avropa-pendirleri',
+  cheese: 'pendir-ve-sud',
+  poultry: 'toyuq-ve-et',
+  souslar: 'souslar',
+  pantry: 'xemir-ve-sirniyyat',
+  diger: 'diger',
+}
+export const categorySlug = c => c.slug || CATEGORY_SLUGS[c.id] || slugOf(c.az ?? c.name?.az ?? '') || c.id
+export const categoryPath = c => `/kataloq/${categorySlug(c)}`

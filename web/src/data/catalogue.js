@@ -124,6 +124,7 @@ function adaptProduct (p) {
     /* Its own page on the site, /mehsul/{slug}. */
     slug: p.slug ?? p.id,
     cat: p.category_id,
+    updated: p.updated_at ?? null,
     /* What it costs today, sale included — what the basket adds up and the
        order charges. The normal price and the badge are only for showing. */
     price: p.price_minor / 100,
@@ -194,6 +195,7 @@ function adaptCategories (apiCategories, products) {
     { id: 'all', en: 'Everything', az: 'Hamısı', ru: 'Всё', kicker: pad(products.length) },
     ...apiCategories.map(c => ({
       id: c.id,
+      slug: c.slug ?? null,
       en: c.name?.en ?? c.id,
       az: c.name?.az ?? c.name?.en ?? c.id,
       ru: c.name?.ru ?? c.name?.en ?? c.id,

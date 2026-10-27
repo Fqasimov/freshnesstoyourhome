@@ -94,4 +94,18 @@ class ProductSlugTest extends TestCase
         $this->patchJson('/api/admin/products/smoked-salmon', ['slug' => 'Qırmızı kürü'])->assertStatus(422);
         $this->patchJson('/api/admin/products/smoked-salmon', ['slug' => '../x'])->assertStatus(422);
     }
+
+    public function test_categories_have_search_friendly_addresses(): void
+    {
+        $this->assertSame('kuru', \App\Models\Category::find('kuruler')->slug);
+        $this->assertSame('hise-verilmis-baliq', \App\Models\Category::find('smoked')->slug);
+
+        Cache::forget(CatalogueCache::KEY);
+        $cats = collect($this->getJson('/api/catalogue')->assertOk()->json('categories'));
+        $this->assertSame('deniz-mehsullari', $cats->firstWhere('id', 'seafood')['slug']);
+
+        $this->asAdmin();
+        $this->postJson('/api/admin/categories', ['id' => 'dondurma', 'translations' => ['az' => ['name' => 'Dondurma']]])
+            ->assertCreated()->assertJsonPath('slug', 'dondurma');
+    }
 }

@@ -45,6 +45,37 @@ final class Slug
     }
 
     /**
+     * Addresses for the shop's own categories, as the SEO brief names them —
+     * the words people search for ("kuru", "teze-baliq"), not the internal
+     * ids. A category added later gets one made from its Azerbaijani name.
+     */
+    public const CATEGORY = [
+        'kuruler' => 'kuru',
+        'smoked' => 'hise-verilmis-baliq',
+        'fresh' => 'teze-baliq',
+        'seafood' => 'deniz-mehsullari',
+        'avropa-pendirleri' => 'avropa-pendirleri',
+        'cheese' => 'pendir-ve-sud',
+        'poultry' => 'toyuq-ve-et',
+        'souslar' => 'souslar',
+        'pantry' => 'xemir-ve-sirniyyat',
+        'diger' => 'diger',
+    ];
+
+    /** A slug for this category that no other category has. */
+    public static function uniqueForCategory(\App\Models\Category $category): string
+    {
+        $base = self::CATEGORY[$category->id] ?? (self::of((string) $category->nameIn('az')) ?: $category->id);
+        $taken = fn (string $s) => \App\Models\Category::where('slug', $s)->whereKeyNot($category->id)->exists();
+
+        for ($n = 1, $slug = $base; $taken($slug); $n++) {
+            $slug = $base.'-'.($n + 1);
+        }
+
+        return $slug;
+    }
+
+    /**
      * A slug for this product that no other product has.
      *
      * Two products with the same name (a cheese in two sizes) are told apart

@@ -1,7 +1,10 @@
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
-import { PRODUCTS, CATEGORIES } from '../data/catalogue'
+import { ref, computed, watch, watchEffect, nextTick, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { PRODUCTS, CATEGORIES, catalogueSettled } from '../data/catalogue'
+import { categoryPath, categorySlug, productPath } from '../data/slug'
+import { categoryTitle, categoryDescription, crumbsJsonLd, itemListJsonLd, words } from '../data/productSchema'
+import { setPageHead, setRobots, setLd } from '../composables/usePageMeta'
 import { CATEGORY_LOOK } from '../data/brand'
 import { useI18n } from '../composables/useI18n'
 import { glideTo } from '../composables/glide'
@@ -25,7 +28,43 @@ const route = useRoute()
    links in the footer, and anyone sharing a search, rely on. */
 const query = ref(typeof route.query.q === 'string' ? route.query.q.slice(0, 60) : '')
 watch(() => route.query.q, q => { query.value = typeof q === 'string' ? q.slice(0, 60) : '' })
-const category = ref('all')
+const router = useRouter()
+
+/* /kataloq/kuru opens on that category: the address is the category, so it
+   can be shared, bookmarked and found in Google. */
+const fromRoute = () => {
+  const slug = route.params.cat
+  if (!slug) return 'all'
+  return CATEGORIES.find(c => c.id !== 'all' && categorySlug(c) === slug)?.id ?? 'all'
+}
+const category = ref(fromRoute())
+watch(() => [route.params.cat, CATEGORIES.length, catalogueSettled.value], () => { category.value = fromRoute() })
+watch(category, id => {
+  const c = CATEGORIES.find(x => x.id === id)
+  const path = id === 'all' || !c ? '/kataloq' : categoryPath(c)
+  if (route.path !== path) router.replace({ path, query: route.query })
+})
+const pick = id => { category.value = id }
+const catHref = id => (id === 'all' ? '/kataloq' : categoryPath(CATEGORIES.find(c => c.id === id) ?? { id }))
+
+/* A category page's head: its own title, snippet and structured data. */
+watchEffect(() => {
+  const c = CATEGORIES.find(x => x.id === category.value && x.id !== 'all')
+  if (!c || route.name !== 'category') { setLd('ld-list', null); setLd('ld-crumbs', null); return }
+  const name = catName(c.id)
+  const items = PRODUCTS.filter(p => p.cat === c.id)
+  if (!items.length) return
+  const title = categoryTitle(name, lang.value)
+  const desc = categoryDescription(name, items.map(p => p.price), lang.value)
+  document.title = title
+  document.querySelector('meta[name="description"]')?.setAttribute('content', desc)
+  setPageHead({ path: categoryPath(c), title, desc })
+  setRobots(!route.query.q)
+  const site = location.origin, w = words(lang.value)
+  setLd('ld-list', itemListJsonLd(name, items.map(p => site + productPath(p))))
+  setLd('ld-crumbs', crumbsJsonLd([[w.home, `${site}/`], [w.catalogue, `${site}/kataloq`], [name, site + categoryPath(c)]]))
+})
+onUnmounted(() => { setLd('ld-list', null); setLd('ld-crumbs', null) })
 const band = ref('any')
 const quick = ref(new Set())
 const sortBy = ref('default')
@@ -150,7 +189,7 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
     <div class="wrap">
       <header class="cat__head">
         <RouterLink to="/" class="cat__back"><BIcon name="arrow-left" :size="12" /> {{ t('cat.back') }}</RouterLink>
-        <h1 class="cat__h">{{ t('cat.h') }}</h1>
+        <h1 class="cat__h">{{ category === 'all' ? t('cat.h') : catName(category) }}</h1>
 
         <label class="search">
           <span class="visually-hidden">{{ t('shop.search') }}</span>
@@ -175,12 +214,12 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
             </span>
           </button>
 
-          <button v-for="(c, i) in tiles" :key="c.id" type="button" class="tile"
-                  :style="{ background: c.look.bg, '--i': i + 1 }" @click="openCategory(c.id)">
+          <a v-for="(c, i) in tiles" :key="c.id" :href="catHref(c.id)" class="tile"
+             :style="{ background: c.look.bg, '--i': i + 1 }" @click.prevent="openCategory(c.id)">
             <span class="tile__name">{{ catName(c.id) }}</span>
             <span class="tile__count" :style="{ color: c.look.ink }">{{ c.count }}</span>
             <img v-if="c.photo" class="tile__plate" :src="c.photo" alt="" loading="lazy">
-          </button>
+          </a>
       </section>
 
       <SetsSection v-if="browsing" compact @add="$emit('add-set', $event)" />
@@ -188,15 +227,15 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
       <!-- The shelf. Categories as chips above it, as in the app. -->
       <div ref="shelf" class="bar">
         <div ref="chipRow" class="chips" role="tablist" :aria-label="t('cat.sections')">
-          <button type="button" role="tab" class="chip" :class="{ on: category === 'all' }"
-                  :aria-selected="category === 'all'" @click="category = 'all'">
+          <a href="/kataloq" role="tab" class="chip" :class="{ on: category === 'all' }"
+             :aria-selected="category === 'all'" @click.prevent="pick('all')">
             {{ t('cat.all') }}
-          </button>
-          <button v-for="c in tiles" :key="c.id" type="button" role="tab" class="chip"
-                  :class="{ on: category === c.id }" :aria-selected="category === c.id"
-                  @click="category = c.id">
-            {{ catName(c.id) }}
-          </button>
+          </a>
+          <a v-for="c in tiles" :key="c.id" :href="catHref(c.id)" role="tab" class="chip"
+             :class="{ on: category === c.id }" :aria-selected="category === c.id"
+             @click.prevent="pick(c.id)">
+            {{ catName(c.id) }} <span class="chip__n">{{ c.count }}</span>
+          </a>
         </div>
       </div>
 
@@ -274,6 +313,9 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
 </template>
 
 <style scoped>
+/* Categories are links now (each has its own page): no underline, and the count beside the name. */
+a.tile, a.chip{ text-decoration:none; }
+.chip__n{ opacity:.55; font-size:.85em; margin-left:2px; }
 /* One easing for everything that answers a hand: fast out, soft landing.
    The drawer curve is the one iOS sheets use. */
 .cat{

@@ -15,7 +15,7 @@ const OWN = {
 
     'hero.eyebrow':'Bakı · Həftənin 7 günü · 10:00 – 22:00',
     'hero.h1b':'Dad evinizə gəlir.',
-    'hero.copy':'Premium qida məhsullarının onlayn mağazası və çatdırılması.',
+    'hero.copy':'Bakıda premium balıq, kürü və pendir çatdırılması',
     'hero.cta1':'Kataloqa baxın','hero.cta2':'Telefonla sifariş',
     'hero.seal':'məhsul<br>kataloqda',
 
@@ -93,6 +93,7 @@ const OWN = {
     'ui.cartempty.d':'Kataloqdan məhsul əlavə edin, burada görünəcək.',
     'ui.remove':'Sil','ui.add':'Səbətə at',
     'ui.unit':'Vahid','ui.category':'Bölmə','ui.price':'Qiymət',
+    'nf.h':'Səhifə tapılmadı','nf.p':'Bu ünvanda heç nə yoxdur — ola bilsin, link köhnədir. Məhsulu axtarın və ya bölmə seçin.',
     'pp.home':'Ana səhifə','pp.crumbs':'Harada olduğunuz','pp.related':'Bu bölmədən daha','pp.open':'Məhsulun səhifəsi',
     'pp.missing':'Bu məhsul hazırda satışda deyil','pp.missingCopy':'Ola bilsin, məhsul bitib və ya adı dəyişib. Kataloqda oxşarını tapın.',
     'pp.loading':'Yüklənir…','pp.delivery':'Bakı və Bakı ətrafına çatdırılma — həftənin 7 günü, 10:00–22:00.',
@@ -135,7 +136,7 @@ const OWN = {
 
     'hero.eyebrow':'Баку · 7 дней в неделю · 10:00 – 22:00',
     'hero.h1b':'Вкус приходит к вам домой.',
-    'hero.copy':'Интернет-магазин и доставка премиальных продуктов питания.',
+    'hero.copy':'Доставка премиальной рыбы, икры и сыров по Баку',
     'hero.cta1':'Смотреть каталог','hero.cta2':'Заказать по телефону',
     'hero.seal':'товара<br>в каталоге',
 
@@ -213,6 +214,7 @@ const OWN = {
     'ui.cartempty.d':'Добавьте что-нибудь из каталога, и оно появится здесь.',
     'ui.remove':'Удалить','ui.add':'В корзину',
     'ui.unit':'Единица','ui.category':'Раздел','ui.price':'Цена',
+    'nf.h':'Страница не найдена','nf.p':'По этому адресу ничего нет — возможно, ссылка устарела. Найдите товар или выберите раздел.',
     'pp.home':'Главная','pp.crumbs':'Где вы находитесь','pp.related':'Ещё из этого раздела','pp.open':'Страница товара',
     'pp.missing':'Этого товара сейчас нет в продаже','pp.missingCopy':'Возможно, он закончился или называется иначе. Найдите похожий в каталоге.',
     'pp.loading':'Загрузка…','pp.delivery':'Доставка по Баку и пригороду — 7 дней в неделю, 10:00–22:00.',
@@ -255,7 +257,7 @@ const OWN = {
 
     'hero.eyebrow':'Baku · Seven days a week · 10:00 – 22:00',
     'hero.h1b':'Taste comes to your home.',
-    'hero.copy':'An online shop for premium food, delivered.',
+    'hero.copy':'Premium fish, caviar and cheese delivered in Baku',
     'hero.cta1':'Browse the catalogue','hero.cta2':'Order by phone',
     'hero.seal':'products<br>in the catalogue',
 
@@ -333,6 +335,7 @@ const OWN = {
     'ui.cartempty.d':'Add something from the catalogue and it will appear here.',
     'ui.remove':'Remove','ui.add':'Add to basket',
     'ui.unit':'Unit','ui.category':'Counter','ui.price':'Price',
+    'nf.h':'Page not found','nf.p':'There is nothing at this address — the link may be out of date. Search for a product or pick a section.',
     'pp.home':'Home','pp.crumbs':'You are here','pp.related':'More from this counter','pp.open':'Product page',
     'pp.missing':'This product is not on sale right now','pp.missingCopy':'It may have sold out or been renamed. Find something similar in the catalogue.',
     'pp.loading':'Loading…','pp.delivery':'Delivery across Baku and its suburbs — 7 days a week, 10:00–22:00.',

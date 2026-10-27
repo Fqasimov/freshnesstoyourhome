@@ -43,6 +43,8 @@ class CatalogueController extends Controller
                 ->get()
                 ->map(fn (Category $c) => [
                     'id' => $c->id,
+                    // Its page on the website: /kataloq/{slug}.
+                    'slug' => $c->slug ?? $c->id,
                     'name' => $c->translationMap('name'),
                 ])
                 ->all();
@@ -55,6 +57,8 @@ class CatalogueController extends Controller
                     'id' => $p->id,
                     // The product's own page on the website: /mehsul/{slug}.
                     'slug' => $p->slug ?? $p->id,
+                    // When it last changed: the sitemap's <lastmod>.
+                    'updated_at' => $p->updated_at?->toAtomString(),
                     'category_id' => $p->category_id,
                     // What it costs today, sale included: the figure every
                     // client adds up and the one the order will charge. The

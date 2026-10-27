@@ -60,6 +60,8 @@ class CategoryController extends Controller
                 }
             }
 
+            $category->assignSlug();
+
             return $category->load('translations');
         });
 
@@ -122,6 +124,7 @@ class CategoryController extends Controller
     {
         return [
             'id' => $c->id,
+            'slug' => $c->slug,
             'is_active' => $c->is_active,
             'sort' => $c->sort,
             'name' => $c->translationMap('name'),
@@ -134,6 +137,9 @@ class CategoryController extends Controller
         $data = $request->validate([
             'is_active' => ['sometimes', 'boolean'],
             'sort' => ['sometimes', 'integer', 'min:0', 'max:9999'],
+            // Its address on the website; changing it moves the page.
+            'slug' => ['sometimes', 'string', 'min:2', 'max:80', 'regex:'.\App\Support\Slug::PATTERN,
+                \Illuminate\Validation\Rule::unique('categories', 'slug')->ignore($id, 'id')],
             'translations' => ['sometimes', 'array'],
             'translations.*.name' => ['sometimes', 'nullable', 'string', 'max:80'],
         ]);
@@ -141,8 +147,8 @@ class CategoryController extends Controller
         $category = Category::with('translations')->findOrFail($id);
 
         $changes = DB::transaction(function () use ($category, $data) {
-            $category->fill(collect($data)->only(['is_active', 'sort'])->all());
-            $changes = Audit::diff($category, ['is_active', 'sort']);
+            $category->fill(collect($data)->only(['is_active', 'sort', 'slug'])->all());
+            $changes = Audit::diff($category, ['is_active', 'sort', 'slug']);
             $category->save();
 
             foreach ($data['translations'] ?? [] as $locale => $fields) {

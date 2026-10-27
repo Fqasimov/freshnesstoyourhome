@@ -6,8 +6,20 @@
 
 Options -Indexes -MultiViews
 
+# Addresses that do not exist get a real 404, with a page that helps.
+ErrorDocument 404 /404.html
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # One address for the shop: www and the old domain go to freshness.az —
+  # first, before the HTTPS rule, so http://old-domain/x is one redirect, not two.
+  # The API (/server) is left alone on purpose: app builds already on phones
+  # call the old domain's /server, and a redirect would turn their POSTs into
+  # GETs or drop their sign-in. /.well-known stays for certificate renewal.
+  RewriteCond %{HTTP_HOST} ^(www\.freshness\.az|(www\.)?freshnesstoyourhome\.az)$ [NC]
+  RewriteCond %{REQUEST_URI} !^/(server|\.well-known)(/|$)
+  RewriteRule ^ https://freshness.az%{REQUEST_URI} [R=301,L]
 
   # HTTPS only. /.well-known stays reachable over plain HTTP, because that is
   # where AutoSSL proves the domain is ours when it renews the certificate.
@@ -15,14 +27,6 @@ Options -Indexes -MultiViews
   RewriteCond %{HTTP:X-Forwarded-Proto} !=https
   RewriteCond %{REQUEST_URI} !^/\.well-known/
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-
-  # One address for the shop: www and the old domain go to freshness.az.
-  # The API (/server) is left alone on purpose: app builds already on phones
-  # call the old domain's /server, and a redirect would turn their POSTs into
-  # GETs or drop their sign-in. /.well-known stays for certificate renewal.
-  RewriteCond %{HTTP_HOST} ^(www\.freshness\.az|(www\.)?freshnesstoyourhome\.az)$ [NC]
-  RewriteCond %{REQUEST_URI} !^/(server|\.well-known)(/|$)
-  RewriteRule ^ https://freshness.az%{REQUEST_URI} [R=301,L]
 
   # Dotfiles — .env, .git, .htaccess, .DS_Store — are never served.
   RewriteRule (^|/)\.(?!well-known/) - [F,L]
@@ -32,22 +36,31 @@ Options -Indexes -MultiViews
   RewriteRule (^|/)(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml)$ - [F,L,NC]
   RewriteRule \.(env|ini|log|sql|sqlite|bak|old|orig|swp|dist|sh|ya?ml|zip|tar|t?gz|7z|rar|map)$ - [F,L,NC]
 
-  # A product page: the plain HTML copy the build wrote for it, with its own
-  # title and structured data for search engines (web/scripts/prerender.mjs).
-  # The app takes over from there. A product with no file yet — added in the
-  # panel since the last build — falls through to the app below, which shows
-  # it all the same.
+  # Pages the build wrote as plain HTML, with their own title and structured
+  # data for search engines (web/scripts/prerender.mjs). The app takes over
+  # once it starts.
+  # They live under /pages, not in a folder called kataloq: a real folder by
+  # that name would make Apache add a slash to /kataloq before these rules.
+  RewriteCond %{QUERY_STRING} (^|&)q=
+  RewriteRule ^kataloq(/.*)?$ - [E=FTH_NOINDEX:1]
+  RewriteRule ^kataloq/?$ pages/kataloq.html [L]
+  RewriteCond %{DOCUMENT_ROOT}/pages/kataloq/$1.html -f
+  RewriteRule ^kataloq/([a-z0-9-]+)/?$ pages/kataloq/$1.html [L]
   RewriteCond %{DOCUMENT_ROOT}/mehsul/$1.html -f
   RewriteRule ^mehsul/([a-z0-9-]+)/?$ mehsul/$1.html [L]
 
-  # The shop's pages (/, /kataloq) are one app: any path that is not a real
-  # file or folder is answered by index.html, and the app shows the page.
-  # The API, the panel and the privacy page are real folders and never
-  # reach this line.
+  # The app's other pages.
+  RewriteRule ^(hesab)?/?$ index.html [L]
+
+  # Everything else does not exist: a 404, answered by 404.html (below). It
+  # is the app's own page, so a product or category added in the panel since
+  # the last build still opens for a visitor — only Google is told it is not
+  # there yet, until the nightly build writes its page. The API, the panel,
+  # the privacy page and real files never reach this line.
   RewriteCond %{REQUEST_URI} !^/(server|cms|privacy|\.well-known)(/|$)
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^ index.html [L]
+  RewriteRule ^ - [R=404,L]
 
   # The site is static: no PHP runs outside the API folder.
   RewriteCond %{REQUEST_URI} !^/server/
@@ -61,6 +74,12 @@ Options -Indexes -MultiViews
   <FilesMatch "\.(js|css|jpg|jpeg|png|svg|webp|woff2?)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
+
+  # A search inside the catalogue (/kataloq?q=...) is not a page of its own.
+  # The flag is set by the rewrite rules above; after their internal rewrite
+  # Apache renames it REDIRECT_FTH_NOINDEX, so both names are checked.
+  Header set X-Robots-Tag "noindex, follow" env=FTH_NOINDEX
+  Header set X-Robots-Tag "noindex, follow" env=REDIRECT_FTH_NOINDEX
 
   <FilesMatch "\.html$">
     Header set Cache-Control "no-cache"

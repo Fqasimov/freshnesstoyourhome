@@ -1,7 +1,8 @@
 import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import { glideTo } from './composables/glide'
-import { setPageHead } from './composables/usePageMeta'
+import { setPageHead, setRobots } from './composables/usePageMeta'
+import { CATALOGUE, HOME } from './data/productSchema'
 
 /**
  * Real addresses: freshness.az/, /kataloq and a page per product at /mehsul/{slug}.
@@ -34,6 +35,14 @@ export const router = createRouter({
       component: () => import('./views/CatalogueView.vue'),
     },
     {
+      path: '/kataloq/:cat',
+      name: 'category',
+      // One page per category (/kataloq/kuru): the searches that matter most
+      // are for a kind of thing, not one product. Same view as the catalogue,
+      // opened on that category.
+      component: () => import('./views/CatalogueView.vue'),
+    },
+    {
       path: '/mehsul/:slug',
       name: 'product',
       // A page per product, so Google can show each one for its own name
@@ -48,7 +57,9 @@ export const router = createRouter({
       // an order never needs it — and split out like the catalogue.
       component: () => import('./views/AccountView.vue'),
     },
-    { path: '/:pathMatch(.*)*', redirect: '/' },
+    // Anything else is a page that does not exist. The server answers it with
+    // a 404 (deploy/website.htaccess); this is what the visitor then sees.
+    { path: '/:pathMatch(.*)*', name: 'notfound', component: () => import('./views/NotFoundView.vue') },
   ],
 
   /**
@@ -64,6 +75,9 @@ export const router = createRouter({
       return false
     }
     if (saved) return saved
+    // Switching category inside the catalogue changes the address, not the page.
+    const shelf = ['catalogue', 'category']
+    if (shelf.includes(to.name) && shelf.includes(from.name)) return false
     return { top: 0 }
   },
 })
@@ -73,24 +87,23 @@ export const router = createRouter({
    and a product page sets its own from the product (ProductView). The words lead
    with what the shop mostly sells — smoked salmon, red caviar, burrata and the
    other cheeses — rather than with any single fish. */
-const HOME_TITLE = document.title
+const HOME_TITLE = HOME.title
 const metaDesc = document.querySelector('meta[name="description"]')
-const HOME_DESC = metaDesc?.getAttribute('content') ?? ''
+const HOME_DESC = HOME.desc
 const ogImage = document.querySelector('meta[property="og:image"]')
-const HOME_IMAGE = ogImage?.getAttribute('content') ?? ''
+const HOME_IMAGE = HOME.image
 const PAGES = {
-  catalogue: {
-    title: 'Kataloq — hisə verilmiş qızıl balıq, kürü, burrata və pendirlər | Freshness To Your Home',
-    desc: 'Kataloq: hisə verilmiş qızıl balıq və beluqa, qırmızı və qara kürü, burrata, mozzarella, parmezan, təzə balıq, krevet və dəniz məhsulları. Qiymətlər AZN ilə, Bakıya çatdırılma.',
-  },
+  catalogue: CATALOGUE,
 }
 router.afterEach(to => {
-  // A product page writes its own head once it knows the product.
-  if (to.name === 'product') return
+  // A product or category page writes its own head once it knows what it shows.
+  if (to.name === 'product' || to.name === 'category' || to.name === 'notfound') return
   const page = PAGES[to.name]
   document.title = page?.title ?? HOME_TITLE
   metaDesc?.setAttribute('content', page?.desc ?? HOME_DESC)
   if (ogImage && HOME_IMAGE) ogImage.setAttribute('content', HOME_IMAGE)
   if (HOME_IMAGE) document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', HOME_IMAGE)
   setPageHead({ path: to.path, title: document.title, desc: page?.desc ?? HOME_DESC })
+  // A search inside the catalogue is not a page of its own.
+  setRobots(!(to.name === 'catalogue' && to.query.q))
 })

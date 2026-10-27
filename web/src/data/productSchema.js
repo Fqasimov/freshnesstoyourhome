@@ -26,6 +26,43 @@ const shortPrice = n => {
   return Number.isInteger(r) ? String(r) : r.toFixed(2)
 }
 
+/* The words around a product's own name, in the page's language. */
+const WORDS = {
+  az: { tail: 'Bakıda çatdırılma hər gün 10:00–22:00.', home: 'Ana səhifə', catalogue: 'Kataloq',
+    catTitle: n => `${n} Bakıda — çatdırılma`, catDesc: (n, k, lo, hi) => `${n}: ${k} məhsul, qiymətlər ${lo}–${hi} ₼. Bakıda çatdırılma hər gün 10:00–22:00.` },
+  ru: { tail: 'Доставка по Баку ежедневно 10:00–22:00.', home: 'Главная', catalogue: 'Каталог',
+    catTitle: n => `${n} в Баку — доставка`, catDesc: (n, k, lo, hi) => `${n}: ${k} товаров, цены ${lo}–${hi} ₼. Доставка по Баку ежедневно 10:00–22:00.` },
+  en: { tail: 'Delivery in Baku daily 10:00–22:00.', home: 'Home', catalogue: 'Catalogue',
+    catTitle: n => `${n} in Baku — delivery`, catDesc: (n, k, lo, hi) => `${n}: ${k} products, ${lo}–${hi} ₼. Delivery in Baku daily 10:00–22:00.` },
+}
+export const words = lang => WORDS[lang] ?? WORDS.az
+
+const BRAND = 'Freshness'
+
+/* The home page's own head — the same words index.html carries, so a visitor
+   who arrived on another page still gets them when they go home. */
+export const HOME = {
+  title: 'Qızıl balıq, kürü, burrata çatdırılması Bakıda | Freshness',
+  desc: 'Hisə verilmiş qızıl balıq, qırmızı və qara kürü, burrata, mozzarella və Avropa pendirləri, təzə balıq və dəniz məhsulları — Bakıda hər gün 10:00–22:00 çatdırılma.',
+  image: 'https://freshness.az/og-image.png',
+}
+
+/* The catalogue page's own head — shared with the build's plain copy. */
+export const CATALOGUE = {
+  title: 'Kataloq — balıq, kürü və pendir çatdırılması | Freshness',
+  desc: 'Kataloq: hisə verilmiş qızıl balıq, qırmızı və qara kürü, burrata, mozzarella, parmezan, təzə balıq və dəniz məhsulları. Qiymətlər ₼ ilə, Bakıda çatdırılma.',
+}
+const MAX_TITLE = 60
+
+/* Up to 60 characters, so Google shows it whole: the brand goes first if it
+   does not fit, the price stays, and only then is the name shortened. */
+function fitTitle (main, suffix) {
+  const full = `${main}${suffix} | ${BRAND}`
+  if (full.length <= MAX_TITLE) return full
+  if (`${main}${suffix}`.length <= MAX_TITLE) return `${main}${suffix}`
+  return `${clip(main, MAX_TITLE - suffix.length)}${suffix}`
+}
+
 /**
  * The tab title and the snippet under it. Name first — it is what was searched
  * for — then the price, then where it is delivered.
@@ -33,16 +70,44 @@ const shortPrice = n => {
  * @param {{name:string, price:number, unit?:string, desc?:string}} p
  */
 export function productTitle (p) {
-  return `${p.name} — ${shortPrice(p.price)} ₼ | Bakıya çatdırılma | ${SITE_NAME}`
+  return fitTitle(p.name, ` — ${shortPrice(p.price)} ₼`)
 }
 
-export function productDescription (p) {
+export function productDescription (p, lang = 'az') {
   const unit = p.unit ? ` (${p.unit})` : ''
   const lead = `${p.name}${unit} — ${shortPrice(p.price)} ₼.`
-  const tail = 'Bakı və ətrafına çatdırılma hər gün 10:00–22:00.'
+  const tail = words(lang).tail
   const room = 158 - lead.length - tail.length - 2
   const body = room > 30 && p.desc ? ` ${clip(asSentences(p.desc), room)}` : ''
   return `${lead}${body} ${tail}`
+}
+
+/** A category page's title and snippet. */
+export function categoryTitle (name, lang = 'az') {
+  return fitTitle(words(lang).catTitle(name), '')
+}
+export function categoryDescription (name, prices, lang = 'az') {
+  const lo = shortPrice(Math.min(...prices)), hi = shortPrice(Math.max(...prices))
+  return words(lang).catDesc(name, prices.length, lo, hi)
+}
+
+/** schema.org ItemList for a category page: its products, in order. */
+export function itemListJsonLd (name, urls) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name,
+    itemListElement: urls.map((url, i) => ({ '@type': 'ListItem', position: i + 1, url })),
+  }
+}
+
+/** schema.org BreadcrumbList from [name, url] pairs. */
+export function crumbsJsonLd (pairs) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: pairs.map(([name, item], i) => ({ '@type': 'ListItem', position: i + 1, name, item })),
+  }
 }
 
 /**
@@ -51,7 +116,7 @@ export function productDescription (p) {
  * @param {{
  *   url:string, name:string, desc?:string, images:string[], price:number,
  *   sku:string, category?:string, weighed?:boolean, site:string,
- *   categoryUrl?:string,
+ *   categoryUrl?:string, inStock?:boolean, lang?:string,
  * }} p
  */
 export function productJsonLd (p) {
@@ -60,7 +125,7 @@ export function productJsonLd (p) {
     url: p.url,
     priceCurrency: 'AZN',
     price: price2(p.price),
-    availability: 'https://schema.org/InStock',
+    availability: p.inStock === false ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
     itemCondition: 'https://schema.org/NewCondition',
     seller: { '@type': 'Organization', name: SITE_NAME },
     areaServed: { '@type': 'City', name: 'Bakı' },
@@ -88,15 +153,13 @@ export function productJsonLd (p) {
     offers: offer,
   }
 
-  const crumbs = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Ana səhifə', item: `${p.site}/` },
-      { '@type': 'ListItem', position: 2, name: 'Kataloq', item: `${p.site}/kataloq` },
-      { '@type': 'ListItem', position: 3, name: p.name, item: p.url },
-    ],
-  }
+  const w = words(p.lang)
+  const crumbs = crumbsJsonLd([
+    [w.home, `${p.site}/`],
+    [w.catalogue, `${p.site}/kataloq`],
+    ...(p.category && p.categoryUrl ? [[p.category, p.categoryUrl]] : []),
+    [p.name, p.url],
+  ])
 
   return [product, crumbs]
 }

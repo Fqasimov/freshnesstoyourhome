@@ -3,6 +3,8 @@ User-agent: *
 Allow: /
 Disallow: /cms/
 Disallow: /hesab
+# The build's page files; Google reaches them at their real addresses.
+Disallow: /pages/
 Disallow: /server/api/
 
 Sitemap: https://freshness.az/sitemap.xml
