@@ -29,7 +29,7 @@ import { fileURLToPath } from 'node:url'
 import { assignSlugs, categorySlug } from '../src/data/slug.js'
 import {
   CATALOGUE, SITE_NAME, categoryDescription, categoryTitle, crumbsJsonLd, itemListJsonLd,
-  productDescription, productJsonLd, productTitle,
+  own, productDescription, productJsonLd, productTitle, textBlocks,
 } from '../src/data/productSchema.js'
 
 const webRoot = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -54,7 +54,16 @@ async function live () {
     if (!Array.isArray(data.products) || !data.products.length) throw new Error('no products')
     return {
       source: `${API}/api/catalogue`,
-      categories: (data.categories ?? []).map(c => ({ id: c.id, slug: c.slug ?? null, name: c.name?.az ?? c.id })),
+      categories: (data.categories ?? []).map(c => ({
+        id: c.id, slug: c.slug ?? null, name: c.name?.az ?? c.id,
+        indexed: c.is_indexed !== false, page: pageOf(c),
+      })),
+      collections: (data.collections ?? []).map(c => ({
+        slug: c.slug, name: c.name?.az ?? c.slug, indexed: c.is_indexed !== false, page: pageOf(c),
+        products: c.products ?? [], sets: c.bundles ?? [],
+        updated: c.updated_at ? String(c.updated_at).slice(0, 10) : null,
+      })),
+      sets: (data.bundles ?? []).map(b => ({ id: b.id, name: b.name?.az ?? b.id, price: (b.price_minor ?? 0) / 100 })),
       products: data.products.map(p => ({
         id: p.id,
         slug: p.slug || null,
@@ -97,10 +106,15 @@ function bundled () {
     }))
   return {
     source: 'shared/catalogue.json (bundled copy)',
-    categories: data.categories.map(c => ({ id: c.id, slug: null, name: c.names?.az ?? c.id })),
+    categories: data.categories.map(c => ({ id: c.id, slug: null, name: c.names?.az ?? c.id, indexed: true, page: {} })),
+    collections: [],
+    sets: [],
     products,
   }
 }
+
+/* A page's own words from the API, as { seo_title: {az, ru, en}, … }. */
+const pageOf = x => Object.fromEntries(['seo_title', 'seo_description', 'h1', 'body'].map(f => [f, x[f] ?? {}]))
 
 /* ── Building a page ────────────────────────────────────────────────────── */
 
@@ -162,6 +176,7 @@ function shell (template, { title, desc, url, type = 'website', image, robots, l
 const catUrl = c => `${SITE}/kataloq/${c.slug}`
 const productLinks = list =>
   `<ul>${list.map(o => `<li><a href="/mehsul/${esc(o.slug)}">${esc(o.name)}</a> — ${money(o.price)} ₼</li>`).join('')}</ul>`
+const textHtml = body => textBlocks(body).map(b => (b.h ? `<h2>${esc(b.h)}</h2>` : `<p>${esc(b.p)}</p>`)).join('\n')
 const categoryLinks = cats =>
   `<ul>${cats.map(c => `<li><a href="/kataloq/${esc(c.slug)}">${esc(c.name)}</a> <span>${c.count}</span></li>`).join('')}</ul>`
 
@@ -204,17 +219,43 @@ function cataloguePage (template, ctx) {
 
 function categoryPage (template, c, ctx) {
   const items = ctx.products.filter(p => p.cat === c.id)
+  const h1 = own(c.page, 'h1', 'az') ?? c.name
   return shell(template, {
-    title: categoryTitle(c.name), desc: categoryDescription(c.name, items.map(p => p.price)), url: catUrl(c),
+    title: own(c.page, 'seo_title', 'az') ?? categoryTitle(c.name),
+    desc: own(c.page, 'seo_description', 'az') ?? categoryDescription(c.name, items.map(p => p.price)),
+    url: catUrl(c), robots: c.indexed ? null : 'noindex, follow',
     image: items.find(p => p.images[0])?.images[0],
     ld: [
       ['ld-list', itemListJsonLd(c.name, items.map(p => `${SITE}/mehsul/${p.slug}`))],
       ['ld-crumbs', crumbsJsonLd([['Ana səhifə', `${SITE}/`], ['Kataloq', `${SITE}/kataloq`], [c.name, catUrl(c)]])],
     ],
     body: `<nav aria-label="breadcrumb"><a href="/">Ana səhifə</a> › <a href="/kataloq">Kataloq</a> › ${esc(c.name)}</nav>
-<h1>${esc(c.name)}</h1>
+<h1>${esc(h1)}</h1>
 ${productLinks(items)}
+${textHtml(own(c.page, 'body', 'az'))}
 <section><h2>Digər bölmələr</h2>${categoryLinks(ctx.shelves.filter(o => o.id !== c.id))}</section>`,
+  })
+}
+
+function collectionPage (template, c, ctx) {
+  const items = c.products.map(id => ctx.products.find(p => p.id === id)).filter(Boolean)
+  const sets = c.sets.map(id => ctx.sets.find(s => s.id === id)).filter(Boolean)
+  const url = `${SITE}/kataloq/${c.slug}`
+  const prices = [...items.map(p => p.price), ...sets.map(s => s.price)]
+  return shell(template, {
+    title: own(c.page, 'seo_title', 'az') ?? categoryTitle(c.name),
+    desc: own(c.page, 'seo_description', 'az') ?? (prices.length ? categoryDescription(c.name, prices) : c.name),
+    url, robots: c.indexed ? null : 'noindex, follow',
+    image: items.find(p => p.images[0])?.images[0],
+    ld: [
+      ['ld-list', itemListJsonLd(c.name, items.map(p => `${SITE}/mehsul/${p.slug}`))],
+      ['ld-crumbs', crumbsJsonLd([['Ana səhifə', `${SITE}/`], ['Kataloq', `${SITE}/kataloq`], [c.name, url]])],
+    ],
+    body: `<nav aria-label="breadcrumb"><a href="/">Ana səhifə</a> › <a href="/kataloq">Kataloq</a> › ${esc(c.name)}</nav>
+<h1>${esc(own(c.page, 'h1', 'az') ?? c.name)}</h1>
+${sets.length ? `<ul>${sets.map(s => `<li>${esc(s.name)} — ${money(s.price)} ₼</li>`).join('')}</ul>` : ''}
+${productLinks(items)}
+${textHtml(own(c.page, 'body', 'az'))}`,
   })
 }
 
@@ -244,7 +285,8 @@ function sitemap (ctx) {
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     url(`${SITE}/`, 'weekly', '1.0', newest(ctx.products)),
     url(`${SITE}/kataloq`, 'daily', '0.9', newest(ctx.products)),
-    ...ctx.shelves.map(c => url(catUrl(c), 'weekly', '0.9', newest(ctx.products.filter(p => p.cat === c.id)))),
+    ...ctx.shelves.filter(c => c.indexed).map(c => url(catUrl(c), 'weekly', '0.9', newest(ctx.products.filter(p => p.cat === c.id)))),
+    ...ctx.collections.filter(c => c.indexed).map(c => url(`${SITE}/kataloq/${c.slug}`, 'weekly', '0.8', c.updated)),
     ...ctx.products.map(p => url(`${SITE}/mehsul/${p.slug}`, 'weekly', '0.8', p.updated)),
     url(`${SITE}/privacy/`, 'yearly', '0.3'),
     '</urlset>',
@@ -276,10 +318,11 @@ ctx.categories.forEach(c => { c.slug ||= categorySlug({ id: c.id, az: c.name }) 
 /* Each slug becomes a file name. The server only stores clean ones, but a
    file name is no place to find out it did not. */
 const SAFE = /^[a-z0-9]+(-[a-z0-9]+)*$/
-const unsafe = [...ctx.products, ...ctx.categories].filter(x => !SAFE.test(x.slug))
+const unsafe = [...ctx.products, ...ctx.categories, ...ctx.collections].filter(x => !SAFE.test(x.slug))
 if (unsafe.length) say(`skipped, not a clean slug: ${unsafe.map(x => x.id).join(', ')}`)
 ctx.products = ctx.products.filter(p => SAFE.test(p.slug))
 ctx.categories = ctx.categories.filter(c => SAFE.test(c.slug))
+ctx.collections = ctx.collections.filter(c => SAFE.test(c.slug) && !ctx.categories.some(k => k.slug === c.slug))
 
 /* The categories with something on them — an empty shelf gets no page. */
 ctx.shelves = ctx.categories
@@ -295,8 +338,9 @@ for (const dir of ['mehsul', 'pages']) rmSync(join(dist, dir), { recursive: true
 for (const dir of ['mehsul', 'pages/kataloq']) mkdirSync(join(dist, dir), { recursive: true })
 for (const p of ctx.products) writeFileSync(join(dist, 'mehsul', `${p.slug}.html`), productPage(template, p, ctx))
 for (const c of ctx.shelves) writeFileSync(join(dist, 'pages', 'kataloq', `${c.slug}.html`), categoryPage(template, c, ctx))
+for (const c of ctx.collections) writeFileSync(join(dist, 'pages', 'kataloq', `${c.slug}.html`), collectionPage(template, c, ctx))
 writeFileSync(join(dist, 'pages', 'kataloq.html'), cataloguePage(template, ctx))
 writeFileSync(join(dist, '404.html'), notFoundPage(template, ctx))
 writeFileSync(join(dist, 'sitemap.xml'), sitemap(ctx))
 
-say(`${ctx.products.length} product pages, ${ctx.shelves.length} category pages, the catalogue, 404.html and sitemap.xml from ${ctx.source} (${SITE_NAME})`)
+say(`${ctx.products.length} product pages, ${ctx.shelves.length} category pages, ${ctx.collections.length} collection pages, the catalogue, 404.html and sitemap.xml from ${ctx.source} (${SITE_NAME})`)

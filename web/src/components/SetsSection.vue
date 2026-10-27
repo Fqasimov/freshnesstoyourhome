@@ -16,9 +16,14 @@ const emit = defineEmits(['add'])
  * they are things to buy — but they must not push fifty-four products below
  * the fold, which is the problem the catalogue page was built to solve.
  */
-defineProps({ compact: { type: Boolean, default: false } })
+const props = defineProps({
+  compact: { type: Boolean, default: false },
+  /* Only these sets, in this order (a collection page); all of them if null. */
+  only: { type: Array, default: null },
+})
 
-const sets = computed(() => SETS.map(s => ({ ...s, ...setPricing(s) })))
+const sets = computed(() => (props.only ? props.only.map(id => SETS.find(s => s.id === id)).filter(Boolean) : SETS)
+  .map(s => ({ ...s, ...setPricing(s) })))
 
 /* A set drops its whole contents into the basket in one go. */
 function addSet (set, ev) {

@@ -2,9 +2,12 @@
 import { ref, computed, watch } from 'vue'
 import { api } from '../api'
 import { say, complain } from '../toast'
+import PageFields from '../components/PageFields.vue'
+import { pageForm, pageBody, pageShape } from '../pageText'
 
 /**
- * A new category, or the names of an existing one.
+ * A new category, or the names of an existing one — and, once it exists,
+ * its page on the website: address, whether Google may list it, and text.
  *
  * A category shows on the website and in the app once it has a product in it,
  * so the usual order is: make the category here, then add its products.
@@ -25,6 +28,8 @@ const form = ref({
   id: c.id ?? '',
   ...Object.fromEntries(LANGS.map(l => [l.id, c.name?.[l.id] ?? ''])),
 })
+const page = ref(pageForm(c))
+const site = ref({ slug: c.slug ?? '', indexed: c.is_indexed !== false })
 const busy = ref(false)
 
 const idTouched = ref(false)
@@ -36,17 +41,22 @@ const slug = text => text.toLowerCase()
 if (isNew) watch(() => form.value.az, n => { if (!idTouched.value) form.value.id = slug(n) })
 
 const idOk = computed(() => !isNew || (/^[a-z0-9]+(-[a-z0-9]+)*$/.test(form.value.id) && form.value.id.length >= 2))
-const ready = computed(() => idOk.value && form.value.az.trim())
+const slugOk = computed(() => isNew || (!c.slug && !site.value.slug) || /^[a-z0-9]+(-[a-z0-9]+)*$/.test(site.value.slug))
+const ready = computed(() => idOk.value && slugOk.value && form.value.az.trim())
 
 async function save () {
   if (!ready.value) return
   busy.value = true
-  const translations = Object.fromEntries(LANGS.map(l => [l.id, { name: form.value[l.id].trim() || null }]))
+  const names = Object.fromEntries(LANGS.map(l => [l.id, { name: form.value[l.id].trim() || null }]))
+  const text = pageBody(page.value)
+  const translations = isNew ? names : Object.fromEntries(LANGS.map(l => [l.id, { ...names[l.id], ...text[l.id] }]))
+  const extra = isNew ? {} : { is_indexed: site.value.indexed, ...(site.value.slug && site.value.slug !== c.slug ? { slug: site.value.slug } : {}) }
   try {
     const saved = isNew
       ? await api('/admin/categories', { method: 'POST', body: { id: form.value.id, translations } })
-      : (await api(`/admin/categories/${c.id}`, { method: 'PATCH', body: { translations } }), {
-          ...c, name: { ...c.name, ...Object.fromEntries(LANGS.filter(l => form.value[l.id].trim()).map(l => [l.id, form.value[l.id].trim()])) },
+      : (await api(`/admin/categories/${c.id}`, { method: 'PATCH', body: { translations, ...extra } }), {
+          ...c, ...pageShape(page.value), slug: site.value.slug, is_indexed: site.value.indexed,
+          name: { ...c.name, ...Object.fromEntries(LANGS.filter(l => form.value[l.id].trim()).map(l => [l.id, form.value[l.id].trim()])) },
         })
     say(`${saved.name?.az ?? saved.id} ${isNew ? 'əlavə edildi' : 'yadda saxlanıldı'}`)
     emit('saved', saved)
@@ -89,6 +99,36 @@ async function save () {
         Kateqoriya saytda və tətbiqdə ilk məhsul əlavə ediləndən sonra görünür.
       </p>
     </div>
+
+    <template v-if="!isNew">
+      <div class="a-sec">
+        <h3>Saytdakı səhifə</h3>
+        <div class="a-field">
+          <label for="cf-slug">Ünvan</label>
+          <div class="a-row" style="gap:6px; align-items:center">
+            <span class="a-mono a-muted">/kataloq/</span>
+            <input id="cf-slug" v-model.trim="site.slug" class="a-in a-mono" maxlength="80"
+                   :class="{ 'a-in--dirty': !slugOk }" style="flex:1">
+          </div>
+          <p v-if="c.slug && site.slug !== c.slug" class="a-note a-note--err" style="margin:8px 0 0">
+            Ünvan dəyişsə, köhnə ünvan işləməyəcək və Google səhifəni yenidən tapmalı olacaq.
+            Yalnız zərurət olduqda dəyişin.
+          </p>
+        </div>
+        <label class="a-sw">
+          <input v-model="site.indexed" type="checkbox">
+          Google-da göstər
+        </label>
+        <p class="a-muted" style="font-size:.76rem; margin:6px 0 0">
+          Söndürülsə, səhifə saytda qalır, amma Google onu axtarışda göstərmir və sitemap-dən çıxır.
+        </p>
+      </div>
+
+      <div class="a-sec">
+        <h3>Səhifənin mətni</h3>
+        <PageFields v-model="page" :name="c.name ?? {}" />
+      </div>
+    </template>
 
     <div class="a-drawer__foot">
       <button class="a-btn" :disabled="!ready || busy" @click="save">

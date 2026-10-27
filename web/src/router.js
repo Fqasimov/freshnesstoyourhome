@@ -28,19 +28,15 @@ export const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView },
     {
-      path: '/kataloq',
+      // The catalogue, and one page per category (/kataloq/kuru): the searches
+      // that matter most are for a kind of thing, not one product. Or a
+      // collection page from the panel (/kataloq/yeni-il-setleri). One route,
+      // so moving between them keeps the page and only changes the address.
+      path: '/kataloq/:cat?',
       name: 'catalogue',
-      // Split out: the catalogue page carries the filtering and every product
-      // card, and somebody who only reads the front page should not download it.
-      component: () => import('./views/CatalogueView.vue'),
-    },
-    {
-      path: '/kataloq/:cat',
-      name: 'category',
-      // One page per category (/kataloq/kuru): the searches that matter most
-      // are for a kind of thing, not one product. Same view as the catalogue,
-      // opened on that category.
-      component: () => import('./views/CatalogueView.vue'),
+      // Split out: the catalogue carries the filtering and every product card,
+      // and somebody who only reads the front page should not download it.
+      component: () => import('./views/KataloqSlugView.vue'),
     },
     {
       path: '/mehsul/:slug',
@@ -76,8 +72,7 @@ export const router = createRouter({
     }
     if (saved) return saved
     // Switching category inside the catalogue changes the address, not the page.
-    const shelf = ['catalogue', 'category']
-    if (shelf.includes(to.name) && shelf.includes(from.name)) return false
+    if (to.name === 'catalogue' && from.name === 'catalogue') return false
     return { top: 0 }
   },
 })
@@ -97,7 +92,7 @@ const PAGES = {
 }
 router.afterEach(to => {
   // A product or category page writes its own head once it knows what it shows.
-  if (to.name === 'product' || to.name === 'category' || to.name === 'notfound') return
+  if (to.name === 'product' || to.name === 'notfound' || (to.name === 'catalogue' && to.params.cat)) return
   const page = PAGES[to.name]
   document.title = page?.title ?? HOME_TITLE
   metaDesc?.setAttribute('content', page?.desc ?? HOME_DESC)

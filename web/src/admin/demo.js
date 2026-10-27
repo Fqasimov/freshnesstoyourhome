@@ -206,6 +206,21 @@ function audit (action, subjectType, subjectId, changes) {
 
 /* ── Derived payloads ────────────────────────────────────────────────────── */
 
+/* A collection as the API returns it, after a create or a patch. */
+function collectionShape (c, body) {
+  const out = { is_active: true, is_indexed: true, name: {}, products: [], bundles: [], ...c }
+  for (const k of ['slug', 'is_active', 'is_indexed', 'products', 'bundles']) if (body[k] !== undefined) out[k] = body[k]
+  for (const f of ['name', 'seo_title', 'seo_description', 'h1', 'body']) {
+    out[f] = { ...(out[f] ?? {}) }
+    for (const [l, v] of Object.entries(body.translations ?? {})) {
+      if (v[f] === undefined) continue
+      if (v[f]) out[f][l] = v[f]
+      else if (f !== 'name') delete out[f][l]
+    }
+  }
+  return out
+}
+
 function bundleShape (b) {
   const items = b.items.map(i => {
     const p = db.products.find(x => x.id === i.product_id)
@@ -624,6 +639,26 @@ export async function respond (path, method, body) {
   }
   if (seg[0] === 'admin' && seg[1] === 'categories' && method === 'DELETE') {
     db.extraCategories = db.extraCategories.filter(c => c.id !== seg[2])
+    return { status: 'ok' }
+  }
+
+  /* collections */
+  db.collections ??= []
+  if (route === '/admin/collections' && method === 'GET') return { data: db.collections }
+  if (route === '/admin/collections' && method === 'POST') {
+    if (db.collections.some(x => x.slug === body.slug)) throw new DemoError('Bu ünvan artıq var.', { slug: ['Bu ünvan artıq var.'] })
+    const c = collectionShape({ id: db.collections.length + 1, sort: db.collections.length }, body)
+    db.collections.push(c)
+    audit('collection.create', 'collection', String(c.id), { slug: { from: null, to: c.slug } })
+    return c
+  }
+  if (seg[0] === 'admin' && seg[1] === 'collections' && method === 'PATCH') {
+    const i = db.collections.findIndex(x => x.id === Number(seg[2]))
+    db.collections[i] = collectionShape(db.collections[i], body)
+    return db.collections[i]
+  }
+  if (seg[0] === 'admin' && seg[1] === 'collections' && method === 'DELETE') {
+    db.collections = db.collections.filter(x => x.id !== Number(seg[2]))
     return { status: 'ok' }
   }
 

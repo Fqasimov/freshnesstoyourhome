@@ -451,6 +451,7 @@ class ProductController extends Controller
         foreach (['product_translations', 'product_images', 'bundle_items', 'order_items'] as $table) {
             DB::table($table)->where('product_id', $from)->update(['product_id' => $to]);
         }
+        DB::table('collection_items')->where('item_type', 'product')->where('item_id', $from)->update(['item_id' => $to]);
 
         Product::whereKey($from)->delete();
         Product::whereKey($to)->update(['slug' => $slug]);

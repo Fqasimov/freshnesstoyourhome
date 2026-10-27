@@ -250,6 +250,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Models\Bundle::class,
             \App\Models\BundleTranslation::class,
             \App\Models\BundleItem::class,
+            // Collection pages are on the website too.
+            \App\Models\Collection::class,
+            \App\Models\CollectionTranslation::class,
+            \App\Models\CollectionItem::class,
         ];
 
         foreach ($models as $model) {

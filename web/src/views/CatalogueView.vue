@@ -3,7 +3,7 @@ import { ref, computed, watch, watchEffect, nextTick, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { PRODUCTS, CATEGORIES, catalogueSettled } from '../data/catalogue'
 import { categoryPath, categorySlug, productPath } from '../data/slug'
-import { categoryTitle, categoryDescription, crumbsJsonLd, itemListJsonLd, words } from '../data/productSchema'
+import { categoryTitle, categoryDescription, crumbsJsonLd, itemListJsonLd, words, own, textBlocks } from '../data/productSchema'
 import { setPageHead, setRobots, setLd } from '../composables/usePageMeta'
 import { CATEGORY_LOOK } from '../data/brand'
 import { useI18n } from '../composables/useI18n'
@@ -45,25 +45,34 @@ watch(category, id => {
   if (route.path !== path) router.replace({ path, query: route.query })
 })
 const pick = id => { category.value = id }
+
+/* On a category page: its own H1 and text, written in the panel. */
+const shownCat = computed(() => CATEGORIES.find(c => c.id === category.value && c.id !== 'all') ?? null)
+const heading = computed(() => (shownCat.value
+  ? own(shownCat.value.page, 'h1', lang.value) ?? catName(shownCat.value.id)
+  : t('cat.h')))
+const blocks = computed(() => (shownCat.value ? textBlocks(own(shownCat.value.page, 'body', lang.value)) : []))
 const catHref = id => (id === 'all' ? '/kataloq' : categoryPath(CATEGORIES.find(c => c.id === id) ?? { id }))
 
 /* A category page's head: its own title, snippet and structured data. */
 watchEffect(() => {
   const c = CATEGORIES.find(x => x.id === category.value && x.id !== 'all')
-  if (!c || route.name !== 'category') { setLd('ld-list', null); setLd('ld-crumbs', null); return }
+  if (!c || !route.params.cat) { setLd('ld-list', null); setLd('ld-crumbs', null); return }
   const name = catName(c.id)
   const items = PRODUCTS.filter(p => p.cat === c.id)
   if (!items.length) return
-  const title = categoryTitle(name, lang.value)
-  const desc = categoryDescription(name, items.map(p => p.price), lang.value)
+  const title = own(c.page, 'seo_title', lang.value) ?? categoryTitle(name, lang.value)
+  const desc = own(c.page, 'seo_description', lang.value) ?? categoryDescription(name, items.map(p => p.price), lang.value)
   document.title = title
   document.querySelector('meta[name="description"]')?.setAttribute('content', desc)
   setPageHead({ path: categoryPath(c), title, desc })
-  setRobots(!route.query.q)
+  setRobots(!route.query.q && c.indexed !== false)
   const site = location.origin, w = words(lang.value)
   setLd('ld-list', itemListJsonLd(name, items.map(p => site + productPath(p))))
   setLd('ld-crumbs', crumbsJsonLd([[w.home, `${site}/`], [w.catalogue, `${site}/kataloq`], [name, site + categoryPath(c)]]))
-})
+
+// After the render, so it lands after the page this one replaced has cleared its own.
+}, { flush: 'post' })
 onUnmounted(() => { setLd('ld-list', null); setLd('ld-crumbs', null) })
 const band = ref('any')
 const quick = ref(new Set())
@@ -189,7 +198,7 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
     <div class="wrap">
       <header class="cat__head">
         <RouterLink to="/" class="cat__back"><BIcon name="arrow-left" :size="12" /> {{ t('cat.back') }}</RouterLink>
-        <h1 class="cat__h">{{ category === 'all' ? t('cat.h') : catName(category) }}</h1>
+        <h1 class="cat__h">{{ heading }}</h1>
 
         <label class="search">
           <span class="visually-hidden">{{ t('shop.search') }}</span>
@@ -271,6 +280,14 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
         <p>{{ t('cat.none') }}</p>
         <button type="button" class="tool tool--reset" @click="reset">{{ t('cat.reset') }}</button>
       </div>
+
+      <!-- The category's own text, written in the panel, under its products. -->
+      <section v-if="blocks.length" class="cat__text">
+        <template v-for="(b, i) in blocks" :key="i">
+          <h2 v-if="b.h">{{ b.h }}</h2>
+          <p v-else>{{ b.p }}</p>
+        </template>
+      </section>
     </div>
 
     <!-- Filters: a sheet from the side at every width, as the app's is a
@@ -313,6 +330,10 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
 </template>
 
 <style scoped>
+.cat__text{ max-width:760px; margin-top:clamp(40px,5vw,64px); padding-top:clamp(24px,3vw,32px); border-top:1px solid var(--line); line-height:1.7; color:var(--ink-2); }
+.cat__text h2{ font-family:var(--display); font-weight:600; font-size:clamp(1.3rem,2.2vw,1.7rem); color:var(--ink); margin:1.4em 0 .5em; }
+.cat__text h2:first-child{ margin-top:0; }
+.cat__text p{ margin:0 0 1em; }
 /* Categories are links now (each has its own page): no underline, and the count beside the name. */
 a.tile, a.chip{ text-decoration:none; }
 .chip__n{ opacity:.55; font-size:.85em; margin-left:2px; }

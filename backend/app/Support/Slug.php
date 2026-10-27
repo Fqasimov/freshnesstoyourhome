@@ -66,7 +66,9 @@ final class Slug
     public static function uniqueForCategory(\App\Models\Category $category): string
     {
         $base = self::CATEGORY[$category->id] ?? (self::of((string) $category->nameIn('az')) ?: $category->id);
-        $taken = fn (string $s) => \App\Models\Category::where('slug', $s)->whereKeyNot($category->id)->exists();
+        // Categories and collection pages share /kataloq/, so neither may take the other's address.
+        $taken = fn (string $s) => \App\Models\Category::where('slug', $s)->whereKeyNot($category->id)->exists()
+            || \App\Models\Collection::where('slug', $s)->exists();
 
         for ($n = 1, $slug = $base; $taken($slug); $n++) {
             $slug = $base.'-'.($n + 1);

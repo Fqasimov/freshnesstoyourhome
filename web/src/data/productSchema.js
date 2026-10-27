@@ -163,3 +163,18 @@ export function productJsonLd (p) {
 
   return [product, crumbs]
 }
+
+/* A page's own field in this language, or null — the template then applies.
+   Only the language asked for: an Azerbaijani title on the Russian page
+   would be worse than the Russian template. */
+export const own = (page, field, lang) => {
+  const v = page?.[field]?.[lang]
+  return typeof v === 'string' && v.trim() ? v.trim() : null
+}
+
+/* A page text as blocks: blank lines separate paragraphs, a line starting
+   "## " is a subheading. Plain text only — never HTML from the panel. */
+export function textBlocks (body) {
+  return String(body ?? '').split(/\n\s*\n/).map(b => b.trim()).filter(Boolean)
+    .map(b => (b.startsWith('## ') ? { h: b.slice(3).trim() } : { p: b.replace(/\s*\n\s*/g, ' ') }))
+}

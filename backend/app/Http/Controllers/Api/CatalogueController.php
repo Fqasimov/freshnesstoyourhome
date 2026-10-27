@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\DeliveryZone;
 use App\Models\Bundle;
+use App\Models\Collection;
+use App\Models\CollectionItem;
+use App\Support\PageContent;
 use App\Models\Product;
 use App\Support\CatalogueCache;
 use Illuminate\Http\JsonResponse;
@@ -46,6 +49,9 @@ class CatalogueController extends Controller
                     // Its page on the website: /kataloq/{slug}.
                     'slug' => $c->slug ?? $c->id,
                     'name' => $c->translationMap('name'),
+                    // Its page's own words, per language; empty = template.
+                    'is_indexed' => $c->is_indexed ?? true,
+                    ...PageContent::shape($c),
                 ])
                 ->all();
 
@@ -129,6 +135,31 @@ class CatalogueController extends Controller
                 ->values()
                 ->all();
 
+            /*
+             * Collection pages, with only what can be bought today in them: a
+             * product off sale or a set with a missing item drops out, and a
+             * page left with nothing is not sent at all.
+             */
+            $deliverable = collect($bundles)->keyBy('id');
+            $collections = Collection::with(['translations', 'items'])
+                ->where('is_active', true)
+                ->orderBy('sort')->orderBy('id')
+                ->get()
+                ->map(fn (Collection $c) => [
+                    'slug' => $c->slug,
+                    'is_indexed' => $c->is_indexed,
+                    'name' => $c->translationMap('name'),
+                    ...PageContent::shape($c),
+                    'products' => $c->items->where('item_type', CollectionItem::PRODUCT)
+                        ->pluck('item_id')->filter(fn ($id) => $orderable->has($id))->values()->all(),
+                    'bundles' => $c->items->where('item_type', CollectionItem::BUNDLE)
+                        ->pluck('item_id')->filter(fn ($id) => $deliverable->has($id))->values()->all(),
+                    'updated_at' => $c->updated_at?->toAtomString(),
+                ])
+                ->filter(fn ($c) => $c['products'] || $c['bundles'])
+                ->values()
+                ->all();
+
             $zones = DeliveryZone::with('translations')
                 ->where('is_active', true)
                 ->orderBy('sort')
@@ -149,6 +180,7 @@ class CatalogueController extends Controller
                 'categories' => $categories,
                 'products' => $products,
                 'bundles' => $bundles,
+                'collections' => $collections,
                 'zones' => $zones,
                 'currency' => config('freshness.currency'),
                 'delivery' => [

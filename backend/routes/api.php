@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\AuditController;
 use App\Http\Controllers\Api\Admin\BundleController;
 use App\Http\Controllers\Api\Admin\CategoryController;
+use App\Http\Controllers\Api\Admin\CollectionController;
 use App\Http\Controllers\Api\Admin\CustomerController;
 use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Admin\DeliveryZoneController;
@@ -185,6 +186,11 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::post('categories/order', [CategoryController::class, 'reorder']);
         Route::patch('categories/{id}', [CategoryController::class, 'update']);
         Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
+
+        Route::get('collections', [CollectionController::class, 'index']);
+        Route::post('collections', [CollectionController::class, 'store']);
+        Route::patch('collections/{id}', [CollectionController::class, 'update'])->whereNumber('id');
+        Route::delete('collections/{id}', [CollectionController::class, 'destroy'])->whereNumber('id');
 
         Route::get('bundles', [BundleController::class, 'index']);
         Route::post('bundles', [BundleController::class, 'store']);

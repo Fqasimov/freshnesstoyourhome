@@ -13,11 +13,11 @@ class Category extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
-    protected $fillable = ['id', 'slug', 'sort', 'is_active'];
+    protected $fillable = ['id', 'slug', 'sort', 'is_active', 'is_indexed'];
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return ['is_active' => 'boolean', 'is_indexed' => 'boolean'];
     }
 
     /**

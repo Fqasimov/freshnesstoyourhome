@@ -9,6 +9,7 @@ import Products from './views/Products.vue'
 import Bundles from './views/Bundles.vue'
 import Zones from './views/Zones.vue'
 import Categories from './views/Categories.vue'
+import Collections from './views/Collections.vue'
 import Customers from './views/Customers.vue'
 import Audits from './views/Audits.vue'
 import { api } from './api'
@@ -19,6 +20,7 @@ const TABS = [
   { id: 'products', label: 'Məhsullar', is: Products },
   { id: 'categories', label: 'Kateqoriyalar', is: Categories },
   { id: 'bundles', label: 'Aksiyalar', is: Bundles },
+  { id: 'collections', label: 'Kolleksiyalar', is: Collections },
   { id: 'zones', label: 'Zonalar', is: Zones },
   { id: 'customers', label: 'Müştərilər', is: Customers },
   { id: 'audits', label: 'Jurnal', is: Audits },

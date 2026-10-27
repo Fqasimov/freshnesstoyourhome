@@ -56,6 +56,10 @@ PRODUCTS.forEach(p => {
    shared/catalogue.json. */
 export const SETS = reactive(BUNDLED_SETS.map(b => ({ ...b })))
 
+/* Collection pages (/kataloq/yeni-il-setleri): put together in the panel, so
+   there are none until the live catalogue arrives. */
+export const COLLECTIONS = reactive([])
+
 /* Money, rounded to the cent and printed without trailing zeroes. */
 /* A whole number stays clean — the price list reads like a poster, not a
    receipt — but anything with qəpik in it gets both digits. "71.5 AZN" looks
@@ -186,6 +190,9 @@ function adaptBundle (b) {
   }
 }
 
+/* A page's own words from the API, as { seo_title: {az, ru, en}, … }. */
+const pageOf = x => Object.fromEntries(['seo_title', 'seo_description', 'h1', 'body'].map(f => [f, x[f] ?? {}]))
+
 /** The API has no "everything" row and no counts; the page wants both. */
 function adaptCategories (apiCategories, products) {
   const count = id => products.filter(p => p.cat === id).length
@@ -196,6 +203,9 @@ function adaptCategories (apiCategories, products) {
     ...apiCategories.map(c => ({
       id: c.id,
       slug: c.slug ?? null,
+      /* Its page's own words, per language — empty means the template. */
+      indexed: c.is_indexed !== false,
+      page: pageOf(c),
       en: c.name?.en ?? c.id,
       az: c.name?.az ?? c.name?.en ?? c.id,
       ru: c.name?.ru ?? c.name?.en ?? c.id,
@@ -274,6 +284,14 @@ export async function loadCatalogue () {
        not switched any on yet would be advertising a price nobody agreed to.
        The admin panel is what turns them on. */
     SETS.splice(0, SETS.length, ...(data.bundles ?? []).map(adaptBundle))
+    COLLECTIONS.splice(0, COLLECTIONS.length, ...(data.collections ?? []).map(c => ({
+      slug: c.slug,
+      indexed: c.is_indexed !== false,
+      az: c.name?.az ?? c.slug, ru: c.name?.ru ?? c.name?.az ?? c.slug, en: c.name?.en ?? c.name?.az ?? c.slug,
+      page: pageOf(c),
+      products: c.products ?? [],
+      sets: c.bundles ?? [],
+    })))
 
     if (Array.isArray(data.zones) && data.zones.length) mergeZones(data.zones)
 

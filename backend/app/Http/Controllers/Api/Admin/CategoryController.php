@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\CategoryTranslation;
 use App\Models\Product;
 use App\Support\Audit;
+use App\Support\PageContent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -126,6 +127,8 @@ class CategoryController extends Controller
             'id' => $c->id,
             'slug' => $c->slug,
             'is_active' => $c->is_active,
+            'is_indexed' => $c->is_indexed ?? true,
+            ...PageContent::shape($c),
             'sort' => $c->sort,
             'name' => $c->translationMap('name'),
             'product_count' => $count,
@@ -142,25 +145,43 @@ class CategoryController extends Controller
                 \Illuminate\Validation\Rule::unique('categories', 'slug')->ignore($id, 'id')],
             'translations' => ['sometimes', 'array'],
             'translations.*.name' => ['sometimes', 'nullable', 'string', 'max:80'],
+            // The category's page on the website. Empty means the template.
+            ...PageContent::rules(),
+            'is_indexed' => ['sometimes', 'boolean'],
         ]);
+
+        if (isset($data['slug']) && \App\Models\Collection::where('slug', $data['slug'])->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['slug' => 'Bu ünvan artıq bir səhifədə istifadə olunur.']);
+        }
 
         $category = Category::with('translations')->findOrFail($id);
 
         $changes = DB::transaction(function () use ($category, $data) {
-            $category->fill(collect($data)->only(['is_active', 'sort', 'slug'])->all());
-            $changes = Audit::diff($category, ['is_active', 'sort', 'slug']);
+            $category->fill(collect($data)->only(['is_active', 'sort', 'slug', 'is_indexed'])->all());
+            $changes = Audit::diff($category, ['is_active', 'sort', 'slug', 'is_indexed']);
             $category->save();
 
             foreach ($data['translations'] ?? [] as $locale => $fields) {
-                if (! in_array($locale, self::LOCALES, true) || blank($fields['name'] ?? null)) {
+                if (! in_array($locale, self::LOCALES, true)) {
                     continue;
                 }
 
                 $row = CategoryTranslation::firstOrNew(['category_id' => $category->id, 'locale' => $locale]);
-                $row->name = $fields['name'];
+                if (filled($fields['name'] ?? null)) {
+                    $row->name = $fields['name'];
+                } elseif (! $row->exists) {
+                    // Page text in a language with no name yet: the Azerbaijani
+                    // name stands in, as it does everywhere else.
+                    $row->name = $category->nameIn('az');
+                }
+                PageContent::fill($row, $fields);
 
                 if ($row->isDirty()) {
-                    $changes["name:{$locale}"] = ['from' => $row->getOriginal('name'), 'to' => $row->name];
+                    foreach ($row->getDirty() as $field => $to) {
+                        if (in_array($field, ['name', ...PageContent::FIELDS], true)) {
+                            $changes["{$field}:{$locale}"] = ['from' => $row->getOriginal($field), 'to' => $to];
+                        }
+                    }
                     $row->save();
                 }
             }

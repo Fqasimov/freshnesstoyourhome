@@ -5,7 +5,7 @@ import BIcon from '../components/BIcon.vue'
 import { CATEGORIES, PRODUCTS } from '../data/catalogue'
 import { categoryPath } from '../data/slug'
 import { useI18n } from '../composables/useI18n'
-import { setRobots } from '../composables/usePageMeta'
+import { setLd, setRobots } from '../composables/usePageMeta'
 
 /**
  * A page that does not exist. The server has already answered it with a 404
@@ -25,6 +25,9 @@ function search () {
 onMounted(() => {
   document.title = `${t('nf.h')} | Freshness`
   setRobots(false)
+  // A dead /kataloq/{slug} may still carry the list the build wrote for it.
+  setLd('ld-list', null)
+  setLd('ld-crumbs', null)
 })
 </script>
 
