@@ -379,7 +379,7 @@ import type { CatalogueResponse } from './api'
  */
 export const FALLBACK_CATALOGUE: CatalogueResponse = {
   currency: 'AZN',
-  delivery: { open: '10:00', close: '22:00', lead_days: 1, weight_tolerance_percent: 10, code_ttl_minutes: 10 },
+  delivery: { open: '10:00', close: '22:00', lead_days: 0, weight_tolerance_percent: 10, code_ttl_minutes: 10 },
 
   categories: [
 ${cats.join('\n')}

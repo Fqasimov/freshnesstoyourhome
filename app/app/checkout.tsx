@@ -28,7 +28,12 @@ export default function Checkout () {
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const lead = catalogue.delivery?.lead_days ?? 1
+  // Same day until delivery closes for the day, then tomorrow (as the server rules it).
+  const close = catalogue.delivery?.close ?? '22:00'
+  const now = new Date()
+  const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  const baseLead = catalogue.delivery?.lead_days ?? 0
+  const lead = baseLead === 0 && hhmm >= close ? 1 : baseLead
   const minDate = isoDaysFromNow(lead)
   const maxDate = isoDaysFromNow(14)
 

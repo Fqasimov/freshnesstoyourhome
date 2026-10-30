@@ -81,10 +81,10 @@ abstract class TestCase extends BaseTestCase
         return [$user, $address];
     }
 
-    /** The first date the shop will accept, given the one-day lead time. */
+    /** A date the shop will accept whatever the hour: tomorrow, in Baku. */
     protected function deliverableDate(): string
     {
-        return now()->addDays((int) config('freshness.order.lead_days') + 1)->toDateString();
+        return \App\Support\OrderDates::now()->addDay()->toDateString();
     }
 
     /** @param  array<string, float>  $lines  product id => qty */

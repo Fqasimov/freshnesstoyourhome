@@ -237,7 +237,13 @@ export function useCart () {
   const NAME_OK = /^\p{L}[\p{L}\s'’.-]*$/u
 const nameOk = v => v.trim().length >= 2 && NAME_OK.test(v.trim())
 const phoneOk = computed(() => /^\+?[0-9 ()-]{7,20}$/.test(phone.value.trim()))
-const minDate = computed(() => isoIn(ORDER_DATES.leadDays))
+/* Today until the delivery day closes (as the server rules it), then tomorrow.
+   The visitor's clock stands in for Baku's: the shop's customers are there. */
+const pastClose = () => {
+  const d = new Date(), pad = n => String(n).padStart(2, '0')
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}` >= ORDER_DATES.close
+}
+const minDate = computed(() => isoIn(ORDER_DATES.leadDays === 0 && pastClose() ? 1 : ORDER_DATES.leadDays))
 const maxDate = computed(() => isoIn(ORDER_DATES.maxDaysAhead))
 /* Empty is fine. A date that is filled in has to be one the shop takes. */
 const dateOk = computed(() => !deliveryDate.value ||
@@ -245,7 +251,7 @@ const dateOk = computed(() => !deliveryDate.value ||
 const canSend = computed(() => Boolean(
     zone.value && dateOk.value &&
     (!address.value.trim() || address.value.trim().length >= 5) &&
-    nameOk(firstName.value) && nameOk(lastName.value) && phoneOk.value))
+    nameOk(firstName.value) && (!lastName.value.trim() || nameOk(lastName.value)) && phoneOk.value))
 
   const messageFor = code => {
     let msg = t('ui.waIntro') + '\n\n'
@@ -265,7 +271,7 @@ const canSend = computed(() => Boolean(
     if (deliveryDate.value) msg += `\n${t('ui.waDate')}: ${deliveryDate.value}`
     if (note.value.trim()) msg += `\n${t('ui.waNote')}: ${note.value.trim()}`
 
-    msg += `\n${t('deliv.fullName')}: ${firstName.value.trim()} ${lastName.value.trim()}`
+    msg += `\n${t('deliv.fullName')}: ${`${firstName.value.trim()} ${lastName.value.trim()}`.trim()}`
     if (phone.value.trim()) msg += `\n${t('deliv.phone')}: ${phone.value.trim()}`
 
     msg += `\n\n${t('ui.waOutro')}`

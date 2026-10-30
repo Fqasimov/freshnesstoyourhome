@@ -24,9 +24,6 @@ class StoreOrderRequest extends FormRequest
 
     public function rules(): array
     {
-        $lead = (int) config('freshness.order.lead_days');
-        $maxAhead = (int) config('freshness.order.max_days_ahead');
-
         return [
             'address_id' => ['required', 'uuid'],
 
@@ -50,12 +47,8 @@ class StoreOrderRequest extends FormRequest
                 'decimal:0,3',
             ],
 
-            // The shop takes orders a day ahead, so today is not offered.
-            'delivery_date' => [
-                'required', 'date_format:Y-m-d',
-                'after_or_equal:'.now()->addDays($lead)->toDateString(),
-                'before_or_equal:'.now()->addDays($maxAhead)->toDateString(),
-            ],
+            // Today until the delivery day closes, then from tomorrow.
+            'delivery_date' => ['required', ...\App\Support\OrderDates::rules()],
             // A time or a range of times ("14:00", "14:00-16:00"); not a place
             // for free text that staff then read as an instruction.
             'delivery_slot' => ['sometimes', 'nullable', 'string', 'max:20', 'regex:/^\d{1,2}:\d{2}(\s?[-–]\s?\d{1,2}:\d{2})?$/u'],

@@ -17,8 +17,10 @@ return [
         // How long a guest's website order can still be claimed into an
         // account for tracking, from the browser that placed it.
         'claim_days' => (int) env('ORDER_CLAIM_DAYS', 30),
-        // Orders are taken a day ahead, as the business requires.
-        'lead_days' => env('ORDER_LEAD_DAYS', 1),
+        // Same-day orders are taken until the delivery day closes
+        // (App\Support\OrderDates). Not read from .env: the server's .env
+        // still carries the old ORDER_LEAD_DAYS=1 from the installer.
+        'lead_days' => 0,
         'delivery_open' => env('DELIVERY_OPEN', '10:00'),
         'delivery_close' => env('DELIVERY_CLOSE', '22:00'),
         'max_days_ahead' => env('ORDER_MAX_DAYS_AHEAD', 14),

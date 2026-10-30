@@ -107,7 +107,7 @@ export const catalogueSettled = ref(false)
 
 /* How far ahead an order may be dated: the shop's own rule, as the server
    states it. The defaults are what the server ships with. */
-export const ORDER_DATES = reactive({ leadDays: 1, maxDaysAhead: 14 })
+export const ORDER_DATES = reactive({ leadDays: 0, maxDaysAhead: 14, close: '22:00' })
 
 const API = import.meta.env.VITE_API_URL
 
@@ -299,6 +299,7 @@ export async function loadCatalogue () {
     const ahead = Number(data.delivery?.max_days_ahead)
     if (Number.isFinite(lead) && lead >= 0) ORDER_DATES.leadDays = lead
     if (Number.isFinite(ahead) && ahead > 0) ORDER_DATES.maxDaysAhead = ahead
+    if (/^\d{2}:\d{2}$/.test(data.delivery?.close ?? '')) ORDER_DATES.close = data.delivery.close
 
     catalogueStale.value = false
   } catch {

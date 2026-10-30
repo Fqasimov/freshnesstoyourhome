@@ -138,17 +138,22 @@ class OrderLifecycleTest extends TestCase
         $this->assertSame(count($codes), count(array_unique($codes)));
     }
 
-    public function test_delivery_must_be_at_least_a_day_ahead(): void
+    public function test_same_day_delivery_until_the_day_closes_but_never_a_past_date(): void
     {
         [$user, $address] = $this->customerWithAddress();
         $this->signInAs($user);
-
         $payload = $this->orderPayload($address, ['smoked-salmon' => 1]);
-        $payload['delivery_date'] = now()->toDateString();
 
-        $this->postJson('/api/orders', $payload)
-            ->assertStatus(422)
-            ->assertJsonValidationErrors('delivery_date');
+        // 12:00 in Baku: today is open, yesterday never is.
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-02 08:00:00', 'UTC'));
+        $this->postJson('/api/orders', ['delivery_date' => '2026-11-01'] + $payload)
+            ->assertStatus(422)->assertJsonValidationErrors('delivery_date');
+        $this->postJson('/api/orders', ['delivery_date' => '2026-11-02'] + $payload)->assertCreated();
+
+        // 23:00 in Baku: today has closed.
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-02 19:00:00', 'UTC'));
+        $this->postJson('/api/orders', ['delivery_date' => '2026-11-02'] + $payload)
+            ->assertStatus(422)->assertJsonValidationErrors('delivery_date');
     }
 
     public function test_delivery_cannot_be_scheduled_absurdly_far_ahead(): void

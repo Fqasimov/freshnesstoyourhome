@@ -52,7 +52,8 @@ class OrderSourceTest extends TestCase
     {
         $this->postJson('/api/orders/web', $this->webOrder([
             'contact_first_name' => '', 'contact_last_name' => '', 'contact_phone' => 'call me', 'zone_id' => 'nowhere',
-        ]))->assertStatus(422)->assertJsonValidationErrors(['contact_first_name', 'contact_last_name', 'contact_phone', 'zone_id']);
+        ]))->assertStatus(422)->assertJsonValidationErrors(['contact_first_name', 'contact_phone', 'zone_id'])
+            ->assertJsonMissingValidationErrors(['contact_last_name']);
 
         $this->assertSame(0, Order::count());
     }
@@ -98,16 +99,48 @@ class OrderSourceTest extends TestCase
         $this->assertSame(['web'], collect($this->getJson('/api/staff/orders?source=web')->json('data'))->pluck('source')->all());
     }
 
-    public function test_first_name_and_surname_are_both_required_and_stored_together(): void
+    public function test_the_surname_is_optional_and_stored_with_the_first_name(): void
     {
         // Several posts in one test; the per-address brake has its own test.
         $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
 
-        $this->postJson('/api/orders/web', $this->webOrder(['contact_last_name' => '']))
-            ->assertStatus(422)->assertJsonValidationErrors(['contact_last_name']);
+        $res = $this->postJson('/api/orders/web', $this->webOrder(['contact_last_name' => '']))->assertCreated()->json();
+        $this->assertSame('Aysel', Order::findOrFail($res['id'])->contact_name);
+
+        $order = $this->webOrder();
+        unset($order['contact_last_name']);
+        $res = $this->postJson('/api/orders/web', $order)->assertCreated()->json();
+        $this->assertSame('Aysel', Order::findOrFail($res['id'])->contact_name);
 
         $res = $this->postJson('/api/orders/web', $this->webOrder())->assertCreated()->json();
         $this->assertSame('Aysel Məmmədova', Order::findOrFail($res['id'])->contact_name);
+
+        // A surname that is given is still checked.
+        $this->postJson('/api/orders/web', $this->webOrder(['contact_last_name' => 'M1']))
+            ->assertStatus(422)->assertJsonValidationErrors(['contact_last_name']);
+    }
+
+    public function test_today_is_taken_until_the_delivery_day_closes_in_baku_time(): void
+    {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+
+        // 21:30 in Baku (17:30 UTC): today is still open.
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-02 17:30:00', 'UTC'));
+        $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-02']))->assertCreated();
+        $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-01']))
+            ->assertStatus(422)->assertJsonValidationErrors(['delivery_date']);
+
+        // 22:30 in Baku: the day has closed, tomorrow is the earliest.
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-02 18:30:00', 'UTC'));
+        $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-02']))
+            ->assertStatus(422)->assertJsonValidationErrors(['delivery_date']);
+        $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-03']))->assertCreated();
+
+        // 01:00 in Baku is still the evening before in UTC; Baku's date counts.
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-02 21:00:00', 'UTC'));
+        $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-03']))->assertCreated();
+        $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-02']))
+            ->assertStatus(422)->assertJsonValidationErrors(['delivery_date']);
     }
 
     public function test_a_name_cannot_carry_digits_links_or_markup(): void
@@ -150,8 +183,7 @@ class OrderSourceTest extends TestCase
         unset($order['contact_first_name'], $order['contact_last_name']);
 
         $this->postJson('/api/orders/web', $order + ['contact_name' => 'Aysel Məmmədova'])->assertCreated();
-        $this->postJson('/api/orders/web', $order + ['contact_name' => 'Aysel'])
-            ->assertStatus(422)->assertJsonValidationErrors(['contact_last_name']);
+        $this->postJson('/api/orders/web', $order + ['contact_name' => 'Aysel'])->assertCreated();
     }
 
     public function test_a_website_order_can_carry_a_note_and_a_delivery_date(): void

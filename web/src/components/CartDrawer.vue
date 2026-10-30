@@ -126,8 +126,8 @@ const countLabel = computed(() =>
                    :placeholder="t('deliv.firstPh')" v-model="firstName">
           </div>
           <div>
-            <label class="deliv__l" for="cart-last"><span>{{ t('deliv.last') }}<span class="deliv__req" aria-hidden="true"> *</span></span></label>
-            <input id="cart-last" class="deliv__in" autocomplete="family-name" required aria-required="true"
+            <label class="deliv__l" for="cart-last"><span>{{ t('deliv.last') }}</span></label>
+            <input id="cart-last" class="deliv__in" autocomplete="family-name"
                    :class="{ 'deliv__in--bad': lastName && !nameOk(lastName) }"
                    :placeholder="t('deliv.lastPh')" v-model="lastName">
           </div>

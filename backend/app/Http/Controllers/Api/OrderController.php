@@ -102,9 +102,6 @@ class OrderController extends Controller
      */
     public function storeFromWebsite(Request $request): JsonResponse
     {
-        $lead = (int) config('freshness.order.lead_days');
-        $maxAhead = (int) config('freshness.order.max_days_ahead');
-
         // A page loaded before the name was split in two still sends one field.
         if (! $request->filled('contact_first_name') && is_string($request->input('contact_name'))) {
             $parts = preg_split('/\s+/u', trim($request->input('contact_name')), 2) ?: [];
@@ -122,10 +119,10 @@ class OrderController extends Controller
             'bundles.*.qty' => ['required', 'integer', 'min:1', 'max:20'],
 
             'zone_id' => ['required', 'string', Rule::exists('delivery_zones', 'id')->where('is_active', true)],
-            // First name and surname, both required, letters only (plus space,
+            // First name required, surname optional; letters only (plus space,
             // hyphen, apostrophe and full stop): no digits, links or markup.
             'contact_first_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L} '’.-]*\z/u"],
-            'contact_last_name' => ['required', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L} '’.-]*\z/u"],
+            'contact_last_name' => ['sometimes', 'nullable', 'string', 'min:2', 'max:40', "regex:/^\p{L}[\p{L} '’.-]*\z/u"],
             // Digits, spaces, dashes, brackets and an optional leading +.
             'contact_phone' => ['required', 'string', 'regex:/^\+?[0-9 ()-]{7,20}\z/'],
             // Optional: the shop phones for the address if it is missing. When it
@@ -142,11 +139,7 @@ class OrderController extends Controller
                 // backslashes or spaces, which some browsers read as `/`.
                 'not_regex:#(/|%2f)(\.|%2e){1,2}(/|%2f|\?|\#|$)|\\\\|%5c|\s#i',
             ],
-            'delivery_date' => [
-                'sometimes', 'nullable', 'date_format:Y-m-d',
-                'after_or_equal:'.now()->addDays($lead)->toDateString(),
-                'before_or_equal:'.now()->addDays($maxAhead)->toDateString(),
-            ],
+            'delivery_date' => ['sometimes', 'nullable', ...\App\Support\OrderDates::rules()],
             'note' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
@@ -159,7 +152,7 @@ class OrderController extends Controller
             }
         }
 
-        $data['contact_name'] = trim($data['contact_first_name'].' '.$data['contact_last_name']);
+        $data['contact_name'] = trim($data['contact_first_name'].' '.($data['contact_last_name'] ?? ''));
 
         // A website visitor who is signed in places the order on their account,
         // exactly as the app does. Only a shop token counts: a panel token or
