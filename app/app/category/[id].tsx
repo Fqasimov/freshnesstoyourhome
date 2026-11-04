@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { type ComponentRef, useMemo, useRef, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -40,7 +40,7 @@ export default function CategoryScreen () {
   const [sorting, setSorting] = useState(false)
 
   // Bring the chosen chip into view, so the row always shows where you are.
-  const chipRow = useRef<ScrollView>(null)
+  const chipRow = useRef<ComponentRef<typeof ScrollView>>(null)
   const chipX = useRef<Record<string, number>>({})
   const reveal = (key: string) => {
     const x = chipX.current[key]

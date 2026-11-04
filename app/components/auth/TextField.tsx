@@ -1,4 +1,4 @@
-import { forwardRef, useState, type ReactNode } from 'react'
+import { type ComponentRef, forwardRef, useState, type ReactNode } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native'
 import Animated, { FadeInUp, FadeOut, useAnimatedStyle, withTiming } from 'react-native-reanimated'
 import { Icon, type IconName } from '../Icon'
@@ -19,7 +19,7 @@ type Props = TextInputProps & {
  * A labelled field with its icon. The border answers focus and error; the
  * error slides in under the field rather than jumping the layout about.
  */
-export const TextField = forwardRef<TextInput, Props>(function TextField (
+export const TextField = forwardRef<ComponentRef<typeof TextInput>, Props>(function TextField (
   { label, icon, error, secret, right, onFocus, onBlur, style, ...input }, ref,
 ) {
   const [focused, setFocused] = useState(false)

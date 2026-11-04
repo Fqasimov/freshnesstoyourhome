@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { type ComponentRef, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import Animated, {
   useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming,
@@ -18,7 +18,7 @@ export type OtpHandle = { shake: () => void; focus: () => void }
 export const OtpInput = forwardRef<OtpHandle, {
   value: string; onChange: (v: string) => void; onComplete: (v: string) => void; error?: boolean
 }>(function OtpInput ({ value, onChange, onComplete, error }, ref) {
-  const input = useRef<TextInput>(null)
+  const input = useRef<ComponentRef<typeof TextInput>>(null)
   const [focused, setFocused] = useState(false)
   const x = useSharedValue(0)
 

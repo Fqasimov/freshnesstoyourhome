@@ -66,7 +66,7 @@ export default function Orders () {
             tintColor={color.forest}
           />
         }
-        ListHeaderComponent={error ? <Note warn>{error}</Note> : null}
+        ListHeaderComponent={error ? <Note warn>{error}</Note> : undefined}
         ListEmptyComponent={
           <Empty title={t('orders.empty')}>
             <Button

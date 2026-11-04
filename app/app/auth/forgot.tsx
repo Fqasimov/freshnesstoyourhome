@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { type ComponentRef, useRef, useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -30,8 +30,8 @@ export default function Forgot () {
   const [password2, setPassword2] = useState('')
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
   const [busy, setBusy] = useState(false)
-  const pwRef = useRef<TextInput>(null)
-  const pw2Ref = useRef<TextInput>(null)
+  const pwRef = useRef<ComponentRef<typeof TextInput>>(null)
+  const pw2Ref = useRef<ComponentRef<typeof TextInput>>(null)
 
   async function submit () {
     if (busy) return

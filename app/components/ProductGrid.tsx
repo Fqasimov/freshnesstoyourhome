@@ -32,8 +32,8 @@ export function ProductGrid ({ products, header, empty }: {
       numColumns={2}
       columnWrapperStyle={{ gap: GAP }}
       contentContainerStyle={s.list}
-      ListHeaderComponent={header}
-      ListEmptyComponent={empty}
+      ListHeaderComponent={header ?? undefined}
+      ListEmptyComponent={empty ?? undefined}
       renderItem={render}
       initialNumToRender={8}
       windowSize={7}

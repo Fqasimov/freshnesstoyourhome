@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { type ComponentRef, useEffect, useRef, useState } from 'react'
 import {
   KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native'
@@ -126,7 +126,7 @@ function SignInForm () {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const pwRef = useRef<TextInput>(null)
+  const pwRef = useRef<ComponentRef<typeof TextInput>>(null)
 
   async function submit () {
     if (busy) return
@@ -229,10 +229,10 @@ function SignUpForm () {
   const [tried, setTried] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  const emailRef = useRef<TextInput>(null)
-  const phoneRef = useRef<TextInput>(null)
-  const pwRef = useRef<TextInput>(null)
-  const pw2Ref = useRef<TextInput>(null)
+  const emailRef = useRef<ComponentRef<typeof TextInput>>(null)
+  const phoneRef = useRef<ComponentRef<typeof TextInput>>(null)
+  const pwRef = useRef<ComponentRef<typeof TextInput>>(null)
+  const pw2Ref = useRef<ComponentRef<typeof TextInput>>(null)
 
   function check (): Errors {
     const e: Errors = {}
