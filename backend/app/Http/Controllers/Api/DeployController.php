@@ -38,6 +38,17 @@ class DeployController extends Controller
             $output .= "\n".trim(Artisan::output());
         }
 
+        // The host's PHP keeps compiled files in memory and can go on running
+        // yesterday's code for minutes after the upload. The deploy's next step
+        // builds the website from this API, so it must see today's: drop the
+        // compiled copies and the catalogue built from them.
+        if ($code === 0) {
+            if (function_exists('opcache_reset')) {
+                @opcache_reset();
+            }
+            \App\Support\CatalogueCache::flush();
+        }
+
         return response()->json([
             'ok' => $code === 0,
             'output' => $output,
