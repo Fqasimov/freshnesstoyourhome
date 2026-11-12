@@ -69,6 +69,21 @@ class SeoFieldsTest extends TestCase
         $this->assertArrayNotHasKey($old, $this->catalogue()['redirects']);
     }
 
+    /** The catalogue is cached serialised: what comes back must still be a plain map. */
+    public function test_redirects_survive_the_cache(): void
+    {
+        // A store that serialises, as the host's does; the array store does not.
+        config(['cache.default' => 'file']);
+        $old = Product::findOrFail('smoked-salmon')->slug;
+        $this->patchJson('/api/admin/products/smoked-salmon', ['slug' => 'qizil-baliq'])->assertOk();
+        Cache::forget(CatalogueCache::KEY);
+        $this->getJson('/api/catalogue')->assertOk();
+        // Second request: from the cache.
+        $r = $this->getJson('/api/catalogue')->assertOk()->json('redirects');
+        $this->assertSame([$old => 'qizil-baliq'], $r);
+        Cache::forget(CatalogueCache::KEY);
+    }
+
     public function test_an_out_of_stock_product_keeps_its_page_but_is_not_orderable(): void
     {
         $this->patchJson('/api/admin/products/smoked-salmon', ['in_stock' => false])->assertOk();

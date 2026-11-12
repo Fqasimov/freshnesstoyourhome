@@ -210,7 +210,8 @@ class CatalogueController extends Controller
                 'categories' => $categories,
                 'products' => $products,
                 'unavailable' => $unavailable,
-                'redirects' => (object) $redirects,
+                // A plain array in the cache (see the warning above); an object only on the way out.
+                'redirects' => $redirects,
                 'bundles' => $bundles,
                 'collections' => $collections,
                 'zones' => $zones,
@@ -234,6 +235,9 @@ class CatalogueController extends Controller
         // the edge absorb a flood on the busiest public endpoint without it
         // reaching this server. Prices in it are for display: every basket and
         // order is priced again here, so a minute-old figure cannot be charged.
+        // {} rather than [] when there are none, so clients always get a map.
+        $payload['redirects'] = (object) ($payload['redirects'] ?? []);
+
         return response()->json($payload)
             ->header('Cache-Control', 'public, max-age=60, s-maxage=60');
     }
