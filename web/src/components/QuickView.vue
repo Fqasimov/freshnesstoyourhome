@@ -9,7 +9,7 @@ import { useI18n } from '../composables/useI18n'
 const props = defineProps({ product: { type: Object, default: null } })
 const emit = defineEmits(['close', 'add'])
 
-const { t, nm, alt, dsc, catName, unitOf } = useI18n()
+const { t, nm, alt, dsc, catName, unitOf, lp } = useI18n()
 const variant = ref(null)
 const qty = ref(1)
 
@@ -103,7 +103,8 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
       <div class="modal__box">
         <div class="modal__img" ref="img">
           <button v-if="pictures.length" type="button" class="modal__zoom" :aria-label="nm(product)" @click="openBig">
-            <img :src="shown ?? product.img" :alt="nm(product)">
+            <img :src="shown ?? product.img" :alt="nm(product)"
+                 :srcset="!shown && product.srcset ? product.srcset : undefined" sizes="(max-width: 800px) 90vw, 600px">
             <span class="modal__zoomhint" aria-hidden="true"><BIcon name="search" :size="13" /></span>
           </button>
           <img v-else :src="shown ?? product.img" :alt="nm(product)">
@@ -125,7 +126,7 @@ const confirm = () => emit('add', { product: props.product, v: variant.value, qt
           <h3>{{ nm(product) }}</h3>
           <p class="modal__alt">{{ alt(product) }}</p>
           <p class="modal__desc">{{ dsc(product) }}</p>
-          <RouterLink :to="productPath(product)" class="modal__page" @click="emit('close')">
+          <RouterLink :to="lp(productPath(product))" class="modal__page" @click="emit('close')">
             {{ t('pp.open') }} <BIcon name="arrow-right" :size="12" />
           </RouterLink>
 

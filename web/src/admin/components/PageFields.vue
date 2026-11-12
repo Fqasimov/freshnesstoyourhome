@@ -18,11 +18,13 @@ const LANGS = [
   { id: 'en', label: 'İngiliscə' },
 ]
 // The same limits the server checks (App\Support\PageContent).
-const MAX = { seo_title: 70, seo_description: 170, h1: 120, body: 12000 }
+const MAX = { seo_title: 70, seo_description: 170, h1: 120, intro: 2000, body: 12000, q: 200, a: 1000 }
 // What Google shows in full; longer still saves, but is cut in the results.
 const SHOWN = { seo_title: 60, seo_description: 160 }
 
 const len = (l, f) => (model.value[l]?.[f] ?? '').length
+const count = text => String(text ?? '').trim().split(/\s+/).filter(Boolean).length
+const addQ = l => { if (model.value[l].faq.length < 10) model.value[l].faq.push({ q: '', a: '' }) }
 const words = l => (model.value[l]?.body ?? '').replace(/^##\s/gm, '').trim().split(/\s+/).filter(Boolean).length
 </script>
 
@@ -56,11 +58,27 @@ const words = l => (model.value[l]?.body ?? '').replace(/^##\s/gm, '').trim().sp
                :placeholder="name[l.id] ?? ''">
       </div>
       <div class="a-field">
+        <label :for="`pf-i-${l.id}`">
+          Giriş (məhsulların üstündə)
+          <span class="a-muted">{{ count(model[l.id].intro) }} söz · 100–200</span>
+        </label>
+        <textarea :id="`pf-i-${l.id}`" v-model="model[l.id].intro" class="a-in" rows="4" :maxlength="MAX.intro"></textarea>
+      </div>
+      <div class="a-field">
         <label :for="`pf-b-${l.id}`">
           Mətn (məhsulların altında)
           <span class="a-muted">{{ words(l.id) }} söz</span>
         </label>
         <textarea :id="`pf-b-${l.id}`" v-model="model[l.id].body" class="a-in" rows="7" :maxlength="MAX.body"></textarea>
+      </div>
+      <div class="a-field">
+        <label>Tez-tez verilən suallar <span class="a-muted">(3–5)</span></label>
+        <div v-for="(x, i) in model[l.id].faq" :key="i" class="pf-faq">
+          <input v-model="x.q" class="a-in" :maxlength="MAX.q" :aria-label="`Sual ${i + 1}`" placeholder="Sual">
+          <textarea v-model="x.a" class="a-in" rows="2" :maxlength="MAX.a" :aria-label="`Cavab ${i + 1}`" placeholder="Cavab"></textarea>
+          <button type="button" class="a-btn a-btn--sm a-btn--ghost" aria-label="Sualı sil" @click="model[l.id].faq.splice(i, 1)">×</button>
+        </div>
+        <button type="button" class="a-btn a-btn--sm a-btn--ghost" :disabled="model[l.id].faq.length >= 10" @click="addQ(l.id)">+ Sual əlavə et</button>
       </div>
     </div>
   </div>
@@ -68,5 +86,12 @@ const words = l => (model.value[l]?.body ?? '').replace(/^##\s/gm, '').trim().sp
     Boş sahə üçün sayt özü yazır (ad və qiymətlərdən). Mətndə boş sətir yeni abzasdır,
     “## ” ilə başlayan sətir isə alt başlıq. Məqsəd 300–500 sözdür.
     Saytda dərhal görünür; Google-un oxuduğu nüsxə hər gecə yenilənir.
+    Sualı və ya cavabı boş olan sual saxlanılmır.
   </p>
 </template>
+
+<style scoped>
+.pf-faq{ display:grid; grid-template-columns:1fr auto; gap:6px; margin-bottom:10px; }
+.pf-faq textarea{ grid-column:1; }
+.pf-faq button{ grid-column:2; grid-row:1; }
+</style>

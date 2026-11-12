@@ -52,6 +52,18 @@ allow_maps_csp () {
   grep -q "maps.googleapis.com" "$1" || { echo "!! could not widen the CSP for Google Maps in $1" >&2; exit 1; }
 }
 
+# Google Analytics, when a measurement id is configured (VITE_GA4_ID): its tag
+# script and the hosts it reports to, and nothing else.
+allow_analytics_csp () {
+  [ -n "${VITE_GA4_ID:-}" ] || return 0
+  sed -i \
+    -e "s|script-src 'self'|script-src 'self' https://www.googletagmanager.com|" \
+    -e "s|img-src 'self' data: blob:|img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com|" \
+    -e "s|connect-src 'self'|connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com|" \
+    "$1"
+  grep -q "googletagmanager.com" "$1" || { echo "!! could not widen the CSP for Google Analytics in $1" >&2; exit 1; }
+}
+
 STAGE="$(mktemp -d)"
 TOKEN="$(head -c 12 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 
@@ -66,6 +78,7 @@ if [ "${WEBSITE_ONLY:-}" = 1 ]; then
   rm -rf "$ROOT/web/dist/cms"
   cp "$ROOT/deploy/website.htaccess" "$ROOT/web/dist/.htaccess"
   allow_maps_csp "$ROOT/web/dist/.htaccess"
+allow_analytics_csp "$ROOT/web/dist/.htaccess"
   ( cd "$ROOT/web/dist" && zip -qr "$OUT/website-only.zip" . )
   ls -lh "$OUT"
   exit 0
@@ -75,6 +88,7 @@ echo "==> website (API at $API_URL)"
 ( cd "$ROOT/web" && VITE_API_URL="$API_URL" npm run build >/dev/null )
 cp "$ROOT/deploy/website.htaccess" "$ROOT/web/dist/.htaccess"
 allow_maps_csp "$ROOT/web/dist/.htaccess"
+allow_analytics_csp "$ROOT/web/dist/.htaccess"
 [ -z "${STAGE_OUT:-}" ] && ( cd "$ROOT/web/dist" && zip -qr "$OUT/website.zip" . )
 
 echo "==> backend (composer --no-dev)"

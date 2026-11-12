@@ -59,6 +59,28 @@ class ProductPhotoTest extends TestCase
         Storage::disk('public')->assertExists(StoredImage::thumbPath($stored));
     }
 
+    /** WebP copies for the website's srcset, none wider than the photo. */
+    public function test_an_upload_gets_webp_copies_for_the_website(): void
+    {
+        if (! function_exists('imagewebp')) {
+            $this->markTestSkipped('GD has no WebP here.');
+        }
+        $this->signInAs($this->admin());
+
+        $this->post('/api/admin/products/smoked-salmon/photo', [
+            'photo' => UploadedFile::fake()->image('fish.jpg', 800, 800),
+        ])->assertOk();
+
+        $stored = Product::find('smoked-salmon')->image_file;
+        Storage::disk('public')->assertExists(StoredImage::variantPath($stored, 300));
+        Storage::disk('public')->assertExists(StoredImage::variantPath($stored, 600));
+        Storage::disk('public')->assertMissing(StoredImage::variantPath($stored, 1200));
+
+        \Illuminate\Support\Facades\Cache::forget(\App\Support\CatalogueCache::KEY);
+        $p = collect($this->getJson('/api/catalogue')->json('products'))->firstWhere('id', 'smoked-salmon');
+        $this->assertSame([300, 600], array_column($p['image_set'], 'w'));
+    }
+
     /** The name the client chose is never the name on disk. */
     public function test_the_uploaded_filename_is_not_used(): void
     {

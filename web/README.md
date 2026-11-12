@@ -402,3 +402,25 @@ and seeded into the Zonalar tab.
 
 - the three bundles and their discounts, which were invented during design and
   ship switched **off** — the admin panel is what turns them on
+
+## Languages, search engines and analytics
+
+Every page exists three times: Azerbaijani at the root (`/kataloq/kuru`),
+Russian and English under `/ru` and `/en` (`/ru/kataloq/kuru`). The address
+decides the language; the switcher moves to the same page in the other one.
+`web/scripts/prerender.mjs` writes a plain HTML copy of each page in each
+language, with `hreflang` alternates, and lists them all in `sitemap.xml`
+(with product photos as `image:image`). `src/data/locale.js` holds the rule.
+
+Optional repository variables (GitHub → Settings → Variables), read by the
+deploy:
+
+| Variable | What it turns on |
+|---|---|
+| `GA4_ID` | Google Analytics 4 (`G-XXXXXXX`): page views, `add_to_cart`, `begin_checkout`, `whatsapp_click`, `phone_click`. The site's CSP admits Google's tag only when this is set. |
+| `YANDEX_VERIFICATION` | `<meta name="yandex-verification">` for Yandex Webmaster |
+| `BING_VERIFICATION` | `<meta name="msvalidate.01">` for Bing Webmaster |
+| `GBP_URL` | The Google Business Profile link: the store's `hasMap` and `sameAs` |
+
+A product whose address is changed in the panel keeps its old one as a 301
+(`product_slug_redirects`), written into `.htaccess` by the deploy.

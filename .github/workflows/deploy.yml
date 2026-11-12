@@ -84,6 +84,11 @@ jobs:
           # to freshness.az in Google Cloud. Unset, the picker is
           # left out and "use my location" still works.
           VITE_GOOGLE_MAPS_KEY: ${{ vars.GOOGLE_MAPS_KEY }}
+          # Optional: Google Analytics 4 measurement id (G-XXXX) and the
+          # Yandex / Bing ownership codes. Empty = not loaded.
+          VITE_GA4_ID: ${{ vars.GA4_ID }}
+          VITE_YANDEX_VERIFICATION: ${{ vars.YANDEX_VERIFICATION }}
+          VITE_BING_VERIFICATION: ${{ vars.BING_VERIFICATION }}
         run: |
           STAGE_OUT="$RUNNER_TEMP/site" scripts/package-deploy.sh
           # hostinq.az's FTPS server rejects zero-byte files ("tlsv1 alert
@@ -129,6 +134,7 @@ jobs:
         env:
           PRERENDER_API: https://${{ env.DOMAIN }}/server
           PRERENDER_LIVE_ONLY: '1'
+          GBP_URL: ${{ vars.GBP_URL }}
         run: node web/scripts/prerender.mjs "${{ runner.temp }}/site/public_html"
 
       - name: Upload ~/public_html

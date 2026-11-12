@@ -2,13 +2,21 @@ import { ref, watch } from 'vue'
 import { I18N } from '../data/messages'
 import { CATEGORIES } from '../data/catalogue'
 
-export const LANGS = ['az', 'ru', 'en']
+import { LANGS, splitLang, withLang } from '../data/locale'
 
-/* Module-level state, so every component shares one language. */
-const stored = (() => { try { return localStorage.getItem('fth.lang') } catch (e) { return null } })()
+export { LANGS }
 
-/* Azerbaijani is the default for a first-time visitor; a saved choice wins. */
-export const lang = ref(LANGS.includes(stored) ? stored : 'az')
+/* The language a visitor chose last time, if any: the router sends them to
+   that version when they arrive at an address without a language in it. */
+export const storedLang = (() => { try { return localStorage.getItem('fth.lang') } catch (e) { return null } })()
+
+/* Module-level state, so every component shares one language. The address
+   decides it (/ru/…, /en/…, Azerbaijani otherwise); the router keeps the two
+   in step (router.js). */
+export const lang = ref(typeof location === 'undefined' ? 'az' : splitLang(location.pathname).lang)
+
+/** A path inside the site, in the current language: lp('/kataloq') → '/ru/kataloq'. */
+export const lp = path => withLang(path, lang.value)
 
 watch(lang, v => {
   try { localStorage.setItem('fth.lang', v) } catch (e) {}
@@ -26,6 +34,7 @@ const pick = (obj, prefix = '') => {
 export function useI18n () {
   return {
     lang,
+    lp,
     t:       k => (I18N[lang.value] && I18N[lang.value][k]) || I18N.en[k] || k,
     nm:      p => pick(p),
     /* A second line under the name: the English name, except in English,

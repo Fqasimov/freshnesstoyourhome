@@ -2,7 +2,7 @@
 import { useI18n } from '../composables/useI18n'
 import BIcon from './BIcon.vue'
 
-const { t } = useI18n()
+const { t, lp } = useI18n()
 
 /**
  * One button, three sizes.
@@ -28,14 +28,14 @@ defineProps({
         <h3 class="display">{{ t('cta.band.h') }}</h3>
         <p>{{ t('cta.band.p') }}</p>
       </div>
-      <RouterLink :to="{ name: 'catalogue' }" class="btn btn--brick ctaband__btn">
+      <RouterLink :to="lp('/kataloq')" class="btn btn--brick ctaband__btn">
         <span>{{ t('cta.go') }}</span>
         <BIcon name="arrow-right" :size="14" />
       </RouterLink>
     </div>
   </div>
 
-  <RouterLink v-else :to="{ name: 'catalogue' }" class="btn" :class="{ 'btn--ghost': variant === 'ghost' }">
+  <RouterLink v-else :to="lp('/kataloq')" class="btn" :class="{ 'btn--ghost': variant === 'ghost' }">
     <span>{{ t('cta.go') }}</span>
     <BIcon name="arrow-right" :size="14" />
   </RouterLink>

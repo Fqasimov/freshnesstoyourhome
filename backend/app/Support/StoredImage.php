@@ -44,6 +44,10 @@ final class StoredImage
     private const QUALITY = 82;
     private const THUMB_QUALITY = 76;
 
+    /** WebP copies for the website's srcset, by width (SEO audit, Nov 2026). */
+    public const WIDTHS = [300, 600, 1200];
+    private const WEBP_QUALITY = 78;
+
     /** What GD can decode and we are willing to accept. */
     private const ACCEPTED = [
         IMAGETYPE_JPEG => 'jpeg',
@@ -103,6 +107,11 @@ final class StoredImage
 
             Storage::disk('public')->put($full, self::encode($source, self::MAX_EDGE, self::QUALITY));
             Storage::disk('public')->put($thumb, self::encode($source, self::THUMB_EDGE, self::THUMB_QUALITY));
+            // Best effort: a host without WebP in its GD still takes the upload.
+            try {
+                self::makeVariants($full);
+            } catch (\Throwable) {
+            }
 
             return $full;
         } finally {
@@ -125,7 +134,61 @@ final class StoredImage
             return;
         }
 
-        Storage::disk('public')->delete([$path, self::thumbPath($path)]);
+        Storage::disk('public')->delete([$path, self::thumbPath($path), ...array_map(fn ($w) => self::variantPath($path, $w), self::WIDTHS)]);
+    }
+
+    public static function variantPath(string $path, int $width): string
+    {
+        return preg_replace('/\.jpg$/', "_w{$width}.webp", $path) ?? $path;
+    }
+
+    /**
+     * WebP copies of a stored photograph, one per width in WIDTHS (none wider
+     * than the photograph itself), made from our own JPEG. Missing ones only.
+     */
+    public static function makeVariants(string $full): void
+    {
+        $disk = Storage::disk('public');
+        if (! function_exists('imagewebp') || ! $disk->exists($full)) {
+            return;
+        }
+        $todo = array_filter(self::WIDTHS, fn ($w) => ! $disk->exists(self::variantPath($full, $w)));
+        if ($todo === []) {
+            return;
+        }
+        $image = @imagecreatefromstring((string) $disk->get($full));
+        if ($image === false) {
+            return;
+        }
+        try {
+            $edge = max(imagesx($image), imagesy($image));
+            foreach ($todo as $w) {
+                if ($w > $edge && $w !== self::WIDTHS[0]) {
+                    continue;
+                }
+                $disk->put(self::variantPath($full, $w), self::encode($image, $w, self::WEBP_QUALITY, 'webp'));
+            }
+        } finally {
+            imagedestroy($image);
+        }
+    }
+
+    /**
+     * The WebP copies that exist, for a srcset: [{w, url}], narrowest first.
+     *
+     * @return list<array{w:int, url:string}>
+     */
+    public static function variants(?string $full): array
+    {
+        if (blank($full)) {
+            return [];
+        }
+        $disk = Storage::disk('public');
+
+        return array_values(array_map(
+            fn ($w) => ['w' => $w, 'url' => $disk->url(self::variantPath($full, $w))],
+            array_filter(self::WIDTHS, fn ($w) => $disk->exists(self::variantPath($full, $w))),
+        ));
     }
 
     public static function thumbPath(string $path): string
@@ -134,7 +197,7 @@ final class StoredImage
     }
 
     /** @param \GdImage $image */
-    private static function encode($image, int $maxEdge, int $quality): string
+    private static function encode($image, int $maxEdge, int $quality, string $format = 'jpeg'): string
     {
         $w = imagesx($image);
         $h = imagesy($image);
@@ -153,7 +216,7 @@ final class StoredImage
         imagecopyresampled($canvas, $image, 0, 0, 0, 0, $tw, $th, $w, $h);
 
         ob_start();
-        imagejpeg($canvas, null, $quality);
+        $format === 'webp' ? imagewebp($canvas, null, $quality) : imagejpeg($canvas, null, $quality);
         $bytes = (string) ob_get_clean();
 
         imagedestroy($canvas);

@@ -23,7 +23,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['add', 'peek'])
 
-const { t, nm, unitOf } = useI18n()
+const { t, nm, unitOf, lp } = useI18n()
 const cart = useCart()
 
 /* Tins that come in two sizes go through the quick view to pick one, so
@@ -46,9 +46,10 @@ function add (ev) {
     <!-- A real link to the product's own page, which is what search engines
          follow; a plain click still opens the quick view, so browsing stays
          where it is. A new-tab click goes to the page. -->
-    <a class="card__open" :href="productPath(product)" :aria-label="nm(product)" @click="peek">
+    <a class="card__open" :href="lp(productPath(product))" :aria-label="nm(product)" @click="peek">
       <span class="card__media">
-        <img v-if="product.img" :src="product.img" :alt="nm(product)" loading="lazy" decoding="async">
+        <img v-if="product.img" :src="product.img" :srcset="product.srcset || undefined"
+             sizes="(max-width: 600px) 50vw, 300px" :alt="nm(product)" loading="lazy" decoding="async">
         <BIcon v-else name="basket" :size="30" class="card__none" />
         <span v-if="product.popular" class="card__hit"><BIcon name="fire" :size="10" />{{ t('cat.hit') }}</span>
         <span v-if="product.discount" class="card__sale">{{ badgeText(product.discount, money) }}</span>

@@ -26,6 +26,7 @@ class Product extends Model
         'id', 'slug', 'category_id', 'price_minor', 'currency', 'unit_kind',
         'unit_qty', 'is_popular', 'is_active', 'in_stock', 'image_path', 'sort',
         'discount_kind', 'discount_percent', 'discount_minor', 'discount_show',
+        'brand', 'gtin',
     ];
 
     /*
@@ -81,6 +82,24 @@ class Product extends Model
 
         $this->load('translations');
         $this->forceFill(['slug' => Slug::uniqueFor($this)])->saveQuietly();
+    }
+
+    /**
+     * Move the product to a new address, keeping the old one as a redirect
+     * (web/scripts/prerender.mjs turns these into 301s). An address that was
+     * someone's old one and is now taken again stops redirecting.
+     */
+    public function moveSlug(string $to): void
+    {
+        $from = $this->getOriginal('slug');
+        \Illuminate\Support\Facades\DB::table('product_slug_redirects')->where('old_slug', $to)->delete();
+        if (filled($from) && $from !== $to) {
+            \Illuminate\Support\Facades\DB::table('product_slug_redirects')->updateOrInsert(
+                ['old_slug' => $from],
+                ['product_id' => $this->id, 'updated_at' => now(), 'created_at' => now()],
+            );
+        }
+        $this->slug = $to;
     }
 
     public function category(): BelongsTo

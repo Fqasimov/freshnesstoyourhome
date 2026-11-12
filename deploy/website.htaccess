@@ -5,6 +5,7 @@
 # inherit the rewrite rules below, so both files carry the deny list.
 
 Options -Indexes -MultiViews
+AddType application/manifest+json .webmanifest
 
 # Addresses that do not exist get a real 404, with a page that helps.
 ErrorDocument 404 /404.html
@@ -36,21 +37,42 @@ ErrorDocument 404 /404.html
   RewriteRule (^|/)(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml)$ - [F,L,NC]
   RewriteRule \.(env|ini|log|sql|sqlite|bak|old|orig|swp|dist|sh|ya?ml|zip|tar|t?gz|7z|rar|map)$ - [F,L,NC]
 
+  # One address per page. /kataloq/ and /index.html are the same pages as
+  # /kataloq and /, so they move there for good — Google otherwise counts
+  # two. Real folders (/privacy/, /cms/) keep their slash: Apache needs it
+  # to serve the index inside.
+  RewriteCond %{THE_REQUEST} \s/+index\.html[\s?]
+  RewriteRule ^index\.html$ / [R=301,L]
+  RewriteCond %{REQUEST_URI} !^/(server|cms|privacy|delete-account|\.well-known)(/|$)
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.+)/$ /$1 [R=301,L]
+
+  # Products that moved to a new address in the panel: the old one leads to
+  # the new for good. Filled in by web/scripts/prerender.mjs at deploy time.
+  # @product-redirects
+  # @end-product-redirects
+
   # Pages the build wrote as plain HTML, with their own title and structured
   # data for search engines (web/scripts/prerender.mjs). The app takes over
-  # once it starts.
-  # They live under /pages, not in a folder called kataloq: a real folder by
-  # that name would make Apache add a slash to /kataloq before these rules.
+  # once it starts. Russian and English live under /ru and /en.
+  # They live under /pages, not in a folder called kataloq or ru: a real
+  # folder by that name would make Apache add a slash before these rules.
   RewriteCond %{QUERY_STRING} (^|&)q=
-  RewriteRule ^kataloq(/.*)?$ - [E=FTH_NOINDEX:1]
-  RewriteRule ^kataloq/?$ pages/kataloq.html [L]
+  RewriteRule ^((ru|en)/)?kataloq(/.*)?$ - [E=FTH_NOINDEX:1]
+  RewriteRule ^kataloq$ pages/kataloq.html [L]
   RewriteCond %{DOCUMENT_ROOT}/pages/kataloq/$1.html -f
-  RewriteRule ^kataloq/([a-z0-9-]+)/?$ pages/kataloq/$1.html [L]
+  RewriteRule ^kataloq/([a-z0-9-]+)$ pages/kataloq/$1.html [L]
   RewriteCond %{DOCUMENT_ROOT}/mehsul/$1.html -f
-  RewriteRule ^mehsul/([a-z0-9-]+)/?$ mehsul/$1.html [L]
+  RewriteRule ^mehsul/([a-z0-9-]+)$ mehsul/$1.html [L]
+  RewriteRule ^(ru|en)/kataloq$ pages/$1/kataloq.html [L]
+  RewriteCond %{DOCUMENT_ROOT}/pages/$1/kataloq/$2.html -f
+  RewriteRule ^(ru|en)/kataloq/([a-z0-9-]+)$ pages/$1/kataloq/$2.html [L]
+  RewriteCond %{DOCUMENT_ROOT}/pages/$1/mehsul/$2.html -f
+  RewriteRule ^(ru|en)/mehsul/([a-z0-9-]+)$ pages/$1/mehsul/$2.html [L]
 
-  # The app's other pages.
-  RewriteRule ^(hesab)?/?$ index.html [L]
+  # The home pages, and the app's other pages.
+  RewriteRule ^(hesab)?$ index.html [L]
+  RewriteRule ^(ru|en)(/hesab)?$ pages/$1/index.html [L]
 
   # Everything else does not exist: a 404, answered by 404.html (below). It
   # is the app's own page, so a product or category added in the panel since

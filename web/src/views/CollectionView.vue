@@ -6,7 +6,7 @@ import ProductCard from '../components/ProductCard.vue'
 import SetsSection from '../components/SetsSection.vue'
 import { PRODUCTS, SETS, COLLECTIONS, setPricing } from '../data/catalogue'
 import { productPath } from '../data/slug'
-import { categoryTitle, categoryDescription, crumbsJsonLd, itemListJsonLd, words, own, textBlocks } from '../data/productSchema'
+import { categoryTitle, categoryDescription, crumbsJsonLd, faqJsonLd, itemListJsonLd, words, own, ownFaq, textBlocks } from '../data/productSchema'
 import { useI18n } from '../composables/useI18n'
 import { setPageHead, setRobots, setLd } from '../composables/usePageMeta'
 
@@ -17,7 +17,7 @@ import { setPageHead, setRobots, setLd } from '../composables/usePageMeta'
  */
 const emit = defineEmits(['add', 'add-set', 'peek'])
 const route = useRoute()
-const { t, lang } = useI18n()
+const { t, lang, lp } = useI18n()
 
 const page = computed(() => COLLECTIONS.find(c => c.slug === route.params.cat) ?? null)
 const name = computed(() => (page.value ? page.value[lang.value] || page.value.az : ''))
@@ -25,6 +25,8 @@ const products = computed(() => (page.value?.products ?? []).map(id => PRODUCTS.
 const sets = computed(() => (page.value?.sets ?? []).filter(id => SETS.some(s => s.id === id)))
 const heading = computed(() => (page.value ? own(page.value.page, 'h1', lang.value) ?? name.value : ''))
 const blocks = computed(() => (page.value ? textBlocks(own(page.value.page, 'body', lang.value)) : []))
+const intro = computed(() => (page.value ? textBlocks(own(page.value.page, 'intro', lang.value)).filter(b => b.p) : []))
+const faq = computed(() => (page.value ? ownFaq(page.value.page, lang.value) : []))
 
 watchEffect(() => {
   const c = page.value
@@ -38,23 +40,27 @@ watchEffect(() => {
   setPageHead({ path, title, desc })
   setRobots(c.indexed !== false)
   const site = location.origin, w = words(lang.value)
-  setLd('ld-list', itemListJsonLd(name.value, products.value.map(p => site + productPath(p))))
-  setLd('ld-crumbs', crumbsJsonLd([[w.home, `${site}/`], [w.catalogue, `${site}/kataloq`], [name.value, site + path]]))
+  setLd('ld-list', itemListJsonLd(name.value, products.value.map(p => site + lp(productPath(p)))))
+  setLd('ld-crumbs', crumbsJsonLd([[w.home, site + lp('/')], [w.catalogue, site + lp('/kataloq')], [name.value, site + lp(path)]]))
+  setLd('ld-faq', faqJsonLd(ownFaq(c.page, lang.value)))
 
 // After the render, so it lands after the page this one replaced has cleared its own.
 }, { flush: 'post' })
-onUnmounted(() => { setLd('ld-list', null); setLd('ld-crumbs', null) })
+onUnmounted(() => { setLd('ld-list', null); setLd('ld-crumbs', null); setLd('ld-faq', null) })
 </script>
 
 <template>
   <main class="col">
     <div class="wrap">
       <nav class="col__crumbs" :aria-label="t('pp.crumbs')">
-        <RouterLink to="/">{{ t('pp.home') }}</RouterLink>
+        <RouterLink :to="lp('/')">{{ t('pp.home') }}</RouterLink>
         <BIcon name="chevron-right" :size="10" />
-        <RouterLink to="/kataloq">{{ t('nav.shop') }}</RouterLink>
+        <RouterLink :to="lp('/kataloq')">{{ t('nav.shop') }}</RouterLink>
       </nav>
       <h1 class="col__h">{{ heading }}</h1>
+      <div v-if="intro.length" class="col__intro">
+        <p v-for="(b, i) in intro" :key="i">{{ b.p }}</p>
+      </div>
 
       <SetsSection v-if="sets.length" compact :only="sets" @add="emit('add-set', $event)" />
 
@@ -68,6 +74,14 @@ onUnmounted(() => { setLd('ld-list', null); setLd('ld-crumbs', null) })
           <h2 v-if="b.h">{{ b.h }}</h2>
           <p v-else>{{ b.p }}</p>
         </template>
+      </section>
+
+      <section v-if="faq.length" class="col__text col__faq">
+        <h2>{{ words(lang).faq }}</h2>
+        <details v-for="(x, i) in faq" :key="i">
+          <summary>{{ x.q }}</summary>
+          <p>{{ x.a }}</p>
+        </details>
       </section>
     </div>
   </main>
@@ -85,4 +99,9 @@ onUnmounted(() => { setLd('ld-list', null); setLd('ld-crumbs', null) })
 .col__text h2{ font-family:var(--display); font-weight:600; font-size:clamp(1.3rem,2.2vw,1.7rem); color:var(--ink); margin:1.4em 0 .5em; }
 .col__text h2:first-child{ margin-top:0; }
 .col__text p{ margin:0 0 1em; }
+.col__intro{ max-width:760px; margin:-6px 0 20px; color:var(--ink-2); line-height:1.6; }
+.col__intro p{ margin:0 0 .6em; }
+.col__faq details{ border-bottom:1px solid var(--line); padding:12px 0; }
+.col__faq summary{ cursor:pointer; font-weight:600; }
+.col__faq details p{ margin:.6em 0 0; }
 </style>

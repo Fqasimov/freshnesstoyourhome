@@ -3,7 +3,7 @@ import { ref, computed, watch, watchEffect, nextTick, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { PRODUCTS, CATEGORIES, catalogueSettled } from '../data/catalogue'
 import { categoryPath, categorySlug, productPath } from '../data/slug'
-import { categoryTitle, categoryDescription, crumbsJsonLd, itemListJsonLd, words, own, textBlocks } from '../data/productSchema'
+import { categoryTitle, categoryDescription, crumbsJsonLd, faqJsonLd, itemListJsonLd, words, own, ownFaq, textBlocks } from '../data/productSchema'
 import { setPageHead, setRobots, setLd } from '../composables/usePageMeta'
 import { CATEGORY_LOOK } from '../data/brand'
 import { useI18n } from '../composables/useI18n'
@@ -19,7 +19,7 @@ import BIcon from '../components/BIcon.vue'
  * with the categories as chips above it — the same pieces in the same order,
  * so someone who shops in the app is never lost on the website.
  */
-const { t, lang, nm, catName } = useI18n()
+const { t, lang, nm, catName, lp } = useI18n()
 defineEmits(['add', 'add-set', 'peek'])
 
 /* ── Filter state ──────────────────────────────────────────────────────── */
@@ -41,7 +41,7 @@ const category = ref(fromRoute())
 watch(() => [route.params.cat, CATEGORIES.length, catalogueSettled.value], () => { category.value = fromRoute() })
 watch(category, id => {
   const c = CATEGORIES.find(x => x.id === id)
-  const path = id === 'all' || !c ? '/kataloq' : categoryPath(c)
+  const path = lp(id === 'all' || !c ? '/kataloq' : categoryPath(c))
   if (route.path !== path) router.replace({ path, query: route.query })
 })
 const pick = id => { category.value = id }
@@ -52,12 +52,15 @@ const heading = computed(() => (shownCat.value
   ? own(shownCat.value.page, 'h1', lang.value) ?? catName(shownCat.value.id)
   : t('cat.h')))
 const blocks = computed(() => (shownCat.value ? textBlocks(own(shownCat.value.page, 'body', lang.value)) : []))
-const catHref = id => (id === 'all' ? '/kataloq' : categoryPath(CATEGORIES.find(c => c.id === id) ?? { id }))
+/* A short lead above the products, and questions under the text. */
+const intro = computed(() => (shownCat.value ? textBlocks(own(shownCat.value.page, 'intro', lang.value)).filter(b => b.p) : []))
+const faq = computed(() => (shownCat.value ? ownFaq(shownCat.value.page, lang.value) : []))
+const catHref = id => lp(id === 'all' ? '/kataloq' : categoryPath(CATEGORIES.find(c => c.id === id) ?? { id }))
 
 /* A category page's head: its own title, snippet and structured data. */
 watchEffect(() => {
   const c = CATEGORIES.find(x => x.id === category.value && x.id !== 'all')
-  if (!c || !route.params.cat) { setLd('ld-list', null); setLd('ld-crumbs', null); return }
+  if (!c || !route.params.cat) { setLd('ld-list', null); setLd('ld-crumbs', null); setLd('ld-faq', null); return }
   const name = catName(c.id)
   const items = PRODUCTS.filter(p => p.cat === c.id)
   if (!items.length) return
@@ -68,12 +71,13 @@ watchEffect(() => {
   setPageHead({ path: categoryPath(c), title, desc })
   setRobots(!route.query.q && c.indexed !== false)
   const site = location.origin, w = words(lang.value)
-  setLd('ld-list', itemListJsonLd(name, items.map(p => site + productPath(p))))
-  setLd('ld-crumbs', crumbsJsonLd([[w.home, `${site}/`], [w.catalogue, `${site}/kataloq`], [name, site + categoryPath(c)]]))
+  setLd('ld-list', itemListJsonLd(name, items.map(p => site + lp(productPath(p)))))
+  setLd('ld-crumbs', crumbsJsonLd([[w.home, site + lp('/')], [w.catalogue, site + lp('/kataloq')], [name, site + lp(categoryPath(c))]]))
+  setLd('ld-faq', faqJsonLd(ownFaq(c.page, lang.value)))
 
 // After the render, so it lands after the page this one replaced has cleared its own.
 }, { flush: 'post' })
-onUnmounted(() => { setLd('ld-list', null); setLd('ld-crumbs', null) })
+onUnmounted(() => { setLd('ld-list', null); setLd('ld-crumbs', null); setLd('ld-faq', null) })
 const band = ref('any')
 const quick = ref(new Set())
 const sortBy = ref('default')
@@ -197,8 +201,11 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
   <main class="cat" id="catalogue">
     <div class="wrap">
       <header class="cat__head">
-        <RouterLink to="/" class="cat__back"><BIcon name="arrow-left" :size="12" /> {{ t('cat.back') }}</RouterLink>
+        <RouterLink :to="lp('/')" class="cat__back"><BIcon name="arrow-left" :size="12" /> {{ t('cat.back') }}</RouterLink>
         <h1 class="cat__h">{{ heading }}</h1>
+        <div v-if="intro.length" class="cat__intro">
+          <p v-for="(b, i) in intro" :key="i">{{ b.p }}</p>
+        </div>
 
         <label class="search">
           <span class="visually-hidden">{{ t('shop.search') }}</span>
@@ -236,7 +243,7 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
       <!-- The shelf. Categories as chips above it, as in the app. -->
       <div ref="shelf" class="bar">
         <div ref="chipRow" class="chips" role="tablist" :aria-label="t('cat.sections')">
-          <a href="/kataloq" role="tab" class="chip" :class="{ on: category === 'all' }"
+          <a :href="lp('/kataloq')" role="tab" class="chip" :class="{ on: category === 'all' }"
              :aria-selected="category === 'all'" @click.prevent="pick('all')">
             {{ t('cat.all') }}
           </a>
@@ -288,6 +295,14 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
           <p v-else>{{ b.p }}</p>
         </template>
       </section>
+
+      <section v-if="faq.length" class="cat__text cat__faq">
+        <h2>{{ words(lang).faq }}</h2>
+        <details v-for="(x, i) in faq" :key="i">
+          <summary>{{ x.q }}</summary>
+          <p>{{ x.a }}</p>
+        </details>
+      </section>
     </div>
 
     <!-- Filters: a sheet from the side at every width, as the app's is a
@@ -334,6 +349,11 @@ const sortLabel = computed(() => t(SORTS.find(s => s.id === sortBy.value)?.key ?
 .cat__text h2{ font-family:var(--display); font-weight:600; font-size:clamp(1.3rem,2.2vw,1.7rem); color:var(--ink); margin:1.4em 0 .5em; }
 .cat__text h2:first-child{ margin-top:0; }
 .cat__text p{ margin:0 0 1em; }
+.cat__intro{ max-width:760px; margin:6px 0 18px; color:var(--ink-2); line-height:1.6; }
+.cat__intro p{ margin:0 0 .6em; }
+.cat__faq details{ border-bottom:1px solid var(--line); padding:12px 0; }
+.cat__faq summary{ cursor:pointer; font-weight:600; color:var(--ink); }
+.cat__faq details p{ margin:.6em 0 0; }
 /* Categories are links now (each has its own page): no underline, and the count beside the name. */
 a.tile, a.chip{ text-decoration:none; }
 .chip__n{ opacity:.55; font-size:.85em; margin-left:2px; }

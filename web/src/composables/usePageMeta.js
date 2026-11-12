@@ -1,5 +1,7 @@
 import { productDescription, productJsonLd, productTitle } from '../data/productSchema'
 import { productPath } from '../data/slug'
+import { OG_LOCALE, alternates, withLang } from '../data/locale'
+import { lang } from './useI18n'
 
 /* The parts of <head> that change from page to page: the canonical address,
    the Open Graph card a shared link shows, and on a product page its
@@ -30,11 +32,29 @@ function link (rel) {
 
 const absolute = src => (src ? new URL(src, location.origin).href : null)
 
-/** Any page: where it really lives, and the card a shared link shows. */
+/* The other languages of this page: one <link rel="alternate" hreflang>
+   each, plus x-default. Replaced as a set on every page. */
+function setAlternates (path) {
+  document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove())
+  if (!path) return
+  for (const [hreflang, href] of alternates(location.origin, path)) {
+    const el = document.createElement('link')
+    el.rel = 'alternate'
+    el.hreflang = hreflang
+    el.href = href
+    document.head.appendChild(el)
+  }
+}
+
+/** Any page: where it really lives, and the card a shared link shows.
+    `path` is the page's address without a language ("/kataloq"); the
+    canonical is its version in the current language. */
 export function setPageHead ({ path, title, desc }) {
-  const url = `${location.origin}${path}`
+  const url = `${location.origin}${withLang(path, lang.value)}`
   link('canonical').href = url
   meta('property', 'og:url').content = url
+  meta('property', 'og:locale').content = OG_LOCALE[lang.value]
+  setAlternates(path)
   if (title) meta('property', 'og:title').content = title
   if (desc) meta('property', 'og:description').content = desc
 }
@@ -43,12 +63,12 @@ export function setPageHead ({ path, title, desc }) {
  * A product page. Called again whenever the live catalogue changes the price
  * or the visitor changes language, so what Google renders matches the page.
  */
-export function setProductMeta (p, { name, desc, unit, category, categoryPath, lang = 'az' }) {
+export function setProductMeta (p, { name, desc, unit, category, categoryPath, lang: l = 'az' }) {
   const path = productPath(p)
-  const url = `${location.origin}${path}`
+  const url = `${location.origin}${withLang(path, l)}`
   const facts = { name, price: p.price, unit, desc }
-  const title = productTitle(facts)
-  const description = productDescription(facts, lang)
+  const title = productTitle(facts, l)
+  const description = productDescription(facts, l)
 
   document.title = title
   meta('name', 'description').content = description
@@ -63,9 +83,12 @@ export function setProductMeta (p, { name, desc, unit, category, categoryPath, l
   }
 
   const [product, crumbs] = productJsonLd({
-    url, name, desc, images, price: p.price, sku: p.id, category, lang,
-    categoryUrl: categoryPath ? `${location.origin}${categoryPath}` : undefined,
+    url, name, desc, images, price: p.price, sku: p.id, category, lang: l,
+    categoryUrl: categoryPath ? `${location.origin}${withLang(categoryPath, l)}` : undefined,
+    homeUrl: `${location.origin}${withLang('/', l)}`, catalogueUrl: `${location.origin}${withLang('/kataloq', l)}`,
     weighed: Boolean(p.weighed), site: location.origin,
+    brand: p.brand, gtin: p.gtin, unitKind: p.weighed ? 'kg' : null, unitQty: p.unitQty, unitLabel: unit,
+    inStock: p.inStock !== false,
   })
   setLd('ld-product', product)
   setLd('ld-crumbs', crumbs)

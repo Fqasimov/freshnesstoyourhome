@@ -55,46 +55,76 @@ class CatalogueController extends Controller
                 ])
                 ->all();
 
+            $shape = fn (Product $p) => [
+                'id' => $p->id,
+                // The product's own page on the website: /mehsul/{slug}.
+                'slug' => $p->slug ?? $p->id,
+                // When it last changed: the sitemap's <lastmod>.
+                'updated_at' => $p->updated_at?->toAtomString(),
+                'category_id' => $p->category_id,
+                // What it costs today, sale included: the figure every
+                // client adds up and the one the order will charge. The
+                // normal price and the badge are only for showing it.
+                'price_minor' => $p->salePriceMinor(),
+                'regular_price_minor' => $p->price_minor,
+                'discount' => $p->discountBadge(),
+                'currency' => $p->currency,
+                'unit_kind' => $p->unit_kind,
+                'unit_qty' => $p->unit_qty,
+                // The client uses this to warn, before checkout, that the
+                // final price depends on what the scales say.
+                'is_weight_based' => $p->isWeightBased(),
+                'is_popular' => $p->is_popular,
+                // Two keys, on purpose. `image` names the picture inside
+                // the client's own bundle and is what every build so far
+                // has used; `image_url` is a photograph uploaded in the
+                // admin panel. A client prefers the URL when it is there
+                // and falls back to the bundle when it is not, so removing
+                // an upload restores the original rather than leaving a
+                // gap, and an older app keeps working unchanged.
+                'image' => $p->image_path,
+                'image_url' => $p->imageUrl(),
+                'thumb_url' => $p->thumbUrl(),
+                // WebP copies of the uploaded photograph for the website's
+                // srcset: [{w: 300, url}, …]. Empty until they are made.
+                'image_set' => \App\Support\StoredImage::variants($p->image_file),
+                // Extra photographs, shown when the product is opened.
+                'gallery' => array_map(fn ($g) => ['image_url' => $g['image_url'], 'thumb_url' => $g['thumb_url']], $p->galleryPayload()),
+                'name' => $p->translationMap('name'),
+                'description' => $p->translationMap('description'),
+                'unit_label' => $p->translationMap('unit_label'),
+                // Its page beyond the card (SEO brief, Nov 2026).
+                'long_description' => $p->translationMap('long_description'),
+                'brand' => $p->brand,
+                'gtin' => $p->gtin,
+            ];
+
             $products = Product::with(['translations', 'gallery'])
                 ->orderable()
                 ->orderBy('sort')
                 ->get()
-                ->map(fn (Product $p) => [
-                    'id' => $p->id,
-                    // The product's own page on the website: /mehsul/{slug}.
-                    'slug' => $p->slug ?? $p->id,
-                    // When it last changed: the sitemap's <lastmod>.
-                    'updated_at' => $p->updated_at?->toAtomString(),
-                    'category_id' => $p->category_id,
-                    // What it costs today, sale included: the figure every
-                    // client adds up and the one the order will charge. The
-                    // normal price and the badge are only for showing it.
-                    'price_minor' => $p->salePriceMinor(),
-                    'regular_price_minor' => $p->price_minor,
-                    'discount' => $p->discountBadge(),
-                    'currency' => $p->currency,
-                    'unit_kind' => $p->unit_kind,
-                    'unit_qty' => $p->unit_qty,
-                    // The client uses this to warn, before checkout, that the
-                    // final price depends on what the scales say.
-                    'is_weight_based' => $p->isWeightBased(),
-                    'is_popular' => $p->is_popular,
-                    // Two keys, on purpose. `image` names the picture inside
-                    // the client's own bundle and is what every build so far
-                    // has used; `image_url` is a photograph uploaded in the
-                    // admin panel. A client prefers the URL when it is there
-                    // and falls back to the bundle when it is not, so removing
-                    // an upload restores the original rather than leaving a
-                    // gap, and an older app keeps working unchanged.
-                    'image' => $p->image_path,
-                    'image_url' => $p->imageUrl(),
-                    'thumb_url' => $p->thumbUrl(),
-                    // Extra photographs, shown when the product is opened.
-                    'gallery' => array_map(fn ($g) => ['image_url' => $g['image_url'], 'thumb_url' => $g['thumb_url']], $p->galleryPayload()),
-                    'name' => $p->translationMap('name'),
-                    'description' => $p->translationMap('description'),
-                    'unit_label' => $p->translationMap('unit_label'),
-                ])
+                ->map($shape)
+                ->all();
+
+            /*
+             * On the shelf but out of stock. Kept apart from `products`, which
+             * every client treats as orderable, so its page stays on the
+             * website — marked out of stock — instead of disappearing from
+             * Google until the next delivery. The app ignores this key.
+             */
+            $unavailable = Product::with(['translations', 'gallery'])
+                ->where('is_active', true)->where('in_stock', false)
+                ->whereHas('category', fn ($q) => $q->where('is_active', true))
+                ->orderBy('sort')
+                ->get()
+                ->map(fn (Product $p) => [...$shape($p), 'in_stock' => false])
+                ->all();
+
+            // Old product addresses, old slug => current slug, for 301s.
+            $current = collect([...$products, ...$unavailable])->pluck('slug', 'id');
+            $redirects = \Illuminate\Support\Facades\DB::table('product_slug_redirects')->get()
+                ->filter(fn ($r) => isset($current[$r->product_id]) && $current[$r->product_id] !== $r->old_slug)
+                ->mapWithKeys(fn ($r) => [$r->old_slug => $current[$r->product_id]])
                 ->all();
 
             /**
@@ -179,6 +209,8 @@ class CatalogueController extends Controller
             return [
                 'categories' => $categories,
                 'products' => $products,
+                'unavailable' => $unavailable,
+                'redirects' => (object) $redirects,
                 'bundles' => $bundles,
                 'collections' => $collections,
                 'zones' => $zones,

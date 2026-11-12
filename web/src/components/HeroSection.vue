@@ -8,7 +8,7 @@ import salmon from '../assets/hero/salmon-carpaccio.webp'
 import caviar from '../assets/hero/caviar-toast.webp'
 import burrata from '../assets/hero/burrata.webp'
 
-const { t } = useI18n()
+const { t, lp } = useI18n()
 
 const rule = ref(null)
 const drawn = ref(false)
@@ -101,7 +101,7 @@ const shots = [
           <!-- A RouterLink, not href="#contact": under hash routing a bare
                fragment sets the whole route to "contact", which matches
                nothing and bounces the visitor back to the top of the page. -->
-          <RouterLink :to="{ path: '/', hash: '#contact' }" class="btn btn--ghost">
+          <RouterLink :to="{ path: lp('/'), hash: '#contact' }" class="btn btn--ghost">
             <span>{{ t('hero.cta2') }}</span>
           </RouterLink>
         </div>

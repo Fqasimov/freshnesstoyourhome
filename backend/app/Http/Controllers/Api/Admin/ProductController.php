@@ -33,7 +33,7 @@ class ProductController extends Controller
     /** Fields whose changes are worth a line in the audit trail. */
     private const AUDITED = [
         'price_minor', 'in_stock', 'is_active', 'is_popular', 'category_id', 'sort',
-        'unit_kind', 'unit_qty', 'slug',
+        'unit_kind', 'unit_qty', 'slug', 'brand', 'gtin',
         'discount_kind', 'discount_percent', 'discount_minor', 'discount_show',
     ];
 
@@ -103,6 +103,7 @@ class ProductController extends Controller
             'translations.*.name' => ['sometimes', 'nullable', 'string', 'max:120'],
             'translations.*.description' => ['sometimes', 'nullable', 'string', 'max:600'],
             'translations.*.unit_label' => ['sometimes', 'nullable', 'string', 'max:40'],
+            ...self::seoRules(),
         ]);
 
         $product = DB::transaction(function () use ($data) {
@@ -116,6 +117,8 @@ class ProductController extends Controller
                 'is_popular' => $data['is_popular'] ?? false,
                 'is_active' => $data['is_active'] ?? true,
                 'in_stock' => $data['in_stock'] ?? true,
+                'brand' => $data['brand'] ?? null,
+                'gtin' => $data['gtin'] ?? null,
                 // No bundled picture exists for something created today, so
                 // this stays null and the photograph comes from an upload.
                 'image_path' => null,
@@ -133,6 +136,7 @@ class ProductController extends Controller
                     'name' => $fields['name'],
                     'description' => $fields['description'] ?? null,
                     'unit_label' => $fields['unit_label'] ?? null,
+                    'long_description' => $fields['long_description'] ?? null,
                 ]);
             }
 
@@ -360,6 +364,7 @@ class ProductController extends Controller
             'translations.*.name' => ['sometimes', 'nullable', 'string', 'max:120'],
             'translations.*.description' => ['sometimes', 'nullable', 'string', 'max:600'],
             'translations.*.unit_label' => ['sometimes', 'nullable', 'string', 'max:40'],
+            ...self::seoRules(),
         ]);
 
         $product = Product::with(['translations', 'gallery'])->findOrFail($id);
@@ -371,7 +376,11 @@ class ProductController extends Controller
                 $product = $this->rename($product, $data['new_id']);
             }
 
-            $product->fill(collect($data)->except(['translations', 'new_id'])->all());
+            // A new address keeps the old one working as a redirect.
+            if (isset($data['slug']) && $data['slug'] !== $product->slug) {
+                $product->moveSlug($data['slug']);
+            }
+            $product->fill(collect($data)->except(['translations', 'new_id', 'slug'])->all());
             self::checkDiscount($product);
             $changes = Audit::diff($product, self::AUDITED);
             $product->save();
@@ -387,7 +396,7 @@ class ProductController extends Controller
                 ]);
                 $row->fill(array_filter(
                     $fields,
-                    fn ($v, $k) => in_array($k, ['name', 'description', 'unit_label'], true),
+                    fn ($v, $k) => in_array($k, ['name', 'description', 'unit_label', 'long_description'], true),
                     ARRAY_FILTER_USE_BOTH,
                 ));
 
@@ -401,7 +410,7 @@ class ProductController extends Controller
                     // Each field that moved, under its own name: a unit label
                     // changed from "1 kg" to "100 g" changes what the price
                     // means, and must not be logged as a change of name.
-                    foreach (['name', 'description', 'unit_label'] as $field) {
+                    foreach (['name', 'description', 'unit_label', 'long_description'] as $field) {
                         if ($row->isDirty($field)) {
                             $changes["{$field}:{$locale}"] = ['from' => $row->getOriginal($field), 'to' => $row->{$field}];
                         }
@@ -452,6 +461,7 @@ class ProductController extends Controller
             DB::table($table)->where('product_id', $from)->update(['product_id' => $to]);
         }
         DB::table('collection_items')->where('item_type', 'product')->where('item_id', $from)->update(['item_id' => $to]);
+        DB::table('product_slug_redirects')->where('product_id', $from)->update(['product_id' => $to]);
 
         Product::whereKey($from)->delete();
         Product::whereKey($to)->update(['slug' => $slug]);
@@ -558,6 +568,23 @@ class ProductController extends Controller
             'name' => $p->translationMap('name'),
             'description' => $p->translationMap('description'),
             'unit_label' => $p->translationMap('unit_label'),
+            'long_description' => $p->translationMap('long_description'),
+            'brand' => $p->brand,
+            'gtin' => $p->gtin,
+        ];
+    }
+
+    /** The product's page beyond its card: long text, brand, barcode. */
+    private static function seoRules(): array
+    {
+        return [
+            // 300–800 characters is the aim (what it is, origin, taste, how to
+            // serve, storage, pack size, ordering); room is left for more.
+            'translations.*.long_description' => ['sometimes', 'nullable', 'string', 'max:3000'],
+            // Empty for the shop's own goods: the website then names Freshness.
+            'brand' => ['sometimes', 'nullable', 'string', 'max:80'],
+            // EAN-8, UPC-A, EAN-13 or GTIN-14, digits only.
+            'gtin' => ['sometimes', 'nullable', 'regex:/^(\d{8}|\d{12,14})$/'],
         ];
     }
 

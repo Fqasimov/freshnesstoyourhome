@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { loadCatalogue, keepCatalogueLive } from './data/catalogue'
 import { router } from './router'
+import { initAnalytics } from './analytics'
 import reveal from './directives/reveal'
 import favicon from './assets/logo-mark.png'
 import './styles/base.css'
@@ -16,6 +17,7 @@ for (const rel of ['icon', 'apple-touch-icon']) {
 }
 
 createApp(App).use(router).directive('reveal', reveal).mount('#app')
+initAnalytics(router)
 
 /* Not awaited: the bundled catalogue is already on screen, and the live one
    replaces it in place the moment the API answers. Making first paint wait on

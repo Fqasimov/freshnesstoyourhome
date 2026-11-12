@@ -3,6 +3,8 @@ import HomeView from './views/HomeView.vue'
 import { glideTo } from './composables/glide'
 import { setPageHead, setRobots } from './composables/usePageMeta'
 import { CATALOGUE, HOME } from './data/productSchema'
+import { lang, storedLang } from './composables/useI18n'
+import { LANGS, splitLang, withLang } from './data/locale'
 
 /**
  * Real addresses: freshness.az/, /kataloq and a page per product at /mehsul/{slug}.
@@ -26,20 +28,22 @@ if (!SINGLE && location.hash.startsWith('#/')) {
 export const router = createRouter({
   history: SINGLE ? createWebHashHistory() : createWebHistory(),
   routes: [
-    { path: '/', name: 'home', component: HomeView },
+    // Every page also lives under /ru and /en — the same page in that
+    // language, with its own address so Google can list each version.
+    { path: '/:lang(ru|en)?', name: 'home', component: HomeView },
     {
       // The catalogue, and one page per category (/kataloq/kuru): the searches
       // that matter most are for a kind of thing, not one product. Or a
       // collection page from the panel (/kataloq/yeni-il-setleri). One route,
       // so moving between them keeps the page and only changes the address.
-      path: '/kataloq/:cat?',
+      path: '/:lang(ru|en)?/kataloq/:cat?',
       name: 'catalogue',
       // Split out: the catalogue carries the filtering and every product card,
       // and somebody who only reads the front page should not download it.
       component: () => import('./views/KataloqSlugView.vue'),
     },
     {
-      path: '/mehsul/:slug',
+      path: '/:lang(ru|en)?/mehsul/:slug',
       name: 'product',
       // A page per product, so Google can show each one for its own name
       // ("burrata Bakı", "qırmızı kürü qiymət"). The build also writes a
@@ -47,7 +51,7 @@ export const router = createRouter({
       component: () => import('./views/ProductView.vue'),
     },
     {
-      path: '/hesab',
+      path: '/:lang(ru|en)?/hesab',
       name: 'account',
       // The personal cabinet: sign in or up, and follow orders. Optional —
       // an order never needs it — and split out like the catalogue.
@@ -77,14 +81,33 @@ export const router = createRouter({
   },
 })
 
+/* The address decides the language. A returning visitor who chose Russian
+   or English before, arriving at an address without a language (a shared
+   link, a bookmark), is taken to that version — on the first page only, so
+   the switcher still works after. */
+router.beforeEach((to, from) => {
+  // /KATALOQ, /Mehsul/X: every address of the shop is lower case. The server
+  // answers these with a 404 page (Apache cannot lower-case in .htaccess);
+  // that page is the app, which moves the visitor to the real address.
+  if (/[A-Z]/.test(to.path)) return { path: to.path.toLowerCase(), query: to.query, hash: to.hash, replace: true }
+  if (from.matched.length === 0 && !to.params.lang && storedLang && storedLang !== 'az' && LANGS.includes(storedLang)) {
+    return withLang(to.fullPath, storedLang)
+  }
+  lang.value = to.params.lang || 'az'
+})
+
+/** The current page in another language. */
+export function switchLang (l) {
+  const here = router.currentRoute.value
+  return router.push(withLang(splitLang(here.fullPath).path, l))
+}
+
 /* Each page says what it is, in the words people search for. The home page keeps
    the title and description written into index.html; the catalogue gets its own,
    and a product page sets its own from the product (ProductView). The words lead
    with what the shop mostly sells — smoked salmon, red caviar, burrata and the
    other cheeses — rather than with any single fish. */
-const HOME_TITLE = HOME.title
 const metaDesc = document.querySelector('meta[name="description"]')
-const HOME_DESC = HOME.desc
 const ogImage = document.querySelector('meta[property="og:image"]')
 const HOME_IMAGE = HOME.image
 const PAGES = {
@@ -93,12 +116,14 @@ const PAGES = {
 router.afterEach(to => {
   // A product or category page writes its own head once it knows what it shows.
   if (to.name === 'product' || to.name === 'notfound' || (to.name === 'catalogue' && to.params.cat)) return
-  const page = PAGES[to.name]
-  document.title = page?.title ?? HOME_TITLE
-  metaDesc?.setAttribute('content', page?.desc ?? HOME_DESC)
+  const l = lang.value
+  const page = PAGES[to.name]?.[l] ?? PAGES[to.name]?.az
+  const home = HOME[l] ?? HOME.az
+  document.title = page?.title ?? home.title
+  metaDesc?.setAttribute('content', page?.desc ?? home.desc)
   if (ogImage && HOME_IMAGE) ogImage.setAttribute('content', HOME_IMAGE)
   if (HOME_IMAGE) document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', HOME_IMAGE)
-  setPageHead({ path: to.path, title: document.title, desc: page?.desc ?? HOME_DESC })
+  setPageHead({ path: splitLang(to.path).path, title: document.title, desc: page?.desc ?? home.desc })
   // A search inside the catalogue is not a page of its own.
   setRobots(!(to.name === 'catalogue' && to.query.q))
 })

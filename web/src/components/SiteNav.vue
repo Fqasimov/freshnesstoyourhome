@@ -3,6 +3,7 @@ import { glideTo } from '../composables/glide'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n, lang, LANGS } from '../composables/useI18n'
+import { switchLang } from '../router'
 import { useCart } from '../composables/useCart'
 import { SETS } from '../data/catalogue'
 import mark from '../assets/logo-mark.svg'
@@ -12,7 +13,7 @@ import flagAz from '../assets/flags/az.svg'
 import flagRu from '../assets/flags/ru.svg'
 import flagGb from '../assets/flags/gb.svg'
 
-const { t } = useI18n()
+const { t, lp } = useI18n()
 const { count, open } = useCart()
 
 const solid = ref(false)
@@ -29,7 +30,7 @@ const FLAGS = { az: flagAz, ru: flagRu, en: flagGb }
 
 const langOpen = ref(false)
 const langBox = ref(null)
-const pickLang = l => { lang.value = l; langOpen.value = false }
+const pickLang = l => { langOpen.value = false; if (l !== lang.value) switchLang(l) }
 // Outside click, not blur: blur fires before the option's own click lands,
 // which would close the menu a frame before the pick registers.
 const onDocClick = e => { if (langBox.value && !langBox.value.contains(e.target)) langOpen.value = false }
@@ -45,14 +46,14 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
    so without this the menu offers a link to a section the page does not
    render — which reads as a broken site rather than as an empty promotion. */
 const links = computed(() => [
-  { to: { path: '/', hash: '#story' }, key: 'nav.story' },
-  ...(SETS.length ? [{ to: { path: '/', hash: '#sets' }, key: 'nav.sets' }] : []),
-  { to: { path: '/', hash: '#week' }, key: 'nav.week' },
+  { to: { path: lp('/'), hash: '#story' }, key: 'nav.story' },
+  ...(SETS.length ? [{ to: { path: lp('/'), hash: '#sets' }, key: 'nav.sets' }] : []),
+  { to: { path: lp('/'), hash: '#week' }, key: 'nav.week' },
   // The catalogue button leaves the toolbar on a phone; it lives here instead.
-  { to: { name: 'catalogue' }, key: 'cta.go', phone: true },
-  { to: { path: '/', hash: '#order' }, key: 'nav.how' },
+  { to: lp('/kataloq'), key: 'cta.go', phone: true },
+  { to: { path: lp('/'), hash: '#order' }, key: 'nav.how' },
   // On a phone the account button leaves the toolbar too, for room.
-  { to: { name: 'account' }, key: 'acc.nav', phone: true },
+  { to: lp('/hesab'), key: 'acc.nav', phone: true },
 ])
 
 const route = useRoute()
@@ -110,7 +111,7 @@ watch(count, (now, before) => {
 <template>
   <header class="nav" :class="{ solid: solid || menu }">
     <div class="nav__in">
-      <RouterLink to="/" class="nav__brand">
+      <RouterLink :to="lp('/')" class="nav__brand">
         <span class="nav__mark"><img :src="mark" alt="Freshness To Your Home"></span>
         <span class="nav__name">
           <b>Freshness</b>
@@ -123,14 +124,14 @@ watch(count, (now, before) => {
       </nav>
 
       <div class="nav__tools">
-        <RouterLink :to="{ name: 'catalogue' }" class="navcat" @click="menu = false">
+        <RouterLink :to="lp('/kataloq')" class="navcat" @click="menu = false">
           <BIcon name="list" :size="15" />
           <span>{{ t('cta.go') }}</span>
         </RouterLink>
 
         <!-- The personal cabinet: the same account as in the app. A dot
              when signed in, so the customer can see they are. -->
-        <RouterLink :to="{ name: 'account' }" class="accbtn" :class="{ in: signedIn }"
+        <RouterLink :to="lp('/hesab')" class="accbtn" :class="{ in: signedIn }"
                     :aria-label="t('acc.nav')" :title="t('acc.nav')" @click="menu = false">
           <BIcon name="person" :size="16" />
         </RouterLink>

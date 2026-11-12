@@ -12,6 +12,22 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
    `npm run build:admin-demo` → the panel as one self-contained .html, answering
                                 from src/admin/demo.js instead of the network,
                                 so the screens can be looked at without a server */
+/* Site ownership for Yandex Webmaster (and Bing, which reads the same kind of
+   tag), from the deploy's GitHub variables. Google is verified by DNS. Only
+   on the shop's own index.html, and only when a code is set. */
+function searchConsoles (env) {
+  const tags = [
+    ['yandex-verification', env.VITE_YANDEX_VERIFICATION],
+    ['msvalidate.01', env.VITE_BING_VERIFICATION],
+  ].filter(([, v]) => /^[A-Za-z0-9_-]{8,64}$/.test(v ?? ''))
+  return {
+    name: 'search-consoles',
+    transformIndexHtml: (html, ctx) => (ctx.filename.endsWith('index.html') && tags.length
+      ? html.replace('<meta name="robots"', `${tags.map(([n, v]) => `<meta name="${n}" content="${v}">`).join('\n')}\n<meta name="robots"`)
+      : html),
+  }
+}
+
 export default defineConfig(({ mode }) => {
   const single = mode === 'single'
   const adminDemo = mode === 'admin-demo'
@@ -34,7 +50,7 @@ export default defineConfig(({ mode }) => {
        have to be root-absolute or the panel's own request for its bundle
        resolves against /cms/ and 404s. */
     base: oneFile ? './' : '/',
-    plugins: [vue(), ...(oneFile ? [viteSingleFile()] : [])],
+    plugins: [vue(), searchConsoles(env), ...(oneFile ? [viteSingleFile()] : [])],
     build: {
       outDir: single ? 'dist-single' : adminDemo ? 'dist-admin-demo' : 'dist',
 

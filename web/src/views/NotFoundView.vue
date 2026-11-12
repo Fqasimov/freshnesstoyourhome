@@ -12,14 +12,14 @@ import { setLd, setRobots } from '../composables/usePageMeta'
  * (deploy/website.htaccess); this is what the visitor sees: a search box and
  * every category, so a dead link still leads somewhere useful.
  */
-const { t, catName } = useI18n()
+const { t, catName, lp } = useI18n()
 const router = useRouter()
 const q = ref('')
 const cats = computed(() => CATEGORIES.filter(c => c.id !== 'all' && PRODUCTS.some(p => p.cat === c.id)))
 
 function search () {
   const query = q.value.trim()
-  router.push(query ? { path: '/kataloq', query: { q: query } } : '/kataloq')
+  router.push(query ? { path: lp('/kataloq'), query: { q: query } } : lp('/kataloq'))
 }
 
 onMounted(() => {
@@ -44,10 +44,10 @@ onMounted(() => {
       </form>
 
       <nav class="nf__cats" :aria-label="t('cat.sections')">
-        <RouterLink v-for="c in cats" :key="c.id" :to="categoryPath(c)">{{ catName(c.id) }}</RouterLink>
+        <RouterLink v-for="c in cats" :key="c.id" :to="lp(categoryPath(c))">{{ catName(c.id) }}</RouterLink>
       </nav>
 
-      <RouterLink to="/" class="btn"><span>{{ t('pp.home') }}</span></RouterLink>
+      <RouterLink :to="lp('/')" class="btn"><span>{{ t('pp.home') }}</span></RouterLink>
     </div>
   </main>
 </template>

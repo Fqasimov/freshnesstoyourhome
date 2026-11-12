@@ -272,6 +272,8 @@ erase who moved or weighed an order.
   is configured.** The basket's "pick on the map" needs `maps.googleapis.com` and
   `maps.gstatic.com`; `scripts/package-deploy.sh` adds exactly those, plus blob
   workers, to the Content-Security-Policy only when `GOOGLE_MAPS_KEY` is set.
+  Google Analytics (googletagmanager.com, *.google-analytics.com) is added the
+  same way, only when `GA4_ID` is set.
   Without a key the policy stays `script-src 'self'`. The browser key itself is
   public by design: restrict it in Google Cloud to this site's referrer and to
   the Maps JavaScript API.

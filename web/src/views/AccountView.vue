@@ -13,7 +13,7 @@ import { money } from '../data/catalogue'
  * site without an account is waiting in this browser to be claimed, and joins
  * the account the moment the customer signs in here.
  */
-const { t } = useI18n()
+const { t, lp } = useI18n()
 const acc = useAccount()
 const { user, orders, signedIn } = acc
 
@@ -143,7 +143,7 @@ watch(signedIn, v => { if (v) refresh() })
 <template>
   <main class="acc">
     <div class="wrap">
-      <RouterLink to="/" class="acc__back"><BIcon name="arrow-left" :size="12" /> {{ t('cat.back') }}</RouterLink>
+      <RouterLink :to="lp('/')" class="acc__back"><BIcon name="arrow-left" :size="12" /> {{ t('cat.back') }}</RouterLink>
 
       <!-- ── signed in ─────────────────────────────────────────────────── -->
       <template v-if="signedIn">
@@ -160,7 +160,7 @@ watch(signedIn, v => { if (v) refresh() })
         <p v-if="loadingOrders && !orders.length" class="acc__muted">…</p>
         <div v-else-if="!orders.length" class="acc__empty">
           <p>{{ t('acc.none') }}</p>
-          <RouterLink :to="{ name: 'catalogue' }" class="btn btn--brick"><span>{{ t('cta.go') }}</span></RouterLink>
+          <RouterLink :to="lp('/kataloq')" class="btn btn--brick"><span>{{ t('cta.go') }}</span></RouterLink>
         </div>
 
         <ul v-else class="ord">

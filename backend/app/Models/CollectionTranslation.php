@@ -6,5 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class CollectionTranslation extends Model
 {
-    protected $fillable = ['collection_id', 'locale', 'name', 'seo_title', 'seo_description', 'h1', 'body'];
+    protected $fillable = ['collection_id', 'locale', 'name', 'seo_title', 'seo_description', 'h1', 'body', 'intro', 'faq'];
+
+    protected function casts(): array
+    {
+        return ['faq' => 'array'];
+    }
 }

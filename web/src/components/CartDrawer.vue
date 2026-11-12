@@ -8,7 +8,7 @@ import { useI18n } from '../composables/useI18n'
 import { useCart } from '../composables/useCart'
 import { useAccount } from '../composables/useAccount'
 
-const { t, nm } = useI18n()
+const { t, nm, lp } = useI18n()
 const {
   lines, count, total, open, setQty, setQtyTo, remove, whatsapp, weighed, ceiling,
   zoneId, address, mapLink, zone, deliveryText, canSend,
@@ -94,7 +94,7 @@ const countLabel = computed(() =>
       <a class="placed__wa" :href="whatsapp" target="_blank" rel="noopener">{{ t('cart.placedWa') }}</a>
       <!-- Tracking: on the account already, or one step away. A guest's
            order waits in this browser and joins the account on sign-in. -->
-      <RouterLink :to="{ name: 'account' }" class="placed__track" @click="open = false">
+      <RouterLink :to="lp('/hesab')" class="placed__track" @click="open = false">
         {{ placedOnAccount ? t('acc.trackIn') : t('acc.trackJoin') }}
       </RouterLink>
     </div>

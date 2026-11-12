@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { reducedMotion } from '../composables/useMotion'
+import { splitLang } from '../data/locale'
 
 /* The real brand mark drawing itself — the leaf and its veins traced on by a
    pen, the three seeds dropping in, the dashed arc swinging home — while the
@@ -13,7 +14,7 @@ let seen = false
 try { seen = sessionStorage.getItem('fth.intro') === '1' } catch (e) {}
 /* Nor on a product page: somebody arriving from a search result for one
    product came for that product, not for the brand's entrance. */
-const skip = reducedMotion || seen || location.pathname.startsWith('/mehsul/')
+const skip = reducedMotion || seen || splitLang(location.pathname).path.startsWith('/mehsul/')
 
 const svg = ref(null)
 const go = ref(false)

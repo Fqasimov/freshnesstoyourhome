@@ -3,6 +3,7 @@ import { PRODUCTS, SETS, CONTACT, ORDER_DATES, money, setPricing } from '../data
 import { zoneById, feeText } from '../data/delivery'
 import { useI18n } from './useI18n'
 import { authToken, rememberClaim } from './useAccount'
+import { track } from '../analytics'
 
 const read = () => {
   try { const v = JSON.parse(localStorage.getItem('fth.cart') || '[]'); return Array.isArray(v) ? v : [] }
@@ -192,6 +193,7 @@ export function useCart () {
     const hit = items.value.find(c => c.key === key)
     if (hit) hit.qty = round2(Math.min(MAX_QTY, hit.qty + qty))
     else items.value.push({ key, id, v, qty, kind })
+    track('add_to_cart', { currency: 'AZN', items: [{ item_id: id, item_category: kind, quantity: qty }] })
   }
 
   function setQty (key, delta) {
@@ -313,6 +315,7 @@ const canSend = computed(() => Boolean(
    */
   async function send () {
     if (!canSend.value || sending.value) return
+    track('begin_checkout', { currency: 'AZN', value: total.value, items: lines.value.map(l => ({ item_id: l.product?.id, quantity: l.qty })) })
     const tab = window.open('', '_blank')
     // The tab is about to go to a page that is not ours; it gets no handle on this one.
     if (tab) tab.opener = null

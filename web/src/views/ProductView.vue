@@ -1,9 +1,10 @@
 <script setup>
 import { computed, ref, watch, watchEffect, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import BIcon from '../components/BIcon.vue'
 import ProductCard from '../components/ProductCard.vue'
-import { PRODUCTS, CATEGORIES, money, catalogueSettled } from '../data/catalogue'
+import { PRODUCTS, UNAVAILABLE, REDIRECTS, CATEGORIES, money, catalogueSettled } from '../data/catalogue'
+import { words } from '../data/productSchema'
 import { badgeText } from '../data/discount'
 import { productPath, categoryPath } from '../data/slug'
 import { useI18n } from '../composables/useI18n'
@@ -21,17 +22,36 @@ import { setProductMeta, clearProductMeta } from '../composables/usePageMeta'
 const emit = defineEmits(['add', 'add-set', 'peek', 'confirm'])
 
 const route = useRoute()
-const { t, nm, alt, dsc, catName, unitOf, lang } = useI18n()
+const { t, nm, alt, dsc, catName, unitOf, lang, lp } = useI18n()
+const router = useRouter()
+const w = computed(() => words(lang.value))
 const catOf = p => CATEGORIES.find(c => c.id === p?.cat)
 
 const product = computed(() => {
   const key = String(route.params.slug ?? '')
-  return PRODUCTS.find(p => p.slug === key) ?? PRODUCTS.find(p => p.id === key) ?? null
+  return PRODUCTS.find(p => p.slug === key) ?? PRODUCTS.find(p => p.id === key)
+    ?? UNAVAILABLE.find(p => p.slug === key) ?? null
+})
+/* Out of stock: the page stays, the basket does not take it. */
+const soldOut = computed(() => product.value?.inStock === false)
+
+/* An address the product used to have: on to the current one. The server
+   does this with a 301 once the nightly build has run; this covers the day
+   in between. */
+watchEffect(() => {
+  const to = REDIRECTS[String(route.params.slug ?? '')]
+  if (!product.value && to) router.replace({ path: lp(`/mehsul/${to}`), query: route.query })
 })
 
 /* The rest of its counter, so a page is never a dead end. */
 const related = computed(() => product.value
   ? PRODUCTS.filter(p => p.cat === product.value.cat && p.id !== product.value.id).slice(0, 8)
+  : [])
+
+/* "Often bought together": the shop's popular things from other counters —
+   pasta with the cheese, cheese with the salmon. No order history is read. */
+const also = computed(() => product.value
+  ? PRODUCTS.filter(p => p.cat !== product.value.cat && p.popular).slice(0, 4)
   : [])
 
 /* ── Buying ─────────────────────────────────────────────────────────────── */
@@ -88,18 +108,20 @@ watchEffect(() => {
 onUnmounted(() => clearProductMeta())
 
 const paragraphs = computed(() => dsc(product.value ?? {}).split(/\n+/).map(s => s.trim()).filter(Boolean))
+/* The longer text from the panel, in this language only. */
+const longText = computed(() => String(product.value?.[`l${lang.value}`] ?? '').split(/\n+/).map(s => s.trim()).filter(Boolean))
 </script>
 
 <template>
   <main class="pp">
     <div class="wrap">
       <nav class="pp__crumbs" :aria-label="t('pp.crumbs')">
-        <RouterLink to="/">{{ t('pp.home') }}</RouterLink>
+        <RouterLink :to="lp('/')">{{ t('pp.home') }}</RouterLink>
         <BIcon name="chevron-right" :size="10" />
-        <RouterLink to="/kataloq">{{ t('nav.shop') }}</RouterLink>
+        <RouterLink :to="lp('/kataloq')">{{ t('nav.shop') }}</RouterLink>
         <template v-if="product">
           <BIcon name="chevron-right" :size="10" />
-          <RouterLink v-if="catOf(product)" :to="categoryPath(catOf(product))">{{ catName(product.cat) }}</RouterLink>
+          <RouterLink v-if="catOf(product)" :to="lp(categoryPath(catOf(product)))">{{ catName(product.cat) }}</RouterLink>
           <span v-else>{{ catName(product.cat) }}</span>
         </template>
       </nav>
@@ -107,7 +129,9 @@ const paragraphs = computed(() => dsc(product.value ?? {}).split(/\n+/).map(s =>
       <article v-if="product" class="pp__main">
         <div class="pp__media">
           <div class="pp__photo" ref="img">
-            <img v-if="shown ?? product.img" :src="shown ?? product.img" :alt="nm(product)">
+            <img v-if="shown ?? product.img" :src="shown ?? product.img" :alt="nm(product)"
+                 :srcset="!shown && product.srcset ? product.srcset : undefined" sizes="(max-width: 800px) 100vw, 600px"
+                 width="600" height="600" fetchpriority="high">
             <BIcon v-else name="basket" :size="42" class="pp__none" />
             <span v-if="product.discount" class="pp__sale">{{ badgeText(product.discount, money) }}</span>
           </div>
@@ -139,7 +163,8 @@ const paragraphs = computed(() => dsc(product.value ?? {}).split(/\n+/).map(s =>
             </button>
           </div>
 
-          <div class="pp__buy">
+          <p v-if="soldOut" class="pp__flag pp__out">{{ w.out }}</p>
+          <div v-else class="pp__buy">
             <div class="pp__qty">
               <button type="button" aria-label="−" @click="stepQty(-1)">−</button>
               <label v-if="weighed">
@@ -159,6 +184,9 @@ const paragraphs = computed(() => dsc(product.value ?? {}).split(/\n+/).map(s =>
           <div v-if="paragraphs.length" class="pp__desc">
             <p v-for="(line, i) in paragraphs" :key="i">{{ line }}</p>
           </div>
+          <div v-if="longText.length" class="pp__desc pp__long">
+            <p v-for="(line, i) in longText" :key="i">{{ line }}</p>
+          </div>
 
           <ul class="pp__facts">
             <li><BIcon name="truck" :size="15" /> {{ t('pp.delivery') }}</li>
@@ -170,7 +198,7 @@ const paragraphs = computed(() => dsc(product.value ?? {}).split(/\n+/).map(s =>
       <section v-else-if="catalogueSettled" class="pp__missing">
         <h1 class="pp__h">{{ t('pp.missing') }}</h1>
         <p>{{ t('pp.missingCopy') }}</p>
-        <RouterLink to="/kataloq" class="btn"><span>{{ t('hero.cta1') }}</span></RouterLink>
+        <RouterLink :to="lp('/kataloq')" class="btn"><span>{{ t('hero.cta1') }}</span></RouterLink>
       </section>
 
       <p v-else class="pp__loading">{{ t('pp.loading') }}</p>
@@ -182,6 +210,18 @@ const paragraphs = computed(() => dsc(product.value ?? {}).split(/\n+/).map(s =>
                        @add="emit('add', $event)" @peek="emit('peek', $event)" />
         </div>
       </section>
+
+      <section v-if="also.length" class="pp__more">
+        <h2>{{ w.also }}</h2>
+        <div class="pp__grid">
+          <ProductCard v-for="p in also" :key="p.id" :product="p"
+                       @add="emit('add', $event)" @peek="emit('peek', $event)" />
+        </div>
+      </section>
+
+      <p v-if="product && catOf(product)" class="pp__allin">
+        <RouterLink :to="lp(categoryPath(catOf(product)))">{{ w.allIn(catName(product.cat)) }} →</RouterLink>
+      </p>
     </div>
   </main>
 </template>
@@ -227,6 +267,9 @@ const paragraphs = computed(() => dsc(product.value ?? {}).split(/\n+/).map(s =>
 .pp__price b{ font-size:1.8rem; font-weight:600; color:var(--forest); }
 .pp__price s{ color:var(--ink-3); }
 .pp__unit{ color:var(--ink-3); font-size:.92rem; }
+.pp__out{ color:var(--brick); font-weight:600; }
+.pp__allin{ margin:clamp(28px,4vw,44px) 0 0; text-align:center; }
+.pp__allin a{ color:var(--forest); font-weight:600; }
 .pp__flag{ display:flex; gap:6px; align-items:center; margin:0 0 10px; font-size:.84rem; color:var(--ink-3); }
 
 .pp__variants{ display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }

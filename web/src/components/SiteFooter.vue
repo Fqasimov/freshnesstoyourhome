@@ -5,7 +5,7 @@ import { useI18n } from '../composables/useI18n'
 import CatalogueCta from './CatalogueCta.vue'
 import logo from '../assets/logo-mark.svg'
 
-const { t } = useI18n()
+const { t, lp } = useI18n()
 const year = new Date().getFullYear()
 /* Routes rather than bare fragments. The site runs on hash history, so a
    plain href="#sets" replaces the whole route with "sets", matches nothing
@@ -30,12 +30,12 @@ const TAGS = [
   ['#hisəverilmişbalıq', 'hisə'],
 ]
 const links = computed(() => [
-  [{ path: '/', hash: '#story' }, 'nav.story'],
+  [{ path: lp('/'), hash: '#story' }, 'nav.story'],
   // Same reason as the header: no active set, no link to one.
-  ...(SETS.length ? [[{ path: '/', hash: '#sets' }, 'nav.sets']] : []),
-  [{ path: '/', hash: '#week' }, 'nav.week'],
-  [{ path: '/', hash: '#order' }, 'nav.how'],
-  [{ path: '/', hash: '#delivery' }, 'nav.delivery'],
+  ...(SETS.length ? [[{ path: lp('/'), hash: '#sets' }, 'nav.sets']] : []),
+  [{ path: lp('/'), hash: '#week' }, 'nav.week'],
+  [{ path: lp('/'), hash: '#order' }, 'nav.how'],
+  [{ path: lp('/'), hash: '#delivery' }, 'nav.delivery'],
 ])
 </script>
 
@@ -61,7 +61,7 @@ const links = computed(() => [
       </div>
       <div class="foot__tags" :aria-label="t('foot.tags')">
         <span>{{ t('foot.tags') }}</span>
-        <RouterLink v-for="[label, q] in TAGS" :key="label" :to="{ path: '/kataloq', query: { q } }">{{ label }}</RouterLink>
+        <RouterLink v-for="[label, q] in TAGS" :key="label" :to="{ path: lp('/kataloq'), query: { q } }">{{ label }}</RouterLink>
       </div>
       <div class="foot__bot">
         <p>{{ t('foot.note') }}</p>

@@ -27,12 +27,15 @@ const form = ref({
   category_id: p.category_id,
   code: p.id,
   slug: p.slug ?? '',
+  brand: p.brand ?? '',
+  gtin: p.gtin ?? '',
   unit_kind: p.unit_kind,
   unit_qty: String(p.unit_qty ?? 1),
   ...Object.fromEntries(LANGS.map(l => [l.id, {
     name: p.name?.[l.id] ?? '',
     description: p.description?.[l.id] ?? '',
     unit_label: p.unit_label?.[l.id] ?? '',
+    long_description: p.long_description?.[l.id] ?? '',
   }])),
 })
 const busy = ref(false)
@@ -111,7 +114,9 @@ const codeOk = computed(() => form.value.code === p.id || (CODE.test(form.value.
 const qtyNum = computed(() => Number(String(form.value.unit_qty).replace(',', '.')))
 const qtyOk = computed(() => Number.isFinite(qtyNum.value) && qtyNum.value >= 0.001 && qtyNum.value <= 9999)
 const slugOk = computed(() => form.value.slug === (p.slug ?? '') || (CODE.test(form.value.slug) && form.value.slug.length >= 3))
-const ready = computed(() => form.value.az.name.trim().length > 0 && codeOk.value && slugOk.value && qtyOk.value && discountOk.value)
+/* A barcode is optional; one that is given is 8, 12, 13 or 14 digits. */
+const gtinOk = computed(() => !form.value.gtin.trim() || /^(\d{8}|\d{12,14})$/.test(form.value.gtin.trim()))
+const ready = computed(() => form.value.az.name.trim().length > 0 && codeOk.value && slugOk.value && qtyOk.value && discountOk.value && gtinOk.value)
 
 async function save () {
   if (!ready.value) return
@@ -123,6 +128,7 @@ async function save () {
       name: form.value[l.id].name.trim() || null,
       description: form.value[l.id].description.trim() || null,
       unit_label: form.value[l.id].unit_label.trim() || null,
+      long_description: form.value[l.id].long_description.trim() || null,
     }]))
 
     const body = { category_id: form.value.category_id, translations }
@@ -130,6 +136,8 @@ async function save () {
     // ride along and be mistaken for an edit.
     if (form.value.code !== p.id) body.new_id = form.value.code
     if (form.value.slug !== (p.slug ?? '')) body.slug = form.value.slug
+    if (form.value.brand.trim() !== (p.brand ?? '')) body.brand = form.value.brand.trim() || null
+    if (form.value.gtin.trim() !== (p.gtin ?? '')) body.gtin = form.value.gtin.trim() || null
     if (form.value.unit_kind !== p.unit_kind) body.unit_kind = form.value.unit_kind
     if (qtyNum.value !== Number(p.unit_qty ?? 1)) body.unit_qty = qtyNum.value
     if (!sameDiscount(discount.value, initialDiscount)) {
@@ -187,7 +195,20 @@ async function save () {
       </div>
       <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
         Məhsulun öz səhifəsi — Google bu ünvanı göstərir (məs. <span class="a-mono">qirmizi-kuru-500q</span>).
-        Adından avtomatik yaranır. Dəyişsəniz, köhnə link işləməyəcək — yalnız lazım olanda dəyişin.
+        Adından avtomatik yaranır. Dəyişsəniz, köhnə link yeni ünvana yönləndirilir (növbəti gecə yenilənmədən sonra).
+      </p>
+    </div>
+
+    <div class="a-sec">
+      <h3>Brend və ştrix-kod</h3>
+      <div class="a-row" style="gap:8px; flex-wrap:wrap">
+        <input v-model="form.brand" class="a-in" style="flex:1; min-width:160px" maxlength="80"
+               aria-label="Brend" placeholder="Brend (məs. Di Martino)">
+        <input v-model="form.gtin" class="a-in a-mono" style="width:190px" maxlength="14" inputmode="numeric"
+               :class="{ 'a-in--dirty': !gtinOk }" aria-label="Ştrix-kod" placeholder="Ştrix-kod (EAN-13)">
+      </div>
+      <p class="a-muted" style="font-size:.76rem; margin:8px 0 0">
+        Google üçün. Öz məhsulumuzdursa, brendi boş buraxın — saytda “Freshness” yazılır.
       </p>
     </div>
 
@@ -229,6 +250,16 @@ async function save () {
             <label :for="`ep-desc-${l.id}`">Təsvir</label>
             <textarea :id="`ep-desc-${l.id}`" v-model="form[l.id].description" class="a-in" maxlength="600"
                       placeholder="Mənşəyi, dadı, necə bişirilir…"></textarea>
+          </div>
+          <div class="a-field">
+            <label :for="`ep-long-${l.id}`">
+              Geniş təsvir (məhsul səhifəsi üçün)
+              <span class="a-muted" :style="form[l.id].long_description.length && form[l.id].long_description.length < 300 ? 'color:var(--warn)' : ''">
+                {{ form[l.id].long_description.length }}/300–800
+              </span>
+            </label>
+            <textarea :id="`ep-long-${l.id}`" v-model="form[l.id].long_description" class="a-in" rows="6" maxlength="3000"
+                      placeholder="Nədir; mənşəyi və brendi; dadı; necə hazırlanır və təqdim olunur; necə saxlanır; çəki və qablaşdırma; sifariş şərtləri."></textarea>
           </div>
           <div class="a-field">
             <label :for="`ep-unit-${l.id}`">Vahid etiketi</label>

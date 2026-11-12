@@ -60,6 +60,13 @@ export const SETS = reactive(BUNDLED_SETS.map(b => ({ ...b })))
    there are none until the live catalogue arrives. */
 export const COLLECTIONS = reactive([])
 
+/* On the shelf but out of stock: their pages stay, marked as such, and they
+   cannot go in the basket. Never mixed into PRODUCTS, which is what is sold. */
+export const UNAVAILABLE = reactive([])
+
+/* Old product addresses, old slug → current one (the server's redirects). */
+export const REDIRECTS = reactive({})
+
 /* Money, rounded to the cent and printed without trailing zeroes. */
 /* A whole number stays clean — the price list reads like a poster, not a
    receipt — but anything with qəpik in it gets both digits. "71.5 AZN" looks
@@ -150,11 +157,21 @@ function adaptProduct (p) {
     den: p.description?.en ?? '',
     daz: p.description?.az ?? '',
     dru: p.description?.ru ?? '',
+    /* The product page's longer text, and what Google is told about it. */
+    laz: p.long_description?.az ?? '',
+    lru: p.long_description?.ru ?? '',
+    len: p.long_description?.en ?? '',
+    brand: p.brand ?? null,
+    gtin: p.gtin ?? null,
+    unitQty: Number(p.unit_qty) || 1,
+    inStock: p.in_stock !== false,
     /* A photograph uploaded in the admin panel wins; otherwise the picture
        that ships in this bundle. Removing an upload therefore restores the
        original rather than leaving a gap, and a product added today — which
        has no bundled picture at all — shows the one that was uploaded with
        it. */
+    /* WebP copies of the uploaded photograph, for srcset ("url 300w, …"). */
+    srcset: (p.image_set ?? []).map(v => `${v.url} ${v.w}w`).join(', ') || null,
     img: p.image_url ?? PHOTOS[`../assets/products/${p.image ?? p.id + '.jpg'}`] ?? null,
     /* Extra photographs, in order; shown as small pictures under the main one. */
     gallery: (p.gallery ?? []).map(g => ({ url: g.image_url, thumb: g.thumb_url ?? g.image_url })),
@@ -191,7 +208,7 @@ function adaptBundle (b) {
 }
 
 /* A page's own words from the API, as { seo_title: {az, ru, en}, … }. */
-const pageOf = x => Object.fromEntries(['seo_title', 'seo_description', 'h1', 'body'].map(f => [f, x[f] ?? {}]))
+const pageOf = x => Object.fromEntries(['seo_title', 'seo_description', 'h1', 'intro', 'body', 'faq'].map(f => [f, x[f] ?? {}]))
 
 /** The API has no "everything" row and no counts; the page wants both. */
 function adaptCategories (apiCategories, products) {
@@ -284,6 +301,9 @@ export async function loadCatalogue () {
        not switched any on yet would be advertising a price nobody agreed to.
        The admin panel is what turns them on. */
     SETS.splice(0, SETS.length, ...(data.bundles ?? []).map(adaptBundle))
+    UNAVAILABLE.splice(0, UNAVAILABLE.length, ...(data.unavailable ?? []).map(adaptProduct))
+    for (const k of Object.keys(REDIRECTS)) delete REDIRECTS[k]
+    Object.assign(REDIRECTS, data.redirects ?? {})
     COLLECTIONS.splice(0, COLLECTIONS.length, ...(data.collections ?? []).map(c => ({
       slug: c.slug,
       indexed: c.is_indexed !== false,

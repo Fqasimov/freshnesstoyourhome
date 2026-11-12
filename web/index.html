@@ -14,6 +14,7 @@
 <link rel="icon" type="image/png" href="/favicon-96.png" sizes="96x96">
 <link rel="icon" type="image/png" href="/favicon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <meta property="og:image" content="https://freshness.az/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -27,26 +28,39 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Freshness To Your Home">
 <meta property="og:locale" content="az_AZ">
-<script type="application/ld+json">
+<!-- The shop as schema.org GroceryStore. web/scripts/prerender.mjs rewrites it
+     per page and language, with the live price range and delivery areas. -->
+<script type="application/ld+json" id="ld-store">
 {
   "@context": "https://schema.org",
-  "@type": "Store",
+  "@type": "GroceryStore",
+  "@id": "https://freshness.az/#store",
   "name": "Freshness To Your Home",
-  "logo": "https://freshness.az/favicon-512.png",
-  "image": "https://freshness.az/og-image.png",
   "url": "https://freshness.az/",
+  "logo": "https://freshness.az/favicon-512.png",
+  "image": [
+    "https://freshness.az/og-image.png"
+  ],
   "description": "Hisə verilmiş qızıl balıq, qırmızı və qara kürü, burrata, mozzarella və Avropa pendirləri, təzə balıq və dəniz məhsulları — Bakıda hər gün 10:00–22:00 çatdırılma.",
   "telephone": "+994503521919",
-  "priceRange": "5–150 ₼",
-  "currenciesAccepted": "AZN",
   "email": "info@freshness.az",
+  "priceRange": "3.90–220 ₼",
+  "currenciesAccepted": "AZN",
+  "paymentAccepted": "Cash, Credit Card",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Bakı",
+    "addressCountry": "AZ"
+  },
+  "areaServed": [
+    {
+      "@type": "City",
+      "name": "Bakı"
+    }
+  ],
   "sameAs": [
     "https://www.instagram.com/freshnesstoyourhome/"
   ],
-  "areaServed": {
-    "@type": "City",
-    "name": "Bakı"
-  },
   "openingHoursSpecification": [
     {
       "@type": "OpeningHoursSpecification",
@@ -61,71 +75,6 @@
       ],
       "opens": "10:00",
       "closes": "22:00"
-    }
-  ],
-  "makesOffer": [
-    {
-      "@type": "Offer",
-      "itemOffered": {
-        "@type": "Product",
-        "name": "Hisə verilmiş qızıl balıq (smoked salmon, копчёный лосось)"
-      }
-    },
-    {
-      "@type": "Offer",
-      "itemOffered": {
-        "@type": "Product",
-        "name": "Qırmızı kürü (red caviar, красная икра)"
-      }
-    },
-    {
-      "@type": "Offer",
-      "itemOffered": {
-        "@type": "Product",
-        "name": "Qara kürü (black caviar, чёрная икра)"
-      }
-    },
-    {
-      "@type": "Offer",
-      "itemOffered": {
-        "@type": "Product",
-        "name": "Burrata pendiri"
-      }
-    },
-    {
-      "@type": "Offer",
-      "itemOffered": {
-        "@type": "Product",
-        "name": "Mozzarella və Avropa pendirləri"
-      }
-    },
-    {
-      "@type": "Offer",
-      "itemOffered": {
-        "@type": "Product",
-        "name": "Hisə verilmiş beluqa və digər hisə verilmiş balıqlar"
-      }
-    },
-    {
-      "@type": "Offer",
-      "itemOffered": {
-        "@type": "Product",
-        "name": "Təzə balıq: salmon, dorado, levrek, forel"
-      }
-    },
-    {
-      "@type": "Offer",
-      "itemOffered": {
-        "@type": "Product",
-        "name": "Krevet və dəniz məhsulları"
-      }
-    },
-    {
-      "@type": "Offer",
-      "itemOffered": {
-        "@type": "Product",
-        "name": "Kənd çolpası, ördək və ət"
-      }
     }
   ]
 }
