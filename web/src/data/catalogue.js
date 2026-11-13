@@ -66,6 +66,9 @@ export const UNAVAILABLE = reactive([])
 
 /* Old product addresses, old slug → current one (the server's redirects). */
 export const REDIRECTS = reactive({})
+/* The same for category pages, and the published recipes (/resept/…). */
+export const CATEGORY_REDIRECTS = reactive({})
+export const ARTICLES = reactive([])
 
 /* Money, rounded to the cent and printed without trailing zeroes. */
 /* A whole number stays clean — the price list reads like a poster, not a
@@ -165,6 +168,8 @@ function adaptProduct (p) {
     gtin: p.gtin ?? null,
     unitQty: Number(p.unit_qty) || 1,
     inStock: p.in_stock !== false,
+    /* Approved reviews: { rating, count, latest: [...] }, or null. */
+    reviews: p.reviews ?? null,
     /* A photograph uploaded in the admin panel wins; otherwise the picture
        that ships in this bundle. Removing an upload therefore restores the
        original rather than leaving a gap, and a product added today — which
@@ -304,6 +309,9 @@ export async function loadCatalogue () {
     UNAVAILABLE.splice(0, UNAVAILABLE.length, ...(data.unavailable ?? []).map(adaptProduct))
     for (const k of Object.keys(REDIRECTS)) delete REDIRECTS[k]
     Object.assign(REDIRECTS, data.redirects ?? {})
+    for (const k of Object.keys(CATEGORY_REDIRECTS)) delete CATEGORY_REDIRECTS[k]
+    Object.assign(CATEGORY_REDIRECTS, data.category_redirects ?? {})
+    ARTICLES.splice(0, ARTICLES.length, ...(data.articles ?? []))
     COLLECTIONS.splice(0, COLLECTIONS.length, ...(data.collections ?? []).map(c => ({
       slug: c.slug,
       indexed: c.is_indexed !== false,

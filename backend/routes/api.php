@@ -54,6 +54,11 @@ Route::post('orders/quote', [OrderController::class, 'quote'])
 Route::post('orders/web', [OrderController::class, 'storeFromWebsite'])
     ->middleware('throttle:web-order');
 
+// A product review from the website: public, so tightly limited, and held
+// for approval in the panel. See ReviewController.
+Route::post('reviews', [\App\Http\Controllers\Api\ReviewController::class, 'store'])
+    ->middleware('throttle:review');
+
 // Run migrations after an automated upload. Token-gated; see DeployController.
 Route::post('deploy/migrate', [DeployController::class, 'migrate'])->middleware('throttle:deploy');
 Route::post('deploy/reencrypt', [DeployController::class, 'reencrypt'])->middleware('throttle:deploy');
@@ -191,6 +196,13 @@ Route::middleware(['auth:sanctum', 'blocked', 'role:admin', 'throttle:admin'])
         Route::post('collections', [CollectionController::class, 'store']);
         Route::patch('collections/{id}', [CollectionController::class, 'update'])->whereNumber('id');
         Route::delete('collections/{id}', [CollectionController::class, 'destroy'])->whereNumber('id');
+        Route::get('articles', [\App\Http\Controllers\Api\Admin\ArticleController::class, 'index']);
+        Route::post('articles', [\App\Http\Controllers\Api\Admin\ArticleController::class, 'store']);
+        Route::patch('articles/{id}', [\App\Http\Controllers\Api\Admin\ArticleController::class, 'update'])->whereNumber('id');
+        Route::delete('articles/{id}', [\App\Http\Controllers\Api\Admin\ArticleController::class, 'destroy'])->whereNumber('id');
+        Route::get('reviews', [\App\Http\Controllers\Api\Admin\ReviewController::class, 'index']);
+        Route::patch('reviews/{id}', [\App\Http\Controllers\Api\Admin\ReviewController::class, 'update'])->whereNumber('id');
+        Route::delete('reviews/{id}', [\App\Http\Controllers\Api\Admin\ReviewController::class, 'destroy'])->whereNumber('id');
 
         Route::get('bundles', [BundleController::class, 'index']);
         Route::post('bundles', [BundleController::class, 'store']);

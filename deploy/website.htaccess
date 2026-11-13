@@ -47,8 +47,8 @@ ErrorDocument 404 /404.html
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.+)/$ /$1 [R=301,L]
 
-  # Products that moved to a new address in the panel: the old one leads to
-  # the new for good. Filled in by web/scripts/prerender.mjs at deploy time.
+  # Products and categories that moved to a new address in the panel: the
+  # old one leads to the new for good. Filled in by web/scripts/prerender.mjs at deploy time.
   # @product-redirects
   # @end-product-redirects
 
@@ -69,6 +69,16 @@ ErrorDocument 404 /404.html
   RewriteRule ^(ru|en)/kataloq/([a-z0-9-]+)$ pages/$1/kataloq/$2.html [L]
   RewriteCond %{DOCUMENT_ROOT}/pages/$1/mehsul/$2.html -f
   RewriteRule ^(ru|en)/mehsul/([a-z0-9-]+)$ pages/$1/mehsul/$2.html [L]
+
+  # Recipes: the list and one page each, in each language.
+  RewriteCond %{DOCUMENT_ROOT}/pages/resept.html -f
+  RewriteRule ^resept$ pages/resept.html [L]
+  RewriteCond %{DOCUMENT_ROOT}/pages/resept/$1.html -f
+  RewriteRule ^resept/([a-z0-9-]+)$ pages/resept/$1.html [L]
+  RewriteCond %{DOCUMENT_ROOT}/pages/$1/resept.html -f
+  RewriteRule ^(ru|en)/resept$ pages/$1/resept.html [L]
+  RewriteCond %{DOCUMENT_ROOT}/pages/$1/resept/$2.html -f
+  RewriteRule ^(ru|en)/resept/([a-z0-9-]+)$ pages/$1/resept/$2.html [L]
 
   # The home pages, and the app's other pages.
   RewriteRule ^(hesab)?$ index.html [L]

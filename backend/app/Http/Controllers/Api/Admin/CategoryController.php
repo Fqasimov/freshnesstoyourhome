@@ -157,6 +157,14 @@ class CategoryController extends Controller
         $category = Category::with('translations')->findOrFail($id);
 
         $changes = DB::transaction(function () use ($category, $data) {
+            // A moved category page keeps its old address as a redirect.
+            if (isset($data['slug']) && filled($category->slug) && $data['slug'] !== $category->slug) {
+                DB::table('category_slug_redirects')->where('old_slug', $data['slug'])->delete();
+                DB::table('category_slug_redirects')->updateOrInsert(
+                    ['old_slug' => $category->slug],
+                    ['category_id' => $category->id, 'created_at' => now(), 'updated_at' => now()],
+                );
+            }
             $category->fill(collect($data)->only(['is_active', 'sort', 'slug', 'is_indexed'])->all());
             $changes = Audit::diff($category, ['is_active', 'sort', 'slug', 'is_indexed']);
             $category->save();

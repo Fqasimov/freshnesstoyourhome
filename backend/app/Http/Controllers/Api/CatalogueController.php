@@ -120,6 +120,27 @@ class CatalogueController extends Controller
                 ->map(fn (Product $p) => [...$shape($p), 'in_stock' => false])
                 ->all();
 
+            // Approved reviews: the average, the count and the latest few.
+            $reviews = \App\Http\Controllers\Api\ReviewController::summaries(
+                collect([...$products, ...$unavailable])->pluck('id')->all());
+            $withReviews = fn (array $p) => isset($reviews[$p['id']]) ? [...$p, 'reviews' => $reviews[$p['id']]] : $p;
+            $products = array_map($withReviews, $products);
+            $unavailable = array_map($withReviews, $unavailable);
+
+            // Old category addresses, for 301s like the products'.
+            $categorySlugs = collect($categories)->pluck('slug', 'id');
+            $categoryRedirects = \Illuminate\Support\Facades\DB::table('category_slug_redirects')->get()
+                ->filter(fn ($r) => isset($categorySlugs[$r->category_id]) && $categorySlugs[$r->category_id] !== $r->old_slug)
+                ->mapWithKeys(fn ($r) => [$r->old_slug => $categorySlugs[$r->category_id]])
+                ->all();
+
+            // Recipes and articles, published only, in date order.
+            $articles = \App\Models\Article::with('translations')->where('is_published', true)
+                ->orderByDesc('published_on')->orderByDesc('id')->get()
+                ->map(fn ($a) => \App\Http\Controllers\Api\Admin\ArticleController::shape($a))
+                ->filter(fn ($a) => isset($a['title']['az']))
+                ->values()->all();
+
             // Old product addresses, old slug => current slug, for 301s.
             $current = collect([...$products, ...$unavailable])->pluck('slug', 'id');
             $redirects = \Illuminate\Support\Facades\DB::table('product_slug_redirects')->get()
@@ -212,6 +233,8 @@ class CatalogueController extends Controller
                 'unavailable' => $unavailable,
                 // A plain array in the cache (see the warning above); an object only on the way out.
                 'redirects' => $redirects,
+                'category_redirects' => $categoryRedirects,
+                'articles' => $articles,
                 'bundles' => $bundles,
                 'collections' => $collections,
                 'zones' => $zones,
@@ -237,6 +260,7 @@ class CatalogueController extends Controller
         // order is priced again here, so a minute-old figure cannot be charged.
         // {} rather than [] when there are none, so clients always get a map.
         $payload['redirects'] = (object) ($payload['redirects'] ?? []);
+        $payload['category_redirects'] = (object) ($payload['category_redirects'] ?? []);
 
         return response()->json($payload)
             ->header('Cache-Control', 'public, max-age=60, s-maxage=60');

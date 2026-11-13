@@ -1,11 +1,12 @@
 <script setup>
 import { computed } from 'vue'
-import { CONTACT, SETS } from '../data/catalogue'
+import { ARTICLES, CONTACT, SETS } from '../data/catalogue'
+import { words } from '../data/productSchema'
 import { useI18n } from '../composables/useI18n'
 import CatalogueCta from './CatalogueCta.vue'
 import logo from '../assets/logo-mark.svg'
 
-const { t, lp } = useI18n()
+const { t, lp, lang } = useI18n()
 const year = new Date().getFullYear()
 /* Routes rather than bare fragments. The site runs on hash history, so a
    plain href="#sets" replaces the whole route with "sets", matches nothing
@@ -37,6 +38,8 @@ const links = computed(() => [
   [{ path: lp('/'), hash: '#order' }, 'nav.how'],
   [{ path: lp('/'), hash: '#delivery' }, 'nav.delivery'],
 ])
+/* The recipes page, once there is something on it. */
+const recipes = computed(() => (ARTICLES.length ? words(lang.value).recipes : null))
 </script>
 
 <template>
@@ -52,6 +55,7 @@ const links = computed(() => [
         </div>
         <nav class="foot__nav">
           <RouterLink v-for="[to, key] in links" :key="key" :to="to">{{ t(key) }}</RouterLink>
+          <RouterLink v-if="recipes" :to="lp('/resept')">{{ recipes }}</RouterLink>
           <a :href="'tel:+' + CONTACT.whatsapp">{{ CONTACT.phoneDisplay }}</a>
         </nav>
 

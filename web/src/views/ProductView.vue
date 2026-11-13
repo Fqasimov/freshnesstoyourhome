@@ -3,6 +3,7 @@ import { computed, ref, watch, watchEffect, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BIcon from '../components/BIcon.vue'
 import ProductCard from '../components/ProductCard.vue'
+import ProductReviews from '../components/ProductReviews.vue'
 import { PRODUCTS, UNAVAILABLE, REDIRECTS, CATEGORIES, money, catalogueSettled } from '../data/catalogue'
 import { words } from '../data/productSchema'
 import { badgeText } from '../data/discount'
@@ -202,6 +203,8 @@ const longText = computed(() => String(product.value?.[`l${lang.value}`] ?? '').
       </section>
 
       <p v-else class="pp__loading">{{ t('pp.loading') }}</p>
+
+      <ProductReviews v-if="product" :product="product" />
 
       <section v-if="related.length" class="pp__more">
         <h2>{{ t('pp.related') }}</h2>

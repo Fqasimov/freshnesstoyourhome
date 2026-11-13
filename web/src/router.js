@@ -51,6 +51,12 @@ export const router = createRouter({
       component: () => import('./views/ProductView.vue'),
     },
     {
+      // Recipes and articles from the panel: the list, and one each.
+      path: '/:lang(ru|en)?/resept/:slug?',
+      name: 'recipes',
+      component: () => import('./views/RecipesView.vue'),
+    },
+    {
       path: '/:lang(ru|en)?/hesab',
       name: 'account',
       // The personal cabinet: sign in or up, and follow orders. Optional —
@@ -115,7 +121,7 @@ const PAGES = {
 }
 router.afterEach(to => {
   // A product or category page writes its own head once it knows what it shows.
-  if (to.name === 'product' || to.name === 'notfound' || (to.name === 'catalogue' && to.params.cat)) return
+  if (to.name === 'product' || to.name === 'recipes' || to.name === 'notfound' || (to.name === 'catalogue' && to.params.cat)) return
   const l = lang.value
   const page = PAGES[to.name]?.[l] ?? PAGES[to.name]?.az
   const home = HOME[l] ?? HOME.az

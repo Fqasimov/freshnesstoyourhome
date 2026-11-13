@@ -36,6 +36,10 @@ const WORDS = {
     delivery: 'Bakı və Bakı ətrafına çatdırılma — həftənin 7 günü, 10:00–22:00. Sifariş:',
     notFound: 'Səhifə tapılmadı', notFoundP: 'Bu ünvanda heç nə yoxdur — ola bilsin, link köhnədir.', search: 'Məhsul axtarın', go: 'Axtar',
     homeH1: 'Bakıda premium balıq, kürü və pendir çatdırılması',
+    recipes: 'Reseptlər', recipesH1: 'Reseptlər və məsləhətlər', recipesDesc: 'Qızıl balıq, kürü, burrata və dəniz məhsulları ilə reseptlər: necə seçmək, necə vermək, nə ilə yemək.',
+    inArticle: 'Bu məqalədəki məhsullar', readMore: 'Oxu',
+    reviews: 'Rəylər', noReviews: 'Hələ rəy yoxdur — ilk siz yazın.', writeReview: 'Rəy yazın', yourName: 'Adınız', yourReview: 'Rəyiniz (istəyə görə)',
+    rating: 'Qiymət', send: 'Göndər', thanks: 'Təşəkkürlər! Rəyiniz yoxlanıldıqdan sonra görünəcək.', failed: 'Göndərmək alınmadı. Bir az sonra yenidən cəhd edin.',
   },
   ru: {
     tail: 'Доставка по Баку ежедневно 10:00–22:00.', home: 'Главная', catalogue: 'Каталог', deliv: 'доставка по Баку',
@@ -45,6 +49,10 @@ const WORDS = {
     delivery: 'Доставка по Баку и пригородам — 7 дней в неделю, 10:00–22:00. Заказ:',
     notFound: 'Страница не найдена', notFoundP: 'По этому адресу ничего нет — возможно, ссылка устарела.', search: 'Поиск товаров', go: 'Найти',
     homeH1: 'Доставка премиальной рыбы, икры и сыров в Баку',
+    recipes: 'Рецепты', recipesH1: 'Рецепты и советы', recipesDesc: 'Рецепты с лососем, икрой, бурратой и морепродуктами: как выбрать, как подать, с чем есть.',
+    inArticle: 'Товары из статьи', readMore: 'Читать',
+    reviews: 'Отзывы', noReviews: 'Отзывов пока нет — напишите первым.', writeReview: 'Написать отзыв', yourName: 'Ваше имя', yourReview: 'Ваш отзыв (необязательно)',
+    rating: 'Оценка', send: 'Отправить', thanks: 'Спасибо! Отзыв появится после проверки.', failed: 'Не удалось отправить. Попробуйте чуть позже.',
   },
   en: {
     tail: 'Delivery in Baku daily 10:00–22:00.', home: 'Home', catalogue: 'Catalogue', deliv: 'delivery in Baku',
@@ -54,6 +62,10 @@ const WORDS = {
     delivery: 'Delivery across Baku and its suburbs — 7 days a week, 10:00–22:00. Order:',
     notFound: 'Page not found', notFoundP: 'There is nothing at this address — the link may be out of date.', search: 'Search products', go: 'Search',
     homeH1: 'Premium fish, caviar and cheese delivered in Baku',
+    recipes: 'Recipes', recipesH1: 'Recipes and tips', recipesDesc: 'Recipes with smoked salmon, caviar, burrata and seafood: how to choose, how to serve, what to pair.',
+    inArticle: 'Products in this article', readMore: 'Read',
+    reviews: 'Reviews', noReviews: 'No reviews yet — be the first.', writeReview: 'Write a review', yourName: 'Your name', yourReview: 'Your review (optional)',
+    rating: 'Rating', send: 'Send', thanks: 'Thank you! Your review will appear once it is checked.', failed: 'Could not send. Please try again shortly.',
   },
 }
 export const words = lang => WORDS[lang] ?? WORDS.az
@@ -215,6 +227,17 @@ export function productJsonLd (p) {
     ...(weightOf(p) ? { weight: weightOf(p) } : {}),
     offers: offer,
   }
+  // Approved customer reviews only (the panel moderates them).
+  if (p.reviews?.count) {
+    product.aggregateRating = { '@type': 'AggregateRating', ratingValue: p.reviews.rating, reviewCount: p.reviews.count, bestRating: 5, worstRating: 1 }
+    product.review = (p.reviews.latest ?? []).map(r => ({
+      '@type': 'Review',
+      author: { '@type': 'Person', name: r.name },
+      ...(r.date ? { datePublished: r.date } : {}),
+      ...(r.text ? { reviewBody: r.text } : {}),
+      reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+    }))
+  }
 
   const w = words(p.lang)
   const home = p.homeUrl ?? `${p.site}/`
@@ -241,6 +264,23 @@ function weightOf (p) {
   if (!m) return null
   const kilo = /^(kq|kg|кг)$/i.test(m[2])
   return { '@type': 'QuantitativeValue', value: Number(m[1].replace(',', '.')), unitCode: kilo ? 'KGM' : 'GRM' }
+}
+
+/** schema.org Article for a recipe page. */
+export function articleJsonLd ({ url, title, desc, image, published, modified, lang }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: title,
+    ...(desc ? { description: desc } : {}),
+    ...(image ? { image: [image] } : {}),
+    ...(published ? { datePublished: published } : {}),
+    ...(modified ? { dateModified: modified } : {}),
+    inLanguage: lang,
+    mainEntityOfPage: url,
+    author: { '@type': 'Organization', name: SITE_NAME },
+    publisher: { '@type': 'Organization', name: SITE_NAME, logo: { '@type': 'ImageObject', url: 'https://freshness.az/favicon-512.png' } },
+  }
 }
 
 /** schema.org FAQPage from [{ q, a }]; null when there is nothing to ask. */

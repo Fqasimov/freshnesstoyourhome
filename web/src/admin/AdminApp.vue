@@ -10,6 +10,8 @@ import Bundles from './views/Bundles.vue'
 import Zones from './views/Zones.vue'
 import Categories from './views/Categories.vue'
 import Collections from './views/Collections.vue'
+import Articles from './views/Articles.vue'
+import Reviews from './views/Reviews.vue'
 import Customers from './views/Customers.vue'
 import Audits from './views/Audits.vue'
 import { api } from './api'
@@ -21,6 +23,8 @@ const TABS = [
   { id: 'categories', label: 'Kateqoriyalar', is: Categories },
   { id: 'bundles', label: 'Aksiyalar', is: Bundles },
   { id: 'collections', label: 'Kolleksiyalar', is: Collections },
+  { id: 'articles', label: 'Reseptlər', is: Articles },
+  { id: 'reviews', label: 'Rəylər', is: Reviews },
   { id: 'zones', label: 'Zonalar', is: Zones },
   { id: 'customers', label: 'Müştərilər', is: Customers },
   { id: 'audits', label: 'Jurnal', is: Audits },

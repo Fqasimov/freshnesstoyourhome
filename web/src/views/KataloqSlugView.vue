@@ -1,7 +1,8 @@
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { CATEGORIES, COLLECTIONS, catalogueSettled } from '../data/catalogue'
+import { computed, watchEffect } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { CATEGORIES, COLLECTIONS, CATEGORY_REDIRECTS, catalogueSettled } from '../data/catalogue'
+import { lp } from '../composables/useI18n'
 import { categorySlug } from '../data/slug'
 import CatalogueView from './CatalogueView.vue'
 import CollectionView from './CollectionView.vue'
@@ -17,6 +18,12 @@ const kind = computed(() => {
   if (COLLECTIONS.some(c => c.slug === slug)) return 'collection'
   if (CATEGORIES.some(c => c.id !== 'all' && categorySlug(c) === slug)) return 'category'
   return catalogueSettled.value ? 'missing' : 'category'
+})
+/* A category that moved to a new address: on to it (the server 301s too). */
+const router = useRouter()
+watchEffect(() => {
+  const to = CATEGORY_REDIRECTS[route.params.cat]
+  if (kind.value === 'missing' && to) router.replace({ path: lp(`/kataloq/${to}`), query: route.query })
 })
 </script>
 

@@ -185,6 +185,12 @@ class AppServiceProvider extends ServiceProvider
             Limit::perDay(400)->by($r->user()?->id ?: self::sourceKey($r->ip())),
         ]);
 
+        // Reviews: a person writes a few, a bot writes thousands.
+        RateLimiter::for('review', fn (Request $r) => [
+            Limit::perMinute(2)->by(self::sourceKey($r->ip())),
+            Limit::perDay(10)->by(self::sourceKey($r->ip())),
+        ]);
+
         RateLimiter::for('catalogue', fn (Request $r) => Limit::perMinute(60)->by(self::sourceKey($r->ip())));
 
         // Laravel's default for everything else.
@@ -254,6 +260,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Models\Collection::class,
             \App\Models\CollectionTranslation::class,
             \App\Models\CollectionItem::class,
+            // Articles and approved reviews are on the website too.
+            \App\Models\Article::class,
+            \App\Models\ArticleTranslation::class,
+            \App\Models\Review::class,
         ];
 
         foreach ($models as $model) {

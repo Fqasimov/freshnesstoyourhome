@@ -642,6 +642,27 @@ export async function respond (path, method, body) {
     return { status: 'ok' }
   }
 
+  /* articles and reviews */
+  db.articles ??= []
+  if (route === '/admin/articles' && method === 'GET') return { data: db.articles }
+  if (route === '/admin/articles' && method === 'POST') {
+    const tr = f => Object.fromEntries(Object.entries(body.translations ?? {}).filter(([, v]) => v[f]).map(([l, v]) => [l, v[f]]))
+    const x = { id: db.articles.length + 1, slug: body.slug, is_published: !!body.is_published, published_on: body.published_on, products: body.products ?? [],
+      title: tr('title'), summary: tr('summary'), body: tr('body'), seo_title: tr('seo_title'), seo_description: tr('seo_description') }
+    db.articles.unshift(x)
+    return x
+  }
+  if (seg[0] === 'admin' && seg[1] === 'articles' && method === 'PATCH') {
+    const x = db.articles.find(a => a.id === Number(seg[2]))
+    Object.assign(x, body.is_published === undefined ? {} : { is_published: body.is_published })
+    return x
+  }
+  if (seg[0] === 'admin' && seg[1] === 'articles' && method === 'DELETE') {
+    db.articles = db.articles.filter(a => a.id !== Number(seg[2]))
+    return { status: 'ok' }
+  }
+  if (route === '/admin/reviews' && method === 'GET') return { data: [], pending: 0 }
+
   /* collections */
   db.collections ??= []
   if (route === '/admin/collections' && method === 'GET') return { data: db.collections }

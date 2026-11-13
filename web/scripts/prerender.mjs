@@ -36,7 +36,7 @@ import { fileURLToPath } from 'node:url'
 import { assignSlugs, categorySlug } from '../src/data/slug.js'
 import { LANGS, OG_LOCALE, alternates, withLang } from '../src/data/locale.js'
 import {
-  CATALOGUE, HOME, SITE_NAME, categoryDescription, categoryTitle, crumbsJsonLd, faqJsonLd, inLang,
+  CATALOGUE, HOME, SITE_NAME, articleJsonLd, categoryDescription, categoryTitle, crumbsJsonLd, faqJsonLd, inLang,
   itemListJsonLd, own, ownFaq, productDescription, productJsonLd, productTitle, textBlocks, words,
 } from '../src/data/productSchema.js'
 
@@ -74,6 +74,7 @@ const liveProduct = p => ({
   brand: p.brand || null,
   gtin: p.gtin || null,
   inStock: p.in_stock !== false,
+  reviews: p.reviews ?? null,
   images: [p.image_url, ...(p.gallery ?? []).map(g => g.image_url)].filter(Boolean),
   srcset: (p.image_set ?? []).map(v => `${v.url} ${v.w}w`).join(', '),
   bundled: p.image ?? `${p.id}.jpg`,
@@ -106,6 +107,8 @@ async function live () {
       products: [...data.products.map(liveProduct), ...(data.unavailable ?? []).map(p => ({ ...liveProduct(p), inStock: false }))],
       zones: (data.zones ?? []).map(z => z.name?.az).filter(Boolean),
       redirects: data.redirects && typeof data.redirects === 'object' ? data.redirects : {},
+      categoryRedirects: data.category_redirects && typeof data.category_redirects === 'object' ? data.category_redirects : {},
+      articles: (data.articles ?? []).map(a => ({ ...a, updated: a.updated_at ? String(a.updated_at).slice(0, 10) : a.published_on })),
     }
   } catch (e) {
     say(`could not read ${API}/api/catalogue (${e.message})`)
@@ -148,6 +151,8 @@ function bundled () {
     products,
     zones: [],
     redirects: {},
+    categoryRedirects: {},
+    articles: [],
   }
 }
 
@@ -305,7 +310,7 @@ function productPage (template, p, l, ctx) {
     url: abs(path, l), name, desc, images: p.images, price: p.price, sku: p.id, lang: l,
     category: cat ? T(cat.name, l) : undefined, categoryUrl: cat ? abs(`/kataloq/${cat.slug}`, l) : undefined,
     homeUrl: abs('/', l), catalogueUrl: abs('/kataloq', l),
-    weighed: p.weighed, site: SITE, brand: p.brand, gtin: p.gtin, inStock: p.inStock,
+    weighed: p.weighed, site: SITE, brand: p.brand, gtin: p.gtin, inStock: p.inStock, reviews: p.reviews,
     unitKind: p.unitKind, unitQty: p.unitQty, unitLabel: unit,
   })
   const related = ctx.products.filter(o => o.cat === p.cat && o.id !== p.id && o.inStock).slice(0, 8)
@@ -326,6 +331,7 @@ ${lines(desc)}
 ${lines(longText)}
 ${deliveryLine(l)}
 </article>
+${p.reviews?.count ? `<section><h2>${esc(w.reviews)} — ${p.reviews.rating}/5 (${p.reviews.count})</h2>${(p.reviews.latest ?? []).map(r => `<p><strong>${esc(r.name)}</strong> ${r.rating}/5${r.text ? ` — ${esc(r.text)}` : ''}</p>`).join('\n')}</section>` : ''}
 ${related.length ? `<section><h2>${esc(w.more)}</h2>${productLinks(related, l)}</section>` : ''}
 ${also.length ? `<section><h2>${esc(w.also)}</h2>${productLinks(also, l)}</section>` : ''}
 ${cat ? `<p><a href="${href(`/kataloq/${cat.slug}`, l)}">${esc(w.allIn(T(cat.name, l)))} →</a></p>` : ''}`,
@@ -386,6 +392,46 @@ const collectionPage = (template, c, l, ctx) => listPage(template, l, ctx, {
   sets: c.sets.map(id => ctx.sets.find(s => s.id === id)).filter(Boolean),
 })
 
+/* Recipes: the list and one page each. Text only in the languages it was
+   written in; another language's page shows the Azerbaijani text. */
+const articleCover = (a, ctx) => (a.products ?? []).map(id => ctx.products.find(p => p.id === id)?.images[0]).find(Boolean)
+
+function recipesPage (template, l, ctx) {
+  const w = words(l)
+  return shell(template, {
+    lang: l, path: '/resept', title: `${w.recipesH1} | Freshness`, desc: w.recipesDesc,
+    ld: [['ld-crumbs', crumbsLd(l, [[w.recipes, '/resept']])]],
+    body: `${crumbsNav(l, [[w.recipes]])}
+<h1>${esc(w.recipesH1)}</h1>
+<p>${esc(w.recipesDesc)}</p>
+<ul>${ctx.articles.map(a => `<li><a href="${href(`/resept/${a.slug}`, l)}">${esc(T(a.title, l))}</a>${T(a.summary, l) ? ` — ${esc(T(a.summary, l))}` : ''}</li>`).join('')}</ul>`,
+  })
+}
+
+function articlePage (template, a, l, ctx) {
+  const w = words(l)
+  const path = `/resept/${a.slug}`
+  const title = T(a.title, l)
+  const desc = T(a.seo_description, l) || T(a.summary, l) || title
+  const items = (a.products ?? []).map(id => ctx.products.find(p => p.id === id)).filter(Boolean)
+  const image = articleCover(a, ctx)
+  return shell(template, {
+    lang: l, path, title: T(a.seo_title, l) || `${title} | Freshness`, desc, type: 'article', image,
+    ld: [
+      ['ld-article', articleJsonLd({ url: abs(path, l), title, desc, image, published: a.published_on, modified: a.updated, lang: l })],
+      ['ld-crumbs', crumbsLd(l, [[w.recipes, '/resept'], [title, path]])],
+      ['ld-list', items.length ? itemListJsonLd(title, items.map(p => abs(`/mehsul/${p.slug}`, l))) : null],
+    ],
+    body: `${crumbsNav(l, [[w.recipes, '/resept'], [title]])}
+<article>
+<h1>${esc(title)}</h1>
+${T(a.summary, l) ? `<p>${esc(T(a.summary, l))}</p>` : ''}
+${textHtml(T(a.body, l))}
+</article>
+${items.length ? `<section><h2>${esc(w.inArticle)}</h2>${productLinks(items, l)}</section>` : ''}`,
+  })
+}
+
 /* The answer to an address that does not exist (deploy/website.htaccess sends
    it with a 404). It is the app's own page, so a product added since the last
    build still opens; Google is told not to index it. */
@@ -424,6 +470,8 @@ function sitemap (ctx) {
     ...ctx.shelves.filter(c => c.indexed).flatMap(c => entry(`/kataloq/${c.slug}`, 'weekly', '0.9', newest(ctx.products.filter(p => p.cat === c.id)))),
     ...ctx.collections.filter(c => c.indexed).flatMap(c => entry(`/kataloq/${c.slug}`, 'weekly', '0.8', c.updated)),
     ...ctx.products.flatMap(p => entry(`/mehsul/${p.slug}`, 'weekly', '0.8', p.updated, p.images.slice(0, 3))),
+    ...(ctx.articles.length ? entry('/resept', 'weekly', '0.6', ctx.articles.map(a => a.updated).filter(Boolean).sort().pop()) : []),
+    ...ctx.articles.flatMap(a => entry(`/resept/${a.slug}`, 'monthly', '0.6', a.updated)),
     '  <url>\n    <loc>' + esc(`${SITE}/privacy/`) + '</loc>\n    <changefreq>yearly</changefreq>\n    <priority>0.3</priority>\n  </url>',
     '</urlset>',
     '',
@@ -432,7 +480,7 @@ function sitemap (ctx) {
 
 /* Old product addresses → 301 to the current one, written into the site's
    .htaccess between its markers (the deploy runs this on the staged copy). */
-function writeRedirects (redirects) {
+function writeRedirects (redirects, categoryRedirects = {}) {
   const file = join(dist, '.htaccess')
   if (!existsSync(file)) return 0
   const htaccess = readFileSync(file, 'utf8')
@@ -444,6 +492,9 @@ function writeRedirects (redirects) {
   const rules = Object.entries(redirects)
     .filter(([from, to]) => SAFE.test(from) && SAFE.test(to) && from !== to)
     .map(([from, to]) => `  RewriteRule ^((ru|en)/)?mehsul/${from}/?$ /$1mehsul/${to} [R=301,L]`)
+    .concat(Object.entries(categoryRedirects)
+      .filter(([from, to]) => SAFE.test(from) && SAFE.test(to) && from !== to)
+      .map(([from, to]) => `  RewriteRule ^((ru|en)/)?kataloq/${from}/?$ /$1kataloq/${to} [R=301,L]`))
   const block = [START, ...rules, `  ${END}`].join("\n")
   writeFileSync(file, htaccess.replace(new RegExp(`${START}[\\s\\S]*?${END}`), block))
   return rules.length
@@ -481,6 +532,7 @@ if (unsafe.length) say(`skipped, not a clean slug: ${unsafe.map(x => x.id ?? x.s
 ctx.products = ctx.products.filter(p => SAFE.test(p.slug))
 ctx.categories = ctx.categories.filter(c => SAFE.test(c.slug))
 ctx.collections = ctx.collections.filter(c => SAFE.test(c.slug) && !ctx.categories.some(k => k.slug === c.slug))
+ctx.articles = (ctx.articles ?? []).filter(a => SAFE.test(a.slug) && a.title?.az)
 
 /* The categories with something on them — an empty shelf gets no page. */
 ctx.shelves = ctx.categories
@@ -507,11 +559,15 @@ for (const l of LANGS) {
   for (const c of ctx.shelves) write(dir(l, 'pages', 'kataloq', `${c.slug}.html`), categoryPage(template, c, l, ctx))
   for (const c of ctx.collections) write(dir(l, 'pages', 'kataloq', `${c.slug}.html`), collectionPage(template, c, l, ctx))
   write(dir(l, 'pages', 'kataloq.html'), cataloguePage(template, l, ctx))
+  if (ctx.articles.length) {
+    write(dir(l, 'pages', 'resept.html'), recipesPage(template, l, ctx))
+    for (const a of ctx.articles) write(dir(l, 'pages', 'resept', `${a.slug}.html`), articlePage(template, a, l, ctx))
+  }
   write(l === 'az' ? indexPath : join(dist, 'pages', l, 'index.html'), homePage(template, l, ctx))
-  count += ctx.products.length + ctx.shelves.length + ctx.collections.length + 2
+  count += ctx.products.length + ctx.shelves.length + ctx.collections.length + 2 + (ctx.articles.length ? ctx.articles.length + 1 : 0)
 }
 write(join(dist, '404.html'), notFoundPage(template, ctx))
 write(join(dist, 'sitemap.xml'), sitemap(ctx))
-const redirected = writeRedirects(ctx.redirects ?? {})
+const redirected = writeRedirects(ctx.redirects ?? {}, ctx.categoryRedirects ?? {})
 
-say(`${count} pages in ${LANGS.length} languages (${ctx.products.length} products, ${ctx.shelves.length} categories, ${ctx.collections.length} collections), 404.html, sitemap.xml${redirected ? `, ${redirected} redirects` : ''} from ${ctx.source} (${SITE_NAME})`)
+say(`${count} pages in ${LANGS.length} languages (${ctx.products.length} products, ${ctx.shelves.length} categories, ${ctx.collections.length} collections, ${ctx.articles.length} articles), 404.html, sitemap.xml${redirected ? `, ${redirected} redirects` : ''} from ${ctx.source} (${SITE_NAME})`)

@@ -88,7 +88,7 @@ export function setProductMeta (p, { name, desc, unit, category, categoryPath, l
     homeUrl: `${location.origin}${withLang('/', l)}`, catalogueUrl: `${location.origin}${withLang('/kataloq', l)}`,
     weighed: Boolean(p.weighed), site: location.origin,
     brand: p.brand, gtin: p.gtin, unitKind: p.weighed ? 'kg' : null, unitQty: p.unitQty, unitLabel: unit,
-    inStock: p.inStock !== false,
+    inStock: p.inStock !== false, reviews: p.reviews,
   })
   setLd('ld-product', product)
   setLd('ld-crumbs', crumbs)
