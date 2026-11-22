@@ -28,7 +28,6 @@ dist-admin-demo/
 !.env.example
 *.pem
 # The app's public update-signing certificate is not secret, and the build needs it.
-!app/certs/certificate.pem
 *.p12
 *.mobileprovision
 *.keystore

@@ -329,11 +329,14 @@ Still open on the app side:
 
 - **Over-the-air updates are not code-signed (medium).** Anyone holding the
   Expo account or the `EXPO_TOKEN` secret can push JavaScript to every
-  installed app. Turn on `expo-updates` code signing (`npx expo-updates
-  codesigning:generate`, keep the private key off GitHub), put `EXPO_TOKEN` in a
-  GitHub Environment that needs approval, and protect the deploy branch. Code
-  signing is a native change: it needs a new store build, and only reaches
-  phones that install it.
+  installed app. Code signing (`expo-updates`) would close this, but EAS only
+  signs updates on a paid plan (Production or Enterprise), and a build that
+  expects signed updates refuses unsigned ones — so it was tried and taken out
+  again in November 2026. Until the plan is paid for: two-factor sign-in on the
+  Expo account and on GitHub, `EXPO_TOKEN` in a GitHub Environment that needs
+  approval, the deploy branch protected, and the token rotated if anyone who had
+  it leaves. If signing is turned on later it is a native change: a new store
+  build, reaching only phones that install it.
 - **`decode-uri-component` 0.2.x inside expo-router** has a published
   denial-of-service advisory (low: a malformed link can crash the screen it
   opens). It is fixed by the next Expo SDK upgrade; the other advisories

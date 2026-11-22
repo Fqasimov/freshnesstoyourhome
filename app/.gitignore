@@ -14,7 +14,6 @@ web-build/
 !.env.example
 *.pem
 # The public certificate the app checks updates against is not secret.
-!certs/certificate.pem
 /keys/
 *.p12
 *.mobileprovision
