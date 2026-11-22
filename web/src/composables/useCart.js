@@ -136,8 +136,21 @@ const WEIGH_MIN = 0.1
 const MAX_QTY = 99
 const round2 = v => Math.round(v * 100) / 100
 
+/* Dates in the WhatsApp message read "20 noyabr", not "2026-11-20". */
+const MONTHS = {
+  az: ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avqust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr'],
+  ru: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'],
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+}
+const niceDate = (iso, lg) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '')
+  if (!m) return iso || ''
+  const names = MONTHS[lg] || MONTHS.az
+  return `${Number(m[3])} ${names[Number(m[2]) - 1]}`
+}
+
 export function useCart () {
-  const { t, nm, unitOf } = useI18n()
+  const { t, nm, unitOf, lang } = useI18n()
 
   /* Resolve a stored line into something the drawer can render. A set is
      one line at its bundle price, not its contents at full price. */
@@ -255,30 +268,46 @@ const canSend = computed(() => Boolean(
     (!address.value.trim() || address.value.trim().length >= 5) &&
     nameOk(firstName.value) && (!lastName.value.trim() || nameOk(lastName.value)) && phoneOk.value))
 
+  /* One line of the order as the shop reads it. By weight it is "2 kq", not
+     "1 kq × 2"; a single piece is "2 əd", not "1 əd × 2". */
+  const lineQty = l => {
+    if (l.isSet) return `${t('ui.set')}${l.qty > 1 ? ` × ${l.qty}` : ''}`
+    if (l.weighed) return `${round2(l.qty)} ${t('ui.kgShort')}`
+    const one = /^1\s+(\S+)$/.exec(String(l.unit).trim())
+    if (one) return `${l.qty} ${one[1]}`
+    return l.qty > 1 ? `${l.unit} × ${l.qty}` : l.unit
+  }
+
   const messageFor = code => {
-    let msg = t('ui.waIntro') + '\n\n'
-    if (code) msg += `${t('ui.waCode')}: ${code}\n\n`
+    const AZN = v => `${money(v)} AZN`
+    const out = [t('ui.waIntro')]
+    if (code) out.push('', `🧾 ${t('ui.waCode')}: ${code}`)
+
+    out.push('', `🛒 ${t('ui.waItems')}:`)
     lines.value.forEach(l => {
-      msg += `• ${nm(l.product)} — ${l.unit} × ${l.qty} = ${money(l.price * l.qty)} ₼\n`
+      out.push(`• ${nm(l.product)} — ${lineQty(l)} ${l.weighed ? '≈' : '='} ${AZN(l.price * l.qty)}`)
     })
 
-    msg += `\n${t('ui.waTotal')}: ${money(total.value)} ₼`
-    if (weighed.value && ceiling.value) {
-      msg += ` (${t('ui.waWeighed')} ${money(ceiling.value)} ₼)`
-    }
+    const sub = quote.value ? quote.value.subtotal_minor / 100 : localTotal.value
+    out.push('', `💰 ${t('ui.waSubtotal')}: ${AZN(sub)}`)
+    if (zone.value) out.push(`🚚 ${t('ui.waDeliv')}: ${nm(zone.value)} — ${deliveryText.value.replace(/\s*₼$/, ' AZN')}`)
+    let sum = `✅ ${t('ui.waSum')}: ${weighed.value ? '≈ ' : ''}${AZN(total.value)}`
+    if (weighed.value && ceiling.value) sum += ` (${t('ui.waWeighed')} ${AZN(ceiling.value)})`
+    out.push(sum)
 
-    if (zone.value) msg += `\n${t('ui.waDeliv')}: ${nm(zone.value)} — ${deliveryText.value}`
-    if (address.value.trim()) msg += `\n${t('ui.waAddr')}: ${address.value.trim()}`
-    if (mapLink.value.trim()) msg += `\n${t('ui.waMap')}: ${mapLink.value.trim()}`
-    if (deliveryDate.value) msg += `\n${t('ui.waDate')}: ${deliveryDate.value}`
-    if (note.value.trim()) msg += `\n${t('ui.waNote')}: ${note.value.trim()}`
+    const who = `${firstName.value.trim()} ${lastName.value.trim()}`.trim()
+    const more = []
+    if (deliveryDate.value) more.push(`📅 ${t('ui.waDate')}: ${niceDate(deliveryDate.value, lang.value)}`)
+    if (address.value.trim()) more.push(`📍 ${t('ui.waAddr')}: ${address.value.trim()}`)
+    if (mapLink.value.trim()) more.push(`🗺 ${t('ui.waMap')}: ${mapLink.value.trim()}`)
+    if (note.value.trim()) more.push(`📝 ${t('ui.waNote')}: ${note.value.trim()}`)
+    if (who) more.push(`👤 ${t('deliv.fullName')}: ${who}`)
+    if (phone.value.trim()) more.push(`📞 ${t('deliv.phone')}: ${phone.value.trim()}`)
+    if (more.length) out.push('', ...more)
 
-    msg += `\n${t('deliv.fullName')}: ${`${firstName.value.trim()} ${lastName.value.trim()}`.trim()}`
-    if (phone.value.trim()) msg += `\n${t('deliv.phone')}: ${phone.value.trim()}`
+    out.push('', t('ui.waOutro'))
 
-    msg += `\n\n${t('ui.waOutro')}`
-
-    return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(msg)}`
+    return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(out.join('\n'))}`
   }
 
   const whatsapp = computed(() => messageFor(placedCode.value))

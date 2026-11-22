@@ -29,11 +29,11 @@ const shortPrice = n => {
 /* The words around a product's own name, in the page's language. */
 const WORDS = {
   az: {
-    tail: 'Bakıda çatdırılma hər gün 10:00–22:00.', home: 'Ana səhifə', catalogue: 'Kataloq', deliv: 'Bakıda çatdırılma',
-    catTitle: n => `${n} Bakıda — çatdırılma`, catDesc: (n, k, lo, hi) => `${n}: ${k} məhsul, qiymətlər ${lo}–${hi} ₼. Bakıda çatdırılma hər gün 10:00–22:00.`,
+    tail: 'Bakıda çatdırılma hər gün 09:00–23:00.', home: 'Ana səhifə', catalogue: 'Kataloq', deliv: 'Bakıda çatdırılma',
+    catTitle: n => `${n} Bakıda — çatdırılma`, catDesc: (n, k, lo, hi) => `${n}: ${k} məhsul, qiymətlər ${lo}–${hi} ₼. Bakıda çatdırılma hər gün 09:00–23:00.`,
     sections: 'Bölmələr', all: 'Bütün məhsullar', more: 'Bu bölmədən daha', also: 'Bununla birlikdə alırlar',
     others: 'Digər bölmələr', faq: 'Tez-tez verilən suallar', out: 'Hazırda yoxdur', allIn: n => `“${n}” bölməsinin bütün məhsulları`,
-    delivery: 'Bakı və Bakı ətrafına çatdırılma — həftənin 7 günü, 10:00–22:00. Sifariş:',
+    delivery: 'Bakı və Bakı ətrafına çatdırılma — həftənin 7 günü, 09:00–23:00. Sifariş:',
     notFound: 'Səhifə tapılmadı', notFoundP: 'Bu ünvanda heç nə yoxdur — ola bilsin, link köhnədir.', search: 'Məhsul axtarın', go: 'Axtar',
     homeH1: 'Bakıda premium balıq, kürü və pendir çatdırılması',
     recipes: 'Reseptlər', recipesH1: 'Reseptlər və məsləhətlər', recipesDesc: 'Qızıl balıq, kürü, burrata və dəniz məhsulları ilə reseptlər: necə seçmək, necə vermək, nə ilə yemək.',
@@ -42,11 +42,11 @@ const WORDS = {
     rating: 'Qiymət', send: 'Göndər', thanks: 'Təşəkkürlər! Rəyiniz yoxlanıldıqdan sonra görünəcək.', failed: 'Göndərmək alınmadı. Bir az sonra yenidən cəhd edin.',
   },
   ru: {
-    tail: 'Доставка по Баку ежедневно 10:00–22:00.', home: 'Главная', catalogue: 'Каталог', deliv: 'доставка по Баку',
-    catTitle: n => `${n} в Баку — доставка`, catDesc: (n, k, lo, hi) => `${n}: ${k} товаров, цены ${lo}–${hi} ₼. Доставка по Баку ежедневно 10:00–22:00.`,
+    tail: 'Доставка по Баку ежедневно 09:00–23:00.', home: 'Главная', catalogue: 'Каталог', deliv: 'доставка по Баку',
+    catTitle: n => `${n} в Баку — доставка`, catDesc: (n, k, lo, hi) => `${n}: ${k} товаров, цены ${lo}–${hi} ₼. Доставка по Баку ежедневно 09:00–23:00.`,
     sections: 'Разделы', all: 'Все товары', more: 'Ещё из этого раздела', also: 'С этим покупают',
     others: 'Другие разделы', faq: 'Частые вопросы', out: 'Нет в наличии', allIn: n => `Все товары раздела «${n}»`,
-    delivery: 'Доставка по Баку и пригородам — 7 дней в неделю, 10:00–22:00. Заказ:',
+    delivery: 'Доставка по Баку и пригородам — 7 дней в неделю, 09:00–23:00. Заказ:',
     notFound: 'Страница не найдена', notFoundP: 'По этому адресу ничего нет — возможно, ссылка устарела.', search: 'Поиск товаров', go: 'Найти',
     homeH1: 'Доставка премиальной рыбы, икры и сыров в Баку',
     recipes: 'Рецепты', recipesH1: 'Рецепты и советы', recipesDesc: 'Рецепты с лососем, икрой, бурратой и морепродуктами: как выбрать, как подать, с чем есть.',
@@ -55,11 +55,11 @@ const WORDS = {
     rating: 'Оценка', send: 'Отправить', thanks: 'Спасибо! Отзыв появится после проверки.', failed: 'Не удалось отправить. Попробуйте чуть позже.',
   },
   en: {
-    tail: 'Delivery in Baku daily 10:00–22:00.', home: 'Home', catalogue: 'Catalogue', deliv: 'delivery in Baku',
-    catTitle: n => `${n} in Baku — delivery`, catDesc: (n, k, lo, hi) => `${n}: ${k} products, ${lo}–${hi} ₼. Delivery in Baku daily 10:00–22:00.`,
+    tail: 'Delivery in Baku daily 09:00–23:00.', home: 'Home', catalogue: 'Catalogue', deliv: 'delivery in Baku',
+    catTitle: n => `${n} in Baku — delivery`, catDesc: (n, k, lo, hi) => `${n}: ${k} products, ${lo}–${hi} ₼. Delivery in Baku daily 09:00–23:00.`,
     sections: 'Sections', all: 'All products', more: 'More from this section', also: 'Often bought together',
     others: 'Other sections', faq: 'Frequently asked questions', out: 'Out of stock', allIn: n => `All products in “${n}”`,
-    delivery: 'Delivery across Baku and its suburbs — 7 days a week, 10:00–22:00. Order:',
+    delivery: 'Delivery across Baku and its suburbs — 7 days a week, 09:00–23:00. Order:',
     notFound: 'Page not found', notFoundP: 'There is nothing at this address — the link may be out of date.', search: 'Search products', go: 'Search',
     homeH1: 'Premium fish, caviar and cheese delivered in Baku',
     recipes: 'Recipes', recipesH1: 'Recipes and tips', recipesDesc: 'Recipes with smoked salmon, caviar, burrata and seafood: how to choose, how to serve, what to pair.',
@@ -78,15 +78,15 @@ const BRAND = 'Freshness'
 export const HOME = {
   az: {
     title: 'Qızıl balıq, kürü, burrata çatdırılması Bakıda | Freshness',
-    desc: 'Hisə verilmiş qızıl balıq, qırmızı və qara kürü, burrata, mozzarella və Avropa pendirləri, təzə balıq və dəniz məhsulları — Bakıda hər gün 10:00–22:00 çatdırılma.',
+    desc: 'Hisə verilmiş qızıl balıq, qırmızı və qara kürü, burrata, mozzarella və Avropa pendirləri, təzə balıq və dəniz məhsulları — Bakıda hər gün 09:00–23:00 çatdırılma.',
   },
   ru: {
     title: 'Лосось, икра, буррата с доставкой по Баку | Freshness',
-    desc: 'Копчёный лосось, красная и чёрная икра, буррата, моцарелла и европейские сыры, свежая рыба и морепродукты — доставка по Баку ежедневно 10:00–22:00.',
+    desc: 'Копчёный лосось, красная и чёрная икра, буррата, моцарелла и европейские сыры, свежая рыба и морепродукты — доставка по Баку ежедневно 09:00–23:00.',
   },
   en: {
     title: 'Smoked salmon, caviar & burrata delivery in Baku | Freshness',
-    desc: 'Smoked salmon, red and black caviar, burrata, mozzarella and European cheeses, fresh fish and seafood — delivered across Baku every day, 10:00–22:00.',
+    desc: 'Smoked salmon, red and black caviar, burrata, mozzarella and European cheeses, fresh fish and seafood — delivered across Baku every day, 09:00–23:00.',
   },
   image: 'https://freshness.az/og-image.png',
 }

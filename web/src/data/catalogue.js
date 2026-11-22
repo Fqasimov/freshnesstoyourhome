@@ -117,7 +117,7 @@ export const catalogueSettled = ref(false)
 
 /* How far ahead an order may be dated: the shop's own rule, as the server
    states it. The defaults are what the server ships with. */
-export const ORDER_DATES = reactive({ leadDays: 0, maxDaysAhead: 14, close: '22:00' })
+export const ORDER_DATES = reactive({ leadDays: 0, maxDaysAhead: 14, close: '23:00' })
 
 const API = import.meta.env.VITE_API_URL
 

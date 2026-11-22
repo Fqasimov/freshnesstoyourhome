@@ -124,14 +124,18 @@ class OrderSourceTest extends TestCase
     {
         $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
 
-        // 21:30 in Baku (17:30 UTC): today is still open.
+        // 21:30 in Baku (17:30 UTC): today is open, yesterday is not.
         $this->travelTo(\Carbon\Carbon::parse('2026-11-02 17:30:00', 'UTC'));
         $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-02']))->assertCreated();
         $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-01']))
             ->assertStatus(422)->assertJsonValidationErrors(['delivery_date']);
 
-        // 22:30 in Baku: the day has closed, tomorrow is the earliest.
+        // 22:30 in Baku: the delivery day closes at 23:00, so today is still open.
         $this->travelTo(\Carbon\Carbon::parse('2026-11-02 18:30:00', 'UTC'));
+        $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-02']))->assertCreated();
+
+        // 23:30 in Baku: the day has closed, tomorrow is the earliest.
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-02 19:30:00', 'UTC'));
         $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-02']))
             ->assertStatus(422)->assertJsonValidationErrors(['delivery_date']);
         $this->postJson('/api/orders/web', $this->webOrder(['delivery_date' => '2026-11-03']))->assertCreated();

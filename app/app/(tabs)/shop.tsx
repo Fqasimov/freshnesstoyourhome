@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
-import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, {
@@ -11,7 +10,6 @@ import { useAuth } from '@/lib/auth'
 import { useCatalogue } from '@/lib/catalogue'
 import { pick, t, useLang } from '@/lib/i18n'
 import { duration, ease } from '@/lib/motion'
-import { productPhoto, type PhotoSource } from '@/lib/photos'
 import { BrandMark } from '@/components/BrandMark'
 import { CategoryTile } from '@/components/CategoryTile'
 import { Icon } from '@/components/Icon'
@@ -57,7 +55,7 @@ export default function Shop () {
     .filter(x => x.products.length > 0), [catalogue])
 
   const first = auth.user?.name?.trim().split(/\s+/)[0]
-  const hours = catalogue.delivery ? { open: catalogue.delivery.open, close: catalogue.delivery.close } : { open: '10:00', close: '22:00' }
+  const hours = catalogue.delivery ? { open: catalogue.delivery.open, close: catalogue.delivery.close } : { open: '09:00', close: '23:00' }
 
   async function onRefresh () {
     setRefreshing(true)
@@ -108,38 +106,19 @@ export default function Shop () {
             </View>
           </Animated.View>
 
-          {catalogue.popular.length > 0 ? (
-            <PopularTile products={catalogue.popular} onPress={() => router.push({ pathname: '/category/[id]', params: { id: 'popular' } })} />
-          ) : null}
-
-          <View style={s.grid}>
-            {catalogue.categories.map((c, i) => {
-              const items = catalogue.inCategory(c.id)
-              return (
-                <CategoryTile
-                  key={c.id}
-                  id={c.id}
-                  name={pick(c.name)}
-                  count={items.length}
-                  fallback={items[0]}
-                  index={i}
-                  width={tileW}
-                />
-              )
-            })}
-          </View>
-
-          <PressableScale
-            onPress={() => router.push({ pathname: '/category/[id]', params: { id: 'all' } })}
-            style={s.allRow}
-            accessibilityRole="button"
-          >
-            <Icon name="grid" size={18} color={color.forest} />
-            <Text style={s.allText}>{t('cat.all')}</Text>
-            <Text style={s.allCount}>{catalogue.products.length}</Text>
-            <Icon name="chevron-right" size={14} color={color.ink3} />
-          </PressableScale>
         </View>
+
+        {/* What sells, with its price and a + to put it in the basket: the first
+            thing under the search, not a banner above a list of categories. */}
+        {catalogue.popular.length > 0 ? (
+          <Shelf
+            title={t('cat.popular')}
+            products={catalogue.popular}
+            cardWidth={shelfCard}
+            onAll={() => router.push({ pathname: '/category/[id]', params: { id: 'popular' } })}
+          />
+        ) : null}
+
 
         {/* Sets come from the panel: switched on there, they appear here and on
             the website together, at the discount set there. */}
@@ -163,14 +142,36 @@ export default function Shop () {
           </View>
         ) : null}
 
-        {catalogue.popular.length > 0 ? (
-          <Shelf
-            title={t('cat.popular')}
-            products={catalogue.popular}
-            cardWidth={shelfCard}
-            onAll={() => router.push({ pathname: '/category/[id]', params: { id: 'popular' } })}
-          />
-        ) : null}
+
+        <View style={[s.pad, { maxWidth: 560 + space.gutter * 2 }]}>
+          <Text style={[s.shelfTitle, { marginTop: 18, marginBottom: 12 }]}>{t('cat.title')}</Text>
+          <View style={s.grid}>
+            {catalogue.categories.map((c, i) => {
+              const items = catalogue.inCategory(c.id)
+              return (
+                <CategoryTile
+                  key={c.id}
+                  id={c.id}
+                  name={pick(c.name)}
+                  fallback={items[0]}
+                  index={i}
+                  width={tileW}
+                />
+              )
+            })}
+          </View>
+
+          <PressableScale
+            onPress={() => router.push({ pathname: '/category/[id]', params: { id: 'all' } })}
+            style={s.allRow}
+            accessibilityRole="button"
+          >
+            <Icon name="grid" size={18} color={color.forest} />
+            <Text style={s.allText}>{t('cat.all')}</Text>
+            <Text style={s.allCount}>{catalogue.products.length}</Text>
+            <Icon name="chevron-right" size={14} color={color.ink3} />
+          </PressableScale>
+        </View>
 
         {shelves.map(({ category, products }) => (
           <Shelf
@@ -183,33 +184,6 @@ export default function Shop () {
         ))}
       </Animated.ScrollView>
     </View>
-  )
-}
-
-/** Best sellers as one wide tile: three of them fanned out on forest green. */
-function PopularTile ({ products, onPress }: { products: Product[]; onPress: () => void }) {
-  const photos = products.map(p => productPhoto(p)).filter(Boolean).slice(0, 3) as NonNullable<PhotoSource>[]
-
-  return (
-    <Animated.View entering={FadeInDown.delay(40).duration(duration.base).easing(ease.out)}>
-      <PressableScale onPress={onPress} style={s.popular} accessibilityRole="button" accessibilityLabel={t('cat.popular')}>
-        <View style={{ flex: 1, zIndex: 1 }}>
-          <View style={s.popularTag}>
-            <Icon name="fire" size={11} color={color.ink} />
-            <Text style={s.popularTagText}>{t('cat.hit')}</Text>
-          </View>
-          <Text style={s.popularTitle}>{t('cat.popular')}</Text>
-          <Text style={s.popularLead}>{t('cat.popularLead')}</Text>
-        </View>
-        <View style={s.fan}>
-          {photos.map((src, i) => (
-            <View key={i} style={[s.fanPlate, { right: i * 38, top: i % 2 ? 26 : 4, zIndex: 3 - i, transform: [{ rotate: `${(i - 1) * 6}deg` }] }]}>
-              <Image source={src} style={StyleSheet.absoluteFill} contentFit="cover" />
-            </View>
-          ))}
-        </View>
-      </PressableScale>
-    </Animated.View>
   )
 }
 

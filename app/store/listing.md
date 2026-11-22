@@ -21,7 +21,7 @@ changes how it works (hours, areas, payment), not the other way round.
 
 Freshness To Your Home — hisə verilmiş və təzə balıq, dəniz məhsulları, kürü, quş əti və Avropa pendirlərini Bakı və ətrafına çatdıran onlayn mağaza.
 
-Bu gün sifariş edin — sabah qapınızda. Çatdırılma hər gün 10:00–22:00 arası.
+Bu gün sifariş edin — bu gün və ya sabah qapınızda. Çatdırılma hər gün 09:00–23:00 arası.
 
 NƏ TAPACAQSINIZ
 • Hisə verilmiş qızıl balıq, beluqa, eskolar və digər balıqlar
@@ -56,7 +56,7 @@ Tətbiq Azərbaycan, rus və ingilis dillərindədir. Hesabınızı istənilən 
 
 Freshness To Your Home — онлайн-магазин копчёной и свежей рыбы, морепродуктов, икры, птицы и европейских сыров с доставкой по Баку и пригородам.
 
-Закажите сегодня — получите завтра. Доставка ежедневно с 10:00 до 22:00.
+Закажите сегодня — привезём сегодня или завтра. Доставка ежедневно с 09:00 до 23:00.
 
 В КАТАЛОГЕ
 • Копчёный лосось, белуга, эсколар и другая рыба
@@ -91,7 +91,7 @@ Freshness To Your Home — онлайн-магазин копчёной и св�
 
 Freshness To Your Home is an online shop for smoked and fresh fish, seafood, caviar, poultry and European cheeses, delivered across Baku and the surrounding area.
 
-Order today, at your door tomorrow. Delivery every day from 10:00 to 22:00.
+Order today — at your door today or tomorrow. Delivery every day from 09:00 to 23:00.
 
 WHAT YOU'LL FIND
 • Smoked salmon, beluga, escolar and more

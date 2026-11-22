@@ -16,8 +16,8 @@ import { color, font, space } from '@/theme/tokens'
  * A category as a tile: its name top-left on a soft ground, and its
  * photograph in a round plate breaking out of the bottom-right corner.
  */
-export function CategoryTile ({ id, name, count, fallback, index, width }: {
-  id: string; name: string; count: number; fallback?: Product; index: number; width: number
+export function CategoryTile ({ id, name, fallback, index, width }: {
+  id: string; name: string; fallback?: Product; index: number; width: number
 }) {
   const router = useRouter()
   const look = CATEGORY_LOOK[id] ?? FALLBACK_LOOK
@@ -36,7 +36,6 @@ export function CategoryTile ({ id, name, count, fallback, index, width }: {
         accessibilityLabel={name}
       >
         <Text style={[s.name, { color: color.ink }]} numberOfLines={3}>{name}</Text>
-        <Text style={[s.count, { color: look.ink }]}>{count}</Text>
         {photo ? (
           <View style={[s.plate, { width: plate, height: plate, borderRadius: plate / 2, right: -plate * 0.2, bottom: -plate * 0.2 }]}>
             <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />

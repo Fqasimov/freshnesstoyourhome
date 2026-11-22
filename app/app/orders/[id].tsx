@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 
 import { api, ApiError, type Order } from '@/lib/api'
+import { useCatalogue } from '@/lib/catalogue'
 import { t, useLang } from '@/lib/i18n'
 import { money } from '@/lib/money'
 import { sendOrderToWhatsApp } from '@/lib/whatsapp'
@@ -13,6 +14,7 @@ import { color, font, space } from '@/theme/tokens'
 const STEPS = ['placed', 'confirmed', 'preparing', 'out_for_delivery', 'delivered'] as const
 
 export default function OrderDetail () {
+  const catalogue = useCatalogue()
   const { id, placed } = useLocalSearchParams<{ id: string; placed?: string }>()
   useLang()
 
@@ -93,7 +95,7 @@ export default function OrderDetail () {
           <View style={{ marginBottom: 18, gap: 12 }}>
             <Note>✓ {t('status.placed')}</Note>
             <Small muted>{t('wa.note')}</Small>
-            <Button title={t('wa.again')} variant="ghost" onPress={() => sendOrderToWhatsApp(order)} />
+            <Button title={t('wa.again')} variant="ghost" onPress={() => sendOrderToWhatsApp(order, catalogue.delivery?.weight_tolerance_percent)} />
           </View>
         ) : null}
 

@@ -170,8 +170,6 @@ if ($action === 'install' && !is_file($envPath) && $allOk) {
             '',
             envLine('CORS_ALLOWED_ORIGINS', 'https://'.DOMAIN.',https://www.'.DOMAIN),
             '',
-            'DELIVERY_OPEN=10:00',
-            'DELIVERY_CLOSE=22:00',
             'WEIGHT_TOLERANCE_PERCENT=10',
             'OTP_PER_EMAIL_HOURLY=5',
             'OTP_PER_IP_HOURLY=15',

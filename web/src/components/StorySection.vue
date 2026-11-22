@@ -18,7 +18,7 @@ const stats = [
   { key: 'st1', value: () => PRODUCTS.length },
   // Minus the synthetic "everything" row the page adds to the front.
   { key: 'st2', value: () => Math.max(CATEGORIES.length - 1, 0) },
-  { key: 'st3', text: '10:00–22:00' },
+  { key: 'st3', text: '09:00–23:00' },
   { key: 'st4', text: '24/7' },
 ]
 

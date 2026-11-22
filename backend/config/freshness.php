@@ -21,8 +21,12 @@ return [
         // (App\Support\OrderDates). Not read from .env: the server's .env
         // still carries the old ORDER_LEAD_DAYS=1 from the installer.
         'lead_days' => 0,
-        'delivery_open' => env('DELIVERY_OPEN', '10:00'),
-        'delivery_close' => env('DELIVERY_CLOSE', '22:00'),
+        // The delivery day, 09:00–23:00: what the website and the app tell
+        // customers (shared/brand.json) and when same-day orders stop. Not
+        // read from .env either — the installer wrote 10:00 and 22:00 into
+        // every server's .env, so a change here would never have arrived.
+        'delivery_open' => '09:00',
+        'delivery_close' => '23:00',
         'max_days_ahead' => env('ORDER_MAX_DAYS_AHEAD', 14),
 
         // A basket may hold at most this many distinct lines, and each line at

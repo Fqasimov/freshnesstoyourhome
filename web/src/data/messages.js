@@ -13,13 +13,13 @@ const OWN = {
 
     'brand.tag':'Dad evinizə gəlir',
 
-    'hero.eyebrow':'Bakı · Həftənin 7 günü · 10:00 – 22:00',
+    'hero.eyebrow':'Bakı · Həftənin 7 günü · 09:00 – 23:00',
     'hero.h1b':'Dad evinizə gəlir.',
     'hero.copy':'Bakıda premium balıq, kürü və pendir çatdırılması',
     'hero.cta1':'Kataloqa baxın','hero.cta2':'Telefonla sifariş',
     'hero.seal':'məhsul<br>kataloqda',
 
-    'pr1.t':'Həftənin 7 günü | 10:00 – 22:00',
+    'pr1.t':'Həftənin 7 günü | 09:00 – 23:00',
     'pr1.d':'Sifarişiniz qapınıza qədər çatdırılır.',
     'pr2.t':'Bakı və Bakı ətrafı',
     'pr2.d':'Bakı və Bakı ətrafı bütün qəsəbələrə və kəndlərə çatdırılma edirik.',
@@ -48,7 +48,7 @@ const OWN = {
 
     'dl.eyebrow':'Çatdırılma şərtləri','dl.h2':'Çatdırılma',
     'dl.copy':'Sifarişlərinizi Bakı və Bakı ətrafı bütün qəsəbələrə çatdırırıq. Məhsulların saxlanması və daşınması zamanı keyfiyyətinə isə zəmanət veririk.',
-    'dl.close':'Həftənin 7 günü, 10:00–22:00 — seçin, sifariş edin, təzə və soyuq şəkildə evinizdə qəbul edin.',
+    'dl.close':'Həftənin 7 günü, 09:00–23:00 — seçin, sifariş edin, təzə və soyuq şəkildə evinizdə qəbul edin.',
     'dl.zones':'Çatdırılma əraziləri','dl.fee':'Çatdırılma haqqı','dl.min':'Minimum sifariş',
     'dl.ask':'Sifariş zamanı dəqiqləşdirilir',
     'dl.table':'Ərazilər və çatdırılma haqqı','dl.area':'Ərazi','dl.feeCol':'Haqq','dl.showAll':'Bütün {n} ərazini göstər','dl.showLess':'Daha az göstər','dl.byArea':'əraziyə görə','dl.seeTable':'Hər ərazinin haqqı aşağıdakı cədvəldədir.','dl.rangeNote':'Aralıq göstərilən ərazilərdə haqq məsafədən asılıdır — dəqiq məbləği sifarişi təsdiqləyərkən bildiririk.',
@@ -67,7 +67,7 @@ const OWN = {
     'ct.eyebrow':'Bizimlə əlaqə','ct.h2':'Bir nömrə, bir mesaj.',
     'ct.copy':'Zəng edin, WhatsApp yazın və ya səbəti birbaşa göndərin. Dəstək xidmətimiz 24/7 işləyir.',
     'ct.wa':'WhatsApp-da yazın','ct.ig':'Instagram-da izləyin',
-    'h.deliv':'Çatdırılma','h.delivv':'Hər gün 10:00 – 22:00',
+    'h.deliv':'Çatdırılma','h.delivv':'Hər gün 09:00 – 23:00',
     'h.support':'Dəstək xidməti','h.supportv':'24/7',
     'h.zone':'Çatdırılma ərazisi','h.zonev':'Bakı və Bakı ətrafı',
     'h.pay':'Ödəniş','h.payv':'Çatdırılma zamanı nağd və ya POS terminal',
@@ -96,8 +96,8 @@ const OWN = {
     'nf.h':'Səhifə tapılmadı','nf.p':'Bu ünvanda heç nə yoxdur — ola bilsin, link köhnədir. Məhsulu axtarın və ya bölmə seçin.',
     'pp.home':'Ana səhifə','pp.crumbs':'Harada olduğunuz','pp.related':'Bu bölmədən daha','pp.open':'Məhsulun səhifəsi',
     'pp.missing':'Bu məhsul hazırda satışda deyil','pp.missingCopy':'Ola bilsin, məhsul bitib və ya adı dəyişib. Kataloqda oxşarını tapın.',
-    'pp.loading':'Yüklənir…','pp.delivery':'Bakı və Bakı ətrafına çatdırılma — həftənin 7 günü, 10:00–22:00.',
-    'ui.waIntro':'Salam! Freshness To Your Home-dan sifariş vermək istəyirəm:',
+    'pp.loading':'Yüklənir…','pp.delivery':'Bakı və Bakı ətrafına çatdırılma — həftənin 7 günü, 09:00–23:00.',
+    'ui.waIntro':'Salam sifariş etmək istəyirəm! 👋',
     'cat.h':'Kataloq','cat.lede':'Axtarın və ya filtrlərlə daraldın.',
     'cat.filters':'Filtrlər','cat.sections':'Bölmələr','cat.price':'Qiymət','cat.quick':'Tez seçim',
     'cat.reset':'Filtrləri sıfırla','cat.show':'Göstər','cat.any':'Hamısı','cat.back':'Ana səhifə',
@@ -123,8 +123,8 @@ const OWN = {
     'shop.results':'Axtarış nəticələri','shop.noresults':'Heç nə tapılmadı. Başqa söz yoxlayın.',
     'shop.clear':'Təmizlə',
     'ui.waWeighed':'ən çox','ui.weighedFlag':'Çəkiyə görə','ui.weightVaries':'Çəki miqdarı verdiyiniz sifarişlə fərqlənə bilər','ui.kgAmount':'Çəki (kq)','ui.kgShort':'kq','deliv.note':'Sifarişə qeyd','deliv.notePh':'Məsələn: zəng etməyin, qapıda qoyun, balığı təmizləyin…','deliv.date':'Çatdırılma tarixi','deliv.dateHint':'İstəsəniz tarix seçin. Seçilməzsə, ən yaxın günə çatdırırıq.','deliv.dateBad':'Bu tarix seçilə bilməz.','ui.waDate':'Tarix','ui.waNote':'Qeyd','map.h':'Dəqiq yer','map.here':'Mövcud yerimi göstər','map.choose':'Xəritədə seç','map.close':'Xəritəni bağla','map.tap':'Xəritəyə toxunun və ya iynəni sürüşdürün.','map.set':'Yer seçildi','map.open':'Google Maps-da aç','map.clear':'Sil','map.denied':'Yer müəyyən edilə bilmədi. İcazə verin və ya ünvanı yazın.','map.failed':'Xəritə yüklənmədi. Mövcud yerimi göstərin və ya ünvanı yazın.','deliv.optional':'məcburi deyil','ui.weighedNote':'Çəkiyə görə satılan məhsullar kuryerdə ölçülür — yekun məbləğ bir az dəyişə bilər.',
-    'ui.waTotal':'Təxmini məbləğ','ui.waOutro':'Zəhmət olmasa mövcudluğu və çatdırılma vaxtını təsdiqləyin. Təşəkkürlər!',
-        'ui.waDeliv':'Çatdırılma','ui.waAddr':'Ünvan','ui.waMap':'Xəritə',
+    'ui.waTotal':'Təxmini məbləğ','ui.waOutro':'Sifarışımı zəhmət olmasa təsdiqləyin 🙏',
+        'ui.waDeliv':'Çatdırılma','ui.waAddr':'Ünvan','ui.waMap':'Xəritə','ui.waItems':'Sifarişim','ui.waSubtotal':'Məhsullar','ui.waSum':'Cəmi',
     'ui.waPlain':'Salam! Məhsullarınız barədə sualım var.'
   },
 
@@ -134,13 +134,13 @@ const OWN = {
 
     'brand.tag':'Вкус приезжает к вам домой',
 
-    'hero.eyebrow':'Баку · 7 дней в неделю · 10:00 – 22:00',
+    'hero.eyebrow':'Баку · 7 дней в неделю · 09:00 – 23:00',
     'hero.h1b':'Вкус приходит к вам домой.',
     'hero.copy':'Доставка премиальной рыбы, икры и сыров по Баку',
     'hero.cta1':'Смотреть каталог','hero.cta2':'Заказать по телефону',
     'hero.seal':'товара<br>в каталоге',
 
-    'pr1.t':'7 дней в неделю | 10:00 – 22:00',
+    'pr1.t':'7 дней в неделю | 09:00 – 23:00',
     'pr1.d':'Ваш заказ доставляется прямо до двери.',
     'pr2.t':'Баку и пригороды',
     'pr2.d':'Доставляем по Баку и во все посёлки и сёла вокруг города.',
@@ -169,7 +169,7 @@ const OWN = {
 
     'dl.eyebrow':'Условия доставки','dl.h2':'Доставка',
     'dl.copy':'Доставляем по Баку и во все посёлки вокруг города. Гарантируем качество продуктов при хранении и перевозке.',
-    'dl.close':'Семь дней в неделю, 10:00–22:00 — выбирайте, заказывайте и принимайте дома свежим и холодным.',
+    'dl.close':'Семь дней в неделю, 09:00–23:00 — выбирайте, заказывайте и принимайте дома свежим и холодным.',
     'dl.zones':'Зоны доставки','dl.fee':'Стоимость доставки','dl.min':'Минимальный заказ',
     'dl.ask':'Уточняется при заказе',
     'dl.table':'Районы и стоимость доставки','dl.area':'Район','dl.feeCol':'Стоимость','dl.showAll':'Показать все {n} районов','dl.showLess':'Свернуть','dl.byArea':'в зависимости от района','dl.seeTable':'Стоимость для каждого района — в таблице ниже.','dl.rangeNote':'Где указан диапазон, стоимость зависит от расстояния — точную сумму сообщим при подтверждении заказа.',
@@ -188,7 +188,7 @@ const OWN = {
     'ct.eyebrow':'Связаться с нами','ct.h2':'Один номер, одно сообщение.',
     'ct.copy':'Позвоните, напишите в WhatsApp или отправьте корзину напрямую. Наша поддержка работает 24/7.',
     'ct.wa':'Написать в WhatsApp','ct.ig':'Мы в Instagram',
-    'h.deliv':'Доставка','h.delivv':'Ежедневно 10:00 – 22:00',
+    'h.deliv':'Доставка','h.delivv':'Ежедневно 09:00 – 23:00',
     'h.support':'Поддержка','h.supportv':'24/7',
     'h.zone':'Зона доставки','h.zonev':'Баку и пригороды',
     'h.pay':'Оплата','h.payv':'При доставке — наличными или POS-терминалом',
@@ -217,8 +217,8 @@ const OWN = {
     'nf.h':'Страница не найдена','nf.p':'По этому адресу ничего нет — возможно, ссылка устарела. Найдите товар или выберите раздел.',
     'pp.home':'Главная','pp.crumbs':'Где вы находитесь','pp.related':'Ещё из этого раздела','pp.open':'Страница товара',
     'pp.missing':'Этого товара сейчас нет в продаже','pp.missingCopy':'Возможно, он закончился или называется иначе. Найдите похожий в каталоге.',
-    'pp.loading':'Загрузка…','pp.delivery':'Доставка по Баку и пригороду — 7 дней в неделю, 10:00–22:00.',
-    'ui.waIntro':'Здравствуйте! Хочу оформить заказ в Freshness To Your Home:',
+    'pp.loading':'Загрузка…','pp.delivery':'Доставка по Баку и пригороду — 7 дней в неделю, 09:00–23:00.',
+    'ui.waIntro':'Здравствуйте, хочу сделать заказ! 👋',
     'cat.h':'Каталог','cat.lede':'Найдите поиском или сузьте фильтрами.',
     'cat.filters':'Фильтры','cat.sections':'Разделы','cat.price':'Цена','cat.quick':'Быстрый выбор',
     'cat.reset':'Сбросить фильтры','cat.show':'Показать','cat.any':'Все','cat.back':'На главную',
@@ -244,8 +244,8 @@ const OWN = {
     'shop.results':'Результаты поиска','shop.noresults':'Ничего не найдено. Попробуйте другое слово.',
     'shop.clear':'Очистить',
     'ui.waWeighed':'не более','ui.weighedFlag':'На вес','ui.weightVaries':'Вес может отличаться от заказанного','ui.kgAmount':'Вес (кг)','ui.kgShort':'кг','deliv.note':'Комментарий к заказу','deliv.notePh':'Например: не звоните, оставьте у двери, почистите рыбу…','deliv.date':'Дата доставки','deliv.dateHint':'Выберите дату, если нужно. Без даты привезём в ближайший день.','deliv.dateBad':'Эту дату выбрать нельзя.','ui.waDate':'Дата','ui.waNote':'Комментарий','map.h':'Точное место','map.here':'Определить моё место','map.choose':'Выбрать на карте','map.close':'Закрыть карту','map.tap':'Нажмите на карту или перетащите метку.','map.set':'Место выбрано','map.open':'Открыть в Google Maps','map.clear':'Удалить','map.denied':'Не удалось определить место. Разрешите доступ или напишите адрес.','map.failed':'Карта не загрузилась. Определите место или напишите адрес.','deliv.optional':'необязательно','ui.weighedNote':'Товары на вес взвешиваются курьером — итоговая сумма может немного отличаться.',
-    'ui.waTotal':'Примерная сумма','ui.waOutro':'Пожалуйста, подтвердите наличие и время доставки. Спасибо!',
-        'ui.waDeliv':'Доставка','ui.waAddr':'Адрес','ui.waMap':'Карта',
+    'ui.waTotal':'Примерная сумма','ui.waOutro':'Пожалуйста, подтвердите мой заказ 🙏',
+        'ui.waDeliv':'Доставка','ui.waAddr':'Адрес','ui.waMap':'Карта','ui.waItems':'Мой заказ','ui.waSubtotal':'Товары','ui.waSum':'Итого',
     'ui.waPlain':'Здравствуйте! У меня вопрос по вашим товарам.'
   },
 
@@ -255,13 +255,13 @@ const OWN = {
 
     'brand.tag':'Taste, delivered home',
 
-    'hero.eyebrow':'Baku · Seven days a week · 10:00 – 22:00',
+    'hero.eyebrow':'Baku · Seven days a week · 09:00 – 23:00',
     'hero.h1b':'Taste comes to your home.',
     'hero.copy':'Premium fish, caviar and cheese delivered in Baku',
     'hero.cta1':'Browse the catalogue','hero.cta2':'Order by phone',
     'hero.seal':'products<br>in the catalogue',
 
-    'pr1.t':'Seven days a week | 10:00 – 22:00',
+    'pr1.t':'Seven days a week | 09:00 – 23:00',
     'pr1.d':'Your order is brought to your door.',
     'pr2.t':'Baku and around it',
     'pr2.d':'We deliver across Baku and to every settlement and village around it.',
@@ -290,7 +290,7 @@ const OWN = {
 
     'dl.eyebrow':'How delivery works','dl.h2':'Delivery',
     'dl.copy':'We deliver across Baku and to every settlement around it, and we guarantee the quality of what we sell — in storage and on the way to you.',
-    'dl.close':'Seven days a week, 10:00–22:00 — choose, order, and take it in at your door, fresh and cold.',
+    'dl.close':'Seven days a week, 09:00–23:00 — choose, order, and take it in at your door, fresh and cold.',
     'dl.zones':'Where we deliver','dl.fee':'Delivery','dl.min':'Minimum order',
     'dl.ask':'Confirmed when you order',
     'dl.table':'Areas and delivery fees','dl.area':'Area','dl.feeCol':'Fee','dl.showAll':'Show all {n} areas','dl.showLess':'Show fewer','dl.byArea':'depending on the area','dl.seeTable':'Each area\'s fee is in the table below.','dl.rangeNote':'Where a range is shown, the fee depends on the distance — we confirm the exact amount when we confirm the order.',
@@ -309,7 +309,7 @@ const OWN = {
     'ct.eyebrow':'Talk to us','ct.h2':'One number, one message.',
     'ct.copy':'Call, WhatsApp or send your basket straight through. Our support line runs 24/7.',
     'ct.wa':'Message on WhatsApp','ct.ig':'Follow on Instagram',
-    'h.deliv':'Delivery','h.delivv':'Every day 10:00 – 22:00',
+    'h.deliv':'Delivery','h.delivv':'Every day 09:00 – 23:00',
     'h.support':'Support','h.supportv':'24/7',
     'h.zone':'Delivery area','h.zonev':'Baku and the surrounding area',
     'h.pay':'Payment','h.payv':'On delivery, cash or POS terminal',
@@ -338,8 +338,8 @@ const OWN = {
     'nf.h':'Page not found','nf.p':'There is nothing at this address — the link may be out of date. Search for a product or pick a section.',
     'pp.home':'Home','pp.crumbs':'You are here','pp.related':'More from this counter','pp.open':'Product page',
     'pp.missing':'This product is not on sale right now','pp.missingCopy':'It may have sold out or been renamed. Find something similar in the catalogue.',
-    'pp.loading':'Loading…','pp.delivery':'Delivery across Baku and its suburbs — 7 days a week, 10:00–22:00.',
-    'ui.waIntro':'Hello! I would like to order from Freshness To Your Home:',
+    'pp.loading':'Loading…','pp.delivery':'Delivery across Baku and its suburbs — 7 days a week, 09:00–23:00.',
+    'ui.waIntro':'Hello, I would like to place an order! 👋',
     'cat.h':'Catalogue','cat.lede':'Search, or narrow it down with the filters.',
     'cat.filters':'Filters','cat.sections':'Counters','cat.price':'Price','cat.quick':'Quick picks',
     'cat.reset':'Clear filters','cat.show':'Show','cat.any':'All','cat.back':'Home',
@@ -365,8 +365,8 @@ const OWN = {
     'shop.results':'Search results','shop.noresults':'Nothing found. Try another word.',
     'shop.clear':'Clear',
     'ui.waWeighed':'at most','ui.weighedFlag':'By weight','ui.weightVaries':'The weight may differ from what you ordered','ui.kgAmount':'Weight (kg)','ui.kgShort':'kg','deliv.note':'Order note','deliv.notePh':'For example: do not call, leave at the door, clean the fish…','deliv.date':'Delivery date','deliv.dateHint':'Pick a date if you like. Without one we deliver on the earliest day.','deliv.dateBad':'That date cannot be chosen.','ui.waDate':'Date','ui.waNote':'Note','map.h':'Exact spot','map.here':'Use my location','map.choose':'Pick on the map','map.close':'Close map','map.tap':'Tap the map or drag the pin.','map.set':'Spot chosen','map.open':'Open in Google Maps','map.clear':'Remove','map.denied':'Could not get your location. Allow it, or type the address.','map.failed':'The map did not load. Use your location or type the address.','deliv.optional':'optional','ui.weighedNote':'Anything sold by weight is measured by the courier — the final amount may vary slightly.',
-    'ui.waTotal':'Estimated total','ui.waOutro':'Please confirm availability and delivery time. Thank you!',
-        'ui.waDeliv':'Delivery','ui.waAddr':'Address','ui.waMap':'Map',
+    'ui.waTotal':'Estimated total','ui.waOutro':'Please confirm my order 🙏',
+        'ui.waDeliv':'Delivery','ui.waAddr':'Address','ui.waMap':'Map','ui.waItems':'My order','ui.waSubtotal':'Items','ui.waSum':'Total',
     'ui.waPlain':'Hello! I have a question about your products.'
   }
 }

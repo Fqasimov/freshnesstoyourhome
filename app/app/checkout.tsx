@@ -29,7 +29,7 @@ export default function Checkout () {
   const [error, setError] = useState<string | null>(null)
 
   // Same day until delivery closes for the day, then tomorrow (as the server rules it).
-  const close = catalogue.delivery?.close ?? '22:00'
+  const close = catalogue.delivery?.close ?? '23:00'
   const now = new Date()
   const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
   const baseLead = catalogue.delivery?.lead_days ?? 0
@@ -101,7 +101,7 @@ export default function Checkout () {
       // Tracking first, so that is where the customer lands on coming back
       // from WhatsApp, which is where the shop confirms time and weights.
       router.replace({ pathname: '/orders/[id]', params: { id: order.id, placed: '1' } })
-      await sendOrderToWhatsApp(order)
+      await sendOrderToWhatsApp(order, catalogue.delivery?.weight_tolerance_percent)
     } catch (e) {
       const err = e as ApiError
       const unavailable = (err.payload?.unavailable_product_ids ?? []) as string[]

@@ -123,7 +123,6 @@ export default function Profile () {
         <Animated.View entering={enter(2)}>
           <Section title={t('profile.account')}>
             <LinkRow icon="geo-alt" label={t('profile.addresses')} onPress={() => router.push('/profile/addresses')} />
-            <LinkRow icon="receipt" label={t('orders.title')} onPress={() => router.push('/(tabs)/orders')} />
             <LinkRow icon="key" label={t('forgot.title')} onPress={() => router.push('/auth/forgot')} last />
           </Section>
         </Animated.View>
@@ -149,7 +148,7 @@ export default function Profile () {
             </View>
             <View style={[s.row, s.last]}>
               <RowIcon name="bag-check" />
-              <Text style={s.rowLabel}>{pushOn ? t('push.on') : t('push.off')}</Text>
+              <Text style={s.rowLabel}>{t('push.label')}</Text>
               <Switch
                 value={pushOn}
                 onValueChange={togglePush}
@@ -176,7 +175,7 @@ export default function Profile () {
 
         <Animated.View entering={enter(5)} style={{ gap: 10, marginTop: 6 }}>
           <PressableScale onPress={() => setConfirmOut(true)} style={s.out} accessibilityRole="button">
-            <Icon name="box-arrow-right" size={18} color={color.ink} />
+            <Icon name="box-arrow-right" size={16} color={color.ink3} />
             <Text style={s.outText}>{t('profile.logout')}</Text>
           </PressableScale>
           <PressableScale onPress={() => { setError(null); setConfirmDelete(true) }} style={s.del} accessibilityRole="button">
@@ -286,11 +285,8 @@ const s = StyleSheet.create({
   lang: { paddingVertical: 5, paddingHorizontal: 9, borderRadius: 999 },
   langOn: { backgroundColor: color.forest },
   langText: { fontFamily: font.bold, fontSize: 11, color: color.ink2 },
-  out: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, height: 54,
-    borderRadius: space.radius, backgroundColor: color.paper2,
-  },
-  outText: { fontFamily: font.semi, fontSize: 16, color: color.ink },
+  out: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44 },
+  outText: { fontFamily: font.medium, fontSize: 15, color: color.ink3 },
   del: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 50 },
   delText: { fontFamily: font.semi, fontSize: 15, color: color.brick },
   sheetIcon: {

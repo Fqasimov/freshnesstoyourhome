@@ -13,9 +13,9 @@ export const CONTACT = {
   email: 'info@freshness.az',
   privacyUrl: 'https://freshness.az/privacy/',
   hours: {
-    az: 'Həftənin 7 günü · 10:00 – 22:00',
-    ru: '7 дней в неделю · 10:00 – 22:00',
-    en: '7 days a week · 10:00 – 22:00'
+    az: 'Həftənin 7 günü · 09:00 – 23:00',
+    ru: '7 дней в неделю · 09:00 – 23:00',
+    en: '7 days a week · 09:00 – 23:00'
   },
   city: {
     az: 'Bakı, Azərbaycan',
