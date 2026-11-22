@@ -26,7 +26,7 @@ const config: ExpoConfig = {
   name: 'Freshness To Your Home',
   slug: 'freshness-to-your-home',
   scheme: 'freshness',
-  version: '1.0.0',
+  version: '1.0.1',
   orientation: 'portrait',
   userInterfaceStyle: 'light',
   icon: './assets/icon.png',
