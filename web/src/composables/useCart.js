@@ -381,6 +381,15 @@ const canSend = computed(() => Boolean(
       } catch (e) { /* offline: WhatsApp alone still works */ }
     }
 
+    /* The sale itself, for Google Analytics: an order with its number and
+       value is what lets it count sales per channel (Google, Instagram,
+       ChatGPT…). WhatsApp opens from code here, not from a link click, so
+       whatsapp_click is sent by hand too. Values are snapshotted before the
+       basket empties below. */
+    const gaItems = lines.value.map(l => ({ item_id: l.product?.id, item_name: l.product ? nm(l.product) : undefined, quantity: l.qty, price: l.price }))
+    track('whatsapp_click', { link_url: 'checkout', value: total.value, currency: 'AZN' })
+    track('purchase', { transaction_id: code || `wa-${Date.now()}`, value: total.value, currency: 'AZN', items: gaItems })
+
     const url = messageFor(code)
     if (tab) tab.location.href = url
     else window.location.href = url
