@@ -432,6 +432,17 @@ ${items.length ? `<section><h2>${esc(w.inArticle)}</h2>${productLinks(items, l)}
   })
 }
 
+/* The personal cabinet (/hesab): the app's shell under its own name, kept
+   out of search results — there is nothing on it but a sign-in form. */
+const ACCOUNT = { az: 'Şəxsi kabinet', ru: 'Личный кабинет', en: 'My account' }
+function accountPage (template, l) {
+  return shell(template, {
+    lang: l, path: '/hesab', title: `${ACCOUNT[l]} | Freshness`, desc: ACCOUNT[l],
+    robots: 'noindex, nofollow',
+    body: `<h1>${esc(ACCOUNT[l])}</h1>`,
+  })
+}
+
 /* The answer to an address that does not exist (deploy/website.htaccess sends
    it with a 404). It is the app's own page, so a product added since the last
    build still opens; Google is told not to index it. */
@@ -559,6 +570,7 @@ for (const l of LANGS) {
   for (const c of ctx.shelves) write(dir(l, 'pages', 'kataloq', `${c.slug}.html`), categoryPage(template, c, l, ctx))
   for (const c of ctx.collections) write(dir(l, 'pages', 'kataloq', `${c.slug}.html`), collectionPage(template, c, l, ctx))
   write(dir(l, 'pages', 'kataloq.html'), cataloguePage(template, l, ctx))
+  write(dir(l, 'pages', 'hesab.html'), accountPage(template, l))
   if (ctx.articles.length) {
     write(dir(l, 'pages', 'resept.html'), recipesPage(template, l, ctx))
     for (const a of ctx.articles) write(dir(l, 'pages', 'resept', `${a.slug}.html`), articlePage(template, a, l, ctx))

@@ -19,7 +19,7 @@ Options -Indexes -MultiViews
     # Only Laravel's own index.php — and the one-time installer or upgrade
     # script, whose names are 24 random hex characters — may run as PHP here.
     # Anything else ending in .php is refused before PHP ever sees it.
-    RewriteCond %{REQUEST_URI} !/(index|install-[0-9a-f]{24}|upgrade-[0-9a-f]{24})\.php$
+    RewriteCond %{REQUEST_URI} !/(index|lowercase|install-[0-9a-f]{24}|upgrade-[0-9a-f]{24})\.php$
     RewriteRule \.(php[0-9]?|phtml|phar|pht|phps)$ - [F,L,NC]
 
     # storage/ is where uploaded photographs are served from. Photographs

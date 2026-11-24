@@ -130,6 +130,7 @@ router.afterEach(to => {
   if (ogImage && HOME_IMAGE) ogImage.setAttribute('content', HOME_IMAGE)
   if (HOME_IMAGE) document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', HOME_IMAGE)
   setPageHead({ path: splitLang(to.path).path, title: document.title, desc: page?.desc ?? home.desc })
-  // A search inside the catalogue is not a page of its own.
-  setRobots(!(to.name === 'catalogue' && to.query.q))
+  // A search inside the catalogue is not a page of its own, nor is the
+  // personal cabinet.
+  setRobots(!(to.name === 'catalogue' && to.query.q) && to.name !== 'account')
 })

@@ -123,7 +123,7 @@ find "$STAGE/freshness/backend/vendor" -type d -name .git -prune -exec rm -rf {}
 # the home folder puts both in place at once.
 API_DIR="$STAGE/public_html/$API_FOLDER"
 mkdir -p "$API_DIR"
-cp "$ROOT/backend/public/.htaccess" "$ROOT/backend/public/favicon.ico" "$ROOT/backend/public/robots.txt" "$API_DIR/"
+cp "$ROOT/backend/public/.htaccess" "$ROOT/backend/public/favicon.ico" "$ROOT/backend/public/robots.txt" "$ROOT/backend/public/lowercase.php" "$API_DIR/"
 cp "$ROOT/deploy/split-index.php" "$API_DIR/index.php"
 # The installer only in a first-install package (INSTALL=1); every package
 # carries the upgrade page, which runs new migrations and then deletes itself.

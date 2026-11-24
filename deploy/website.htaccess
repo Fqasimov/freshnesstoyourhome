@@ -43,6 +43,16 @@ ErrorDocument 404 /404.html
   # to serve the index inside.
   RewriteCond %{THE_REQUEST} \s/+index\.html[\s?]
   RewriteRule ^index\.html$ / [R=301,L]
+
+  # Capitals: /KATALOQ, /Mehsul/levrek, /RU/kataloq → 301 to the lower-case
+  # address. .htaccess cannot lower-case by itself, so the request is handed
+  # to server/lowercase.php, which answers with the one redirect. Real files
+  # (hashed /assets names have capitals) and the API are left alone.
+  RewriteCond %{REQUEST_URI} [A-Z]
+  RewriteCond %{REQUEST_URI} !^/(server|cms|assets|privacy|delete-account|\.well-known)(/|$)
+  RewriteCond %{REQUEST_URI} ^/[A-Za-z0-9/_.-]*$
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^ server/lowercase.php [L]
   RewriteCond %{REQUEST_URI} !^/(server|cms|privacy|delete-account|\.well-known)(/|$)
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.+)/$ /$1 [R=301,L]
@@ -81,8 +91,11 @@ ErrorDocument 404 /404.html
   RewriteRule ^(ru|en)/resept/([a-z0-9-]+)$ pages/$1/resept/$2.html [L]
 
   # The home pages, and the app's other pages.
-  RewriteRule ^(hesab)?$ index.html [L]
-  RewriteRule ^(ru|en)(/hesab)?$ pages/$1/index.html [L]
+  RewriteRule ^$ index.html [L]
+  RewriteRule ^(ru|en)$ pages/$1/index.html [L]
+  # The personal cabinet: its own copy of the shell, marked noindex.
+  RewriteRule ^hesab$ pages/hesab.html [L]
+  RewriteRule ^(ru|en)/hesab$ pages/$1/hesab.html [L]
 
   # Everything else does not exist: a 404, answered by 404.html (below). It
   # is the app's own page, so a product or category added in the panel since
