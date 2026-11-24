@@ -118,7 +118,7 @@ export const APP_COPY: Record<Lang, Record<string, string>> = {
     'cat.sortDear': 'Əvvəlcə baha',
     'cat.sortName': 'Ada görə',
     'cat.hit': 'Hit',
-    'cat.banner': 'Bu gün sifariş edin — bu gün və ya sabah qapınızda',
+    'cat.banner': 'Bu gün sifariş edin',
     'cat.bannerLead': 'Çatdırılma {open}–{close}, Bakı və ətrafı',
     'cat.greeting': 'Salam, {name}',
 
@@ -255,7 +255,7 @@ export const APP_COPY: Record<Lang, Record<string, string>> = {
     'cat.sortDear': 'Сначала дороже',
     'cat.sortName': 'По названию',
     'cat.hit': 'Хит',
-    'cat.banner': 'Закажите сегодня — привезём сегодня или завтра',
+    'cat.banner': 'Закажите сегодня',
     'cat.bannerLead': 'Доставка {open}–{close}, Баку и пригороды',
     'cat.greeting': 'Здравствуйте, {name}',
 
@@ -392,7 +392,7 @@ export const APP_COPY: Record<Lang, Record<string, string>> = {
     'cat.sortDear': 'Price: high to low',
     'cat.sortName': 'By name',
     'cat.hit': 'Hit',
-    'cat.banner': 'Order today — at your door today or tomorrow',
+    'cat.banner': 'Order today',
     'cat.bannerLead': 'Delivery {open}–{close}, Baku and around',
     'cat.greeting': 'Hello, {name}',
 
