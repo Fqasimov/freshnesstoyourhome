@@ -30,6 +30,7 @@
  * itself rewritten (it is the Azerbaijani home page), so the untouched build
  * output is kept beside it as .prerender-shell.html for the second run.
  */
+import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -89,10 +90,15 @@ async function live () {
       signal: AbortSignal.timeout(20_000),
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const raw = await res.text()
+    const data = JSON.parse(raw)
     if (!Array.isArray(data.products) || !data.products.length) throw new Error('no products')
     return {
       source: `${API}/api/catalogue`,
+      // A fingerprint of exactly what the pages were built from. The deploy
+      // compares it with the live catalogue every few hours and rebuilds
+      // only when a price, name or anything else has changed since.
+      version: createHash('sha256').update(raw).digest('hex'),
       categories: (data.categories ?? []).map(c => ({
         id: c.id, slug: c.slug ?? null, name: { ...map(c.name), az: c.name?.az ?? c.id },
         indexed: c.is_indexed !== false, page: pageOf(c),
@@ -580,6 +586,7 @@ for (const l of LANGS) {
 }
 write(join(dist, '404.html'), notFoundPage(template, ctx))
 write(join(dist, 'sitemap.xml'), sitemap(ctx))
+if (ctx.version) write(join(dist, 'catalogue-version.txt'), `${ctx.version}\n`)
 const redirected = writeRedirects(ctx.redirects ?? {}, ctx.categoryRedirects ?? {})
 
 say(`${count} pages in ${LANGS.length} languages (${ctx.products.length} products, ${ctx.shelves.length} categories, ${ctx.collections.length} collections, ${ctx.articles.length} articles), 404.html, sitemap.xml${redirected ? `, ${redirected} redirects` : ''} from ${ctx.source} (${SITE_NAME})`)

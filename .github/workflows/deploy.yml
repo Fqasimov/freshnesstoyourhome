@@ -22,6 +22,10 @@ on:
   # prices and products set in the panel that day. Only what changed is sent.
   schedule:
     - cron: '7 1 * * *'   # 05:07 in Baku
+    # And every three hours a quick look: if anything in the panel changed
+    # (a price, a name, stock), the pages are rebuilt so Google never reads
+    # yesterday's price for long. Nothing changed: the run stops in seconds.
+    - cron: '37 */3 * * *'
 
 # One deploy at a time, in order: a second push waits for the first.
 concurrency:
@@ -32,10 +36,31 @@ permissions:
   contents: read
 
 jobs:
+  # Only on the three-hourly run: has the catalogue changed since the pages
+  # were built? web/scripts/prerender.mjs publishes catalogue-version.txt,
+  # the fingerprint of the catalogue it built them from.
+  changed:
+    if: github.event.schedule == '37 */3 * * *' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      rebuild: ${{ steps.compare.outputs.rebuild }}
+    steps:
+      - id: compare
+        run: |
+          now=$(curl -fsS --retry 3 -H 'Accept: application/json' "https://freshness.az/server/api/catalogue" | sha256sum | cut -d' ' -f1)
+          built=$(curl -fsS --retry 3 "https://freshness.az/catalogue-version.txt" || true)
+          echo "live $now, pages built from ${built:-nothing}"
+          if [ "$now" = "$built" ]; then echo "rebuild=false" >> "$GITHUB_OUTPUT"; else echo "rebuild=true" >> "$GITHUB_OUTPUT"; fi
+
   deploy:
+    needs: changed
+    # always(): the check above is skipped on every other kind of run.
     # Only from the release branch. "Run workflow" lets anyone with write
     # access pick any branch; that must not be a way to ship unreviewed code.
-    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/claude/photo-analysis-bgp25f'
+    if: >-
+      always() && vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/claude/photo-analysis-bgp25f'
+      && (needs.changed.result == 'skipped' || needs.changed.outputs.rebuild == 'true')
     runs-on: ubuntu-latest
     # The first run sends ~13,800 files (vendor/) one at a time over FTP;
     # later runs send only what changed and take a few minutes.
@@ -61,6 +86,8 @@ jobs:
 
       # ---- Nothing goes up unless all of this passes ----------------------
       - name: Backend tests
+        # The code did not change on a catalogue refresh; only the pages do.
+        if: github.event.schedule != '37 */3 * * *'
         working-directory: backend
         run: |
           composer install --no-interaction --prefer-dist --no-progress
