@@ -22,7 +22,7 @@ class AdminAudit extends Model
     protected function casts(): array
     {
         return [
-            'changes' => 'array',
+            'changes' => \App\Casts\AuditChanges::class,
             'created_at' => 'datetime',
         ];
     }

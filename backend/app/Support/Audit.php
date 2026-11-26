@@ -121,7 +121,7 @@ final class Audit
 
             $ok = $audit->hash !== null
                 && $audit->prev_hash === $prev
-                && hash_equals($audit->hash, self::seal($prev, $row));
+                && (hash_equals($audit->hash, self::seal($prev, $row)) || self::sealedBeforeFloatFix($audit->hash, $prev, $row));
 
             if (! $ok) {
                 return ['intact' => false, 'checked' => $checked, 'unchained' => $unchained, 'broken_at' => $audit->id];
@@ -138,6 +138,48 @@ final class Audit
         }
 
         return ['intact' => true, 'checked' => $checked, 'unchained' => $unchained, 'broken_at' => null];
+    }
+
+    /**
+     * Rows written before App\Casts\AuditChanges were sealed with whole-number
+     * floats as "10.0" but stored as "10", so they read back as integers.
+     * Try the integers in their changes as floats too — the same numbers,
+     * only written differently — so those rows check out without loosening
+     * anything else: a changed value still fails every combination.
+     */
+    private static function sealedBeforeFloatFix(string $hash, ?string $prev, array $row): bool
+    {
+        if (! is_array($row['changes'])) {
+            return false;
+        }
+        $paths = [];
+        array_walk_recursive($row['changes'], function ($v) use (&$paths) {
+            $paths[] = is_int($v);
+        });
+        $ints = array_sum($paths);
+        if ($ints === 0 || $ints > 12) {
+            return false;
+        }
+        for ($mask = 1; $mask < (1 << $ints); $mask++) {
+            $i = 0;
+            $changes = $row['changes'];
+            array_walk_recursive($changes, function (&$v) use (&$i, $mask) {
+                if (is_int($v)) {
+                    if ($mask & (1 << $i)) {
+                        $v = (float) $v;
+                    }
+                    $i++;
+                }
+            });
+            // Same row, same key order (the seal is over its JSON), these changes.
+            $candidate = $row;
+            $candidate['changes'] = $changes;
+            if (hash_equals($hash, self::seal($prev, $candidate))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** HMAC over the previous hash and this row, keyed off APP_KEY. */
